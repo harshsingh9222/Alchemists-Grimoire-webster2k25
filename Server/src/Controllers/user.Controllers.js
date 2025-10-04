@@ -5,6 +5,7 @@ import { ApiError } from "../Utils/ApiError.js";
 import { ApiResponse } from "../Utils/ApiResponse.js";
 import { asyncHandler } from "../Utils/asyncHandler.js";
 import { generateAccessAndRefreshToken } from "../Utils/tokens.js";
+import Medicine from "../Models/medicineModel.js";
 
 const options = {
     httpOnly: true,
@@ -176,4 +177,33 @@ const getCurrentUser = async (req, res) => {
         });
 };
 
-export { registerUser, localLogin, getCurrentUser, logoutUser, refreshAccessToken };
+const addMedicine = async (req, res) => {
+  try {
+    const { userId, medicineName, dosage, frequency, times, startDate, endDate, notes } = req.body;
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const newMedicine = new Medicine({
+      userId,
+      medicineName,
+      dosage,
+      frequency,
+      times,
+      startDate,
+      endDate,
+      notes,
+    });
+
+    await newMedicine.save();
+
+    res.status(201).json({ message: "Medicine saved successfully", medicine: newMedicine });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+
+export { addMedicine,registerUser, localLogin, getCurrentUser, logoutUser, refreshAccessToken };
