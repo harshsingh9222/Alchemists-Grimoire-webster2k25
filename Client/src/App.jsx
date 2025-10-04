@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, useParams } from "react-router-
 
 import './App.css'
 import MainLayout from './Layouts/MainLayout';
+import Home from './Pages/Home';
 
 function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -11,7 +12,6 @@ function App() {
     <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen}>
           <Routes>
             <Route path="/" element={<Home />} />
-            <Route path="/about" element={<About />} />
             {/* Add more routes as needed */}
           </Routes>
         </MainLayout>
