@@ -10,8 +10,19 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@tailwindcss/vite": "^4.1.14",
+    "axios": "^1.12.2",
+    "canvas-confetti": "^1.9.3",
+    "clsx": "^2.1.1",
+    "framer-motion": "^11.18.2",
+    "howler": "^2.2.4",
+    "lucide-react": "^0.544.0",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-dom": "^18.2.0",
+    "react-hook-form": "^7.63.0",
+    "react-parallax-tilt": "^1.7.309",
+    "react-router-dom": "^6.30.1",
+    "tailwindcss": "^4.1.14"
   },
   "devDependencies": {
     "@types/react": "^18.2.64",
