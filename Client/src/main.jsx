@@ -8,16 +8,17 @@ import { BrowserRouter } from 'react-router-dom'
 import ReactDOM from 'react-dom/client';
 import { Provider } from 'react-redux'
 import {store} from "./store/store.js";
+import { GoogleOAuthProvider } from '@react-oauth/google'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <StrictMode>
-    {/* <GoogleOAuthProvider clientId="..."> */}
+  <GoogleOAuthProvider clientId="576465356327-501k2vs4bv48ibc54f4c4519j8gitj9g.apps.googleusercontent.com">
       <Provider store={store}>
         <BrowserRouter>
           <App />
         </BrowserRouter>
       </Provider>
-    {/* </GoogleOAuthProvider> */}
+     </GoogleOAuthProvider> 
   </StrictMode>
 );
 

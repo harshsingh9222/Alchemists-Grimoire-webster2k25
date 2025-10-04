@@ -1,36 +1,121 @@
-import React, { useState } from "react"
-import { useNavigate } from "react-router-dom"
-import toast from "react-hot-toast"
-import { userLogin } from "../api"  
-import {login as authLogin} from "../store/authSlice.js"
-import { useDispatch } from 'react-redux';
-
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
+import { userLogin } from "../api";
+import { login as authLogin } from "../store/authSlice.js";
+import { useDispatch } from "react-redux";
+import { googleAuth, verifyOTP as apiVerifyOTP } from "../api.js";
+import { useGoogleLogin } from "@react-oauth/google";
+import { useEffect, useCallback } from "react";
 
 const Login = () => {
-  const navigate = useNavigate()
+  const navigate = useNavigate();
   const dispatch = useDispatch();
-  const [formData, setFormData] = useState({ email: "", password: "" })
-  const [loading, setLoading] = useState(false)
+  const modal = document.getElementById("my_modal_3");
+
+  useEffect(() => {
+    const handleMessage = (event) => {
+      if (event.data === "googleLoginSuccess") {
+        modal?.close();
+        navigate("/");
+      }
+    };
+
+    window.addEventListener("message", handleMessage);
+    return () => {
+      window.removeEventListener("message", handleMessage);
+      modal?.close();
+    };
+  }, [navigate]);
+
+
+
+  const [formData, setFormData] = useState({ email: "", password: "" });
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value })
-  }
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
-    setLoading(true)
+    e.preventDefault();
+    setLoading(true);
     try {
-      const res = await userLogin(formData)
-      
+      const res = await userLogin(formData);
+
       console.log("User logged in:", res);
       dispatch(authLogin(res.user));
-        
-      navigate("/") // redirect to homepage after login
+
+      navigate("/"); // redirect to homepage after login
     } catch (err) {
-      toast.error(err.message || "Login failed")
+      toast.error(err.message || "Login failed");
     }
-    setLoading(false)
-  }
+    setLoading(false);
+  };
+
+
+
+
+
+  const responseGoogle = useCallback(
+    async (authResult) => {
+      try {
+        if (authResult.code) {
+          // Instead of completing login on the server, request OTP be sent to the Google email
+          const sendOtpResp = await googleAuth(authResult.code, true)
+          toast.success('OTP sent to your Google email (check preview URL in response if using Ethereal)')
+
+          // If server returned an Ethereal preview URL (local dev), show it to the user
+          if (sendOtpResp.previewUrl) {
+            // Show preview link so the developer/tester can open it
+            // In production you would not show this
+            // eslint-disable-next-line no-alert
+            alert(`Preview URL for OTP email:\n${sendOtpResp.previewUrl}`)
+          }
+
+          // Prompt user to enter OTP (simple flow). You can replace with a modal form.
+          // eslint-disable-next-line no-alert
+          const userOtp = window.prompt('Enter the OTP sent to your email:')
+          if (!userOtp) {
+            toast.error('OTP entry cancelled')
+            return
+          }
+
+          // Verify OTP with backend
+          const verifyResp = await apiVerifyOTP(sendOtpResp.email, userOtp)
+
+          // On success, server sets cookies; update client state
+          dispatch(authLogin(verifyResp.user))
+          localStorage.setItem('User', JSON.stringify(verifyResp.user))
+          toast.success(`Welcome, ${verifyResp.user.fullname || verifyResp.user.email}!`)
+
+          if (window.opener) {
+            window.opener.postMessage('googleLoginSuccess', '*')
+            window.close()
+          } else {
+            modal?.close()
+            navigate('/')
+          }
+        }
+      } catch (error) {
+        console.error("Google auth failed:", error);
+        toast.error("Google authentication failed!");
+      }
+    },
+    [navigate, authLogin]
+  );
+
+  const googleLogin = useGoogleLogin({
+    onSuccess: responseGoogle,
+    onError: responseGoogle,
+    flow: "auth-code",
+    ux_mode: "popup",
+  });
+
+
+
+
+
 
   return (
     <div className="flex justify-center items-center min-h-screen bg-gray-100">
@@ -62,10 +147,22 @@ const Login = () => {
           >
             {loading ? "Logging in..." : "Login"}
           </button>
+          <button
+            type="button"
+            onClick={googleLogin}
+            className="btn btn-outline w-80"
+          >
+            <img
+              src="https://cdn1.iconfinder.com/data/icons/google-s-logo/150/Google_Icons-09-1024.png"
+              alt="Google"
+              className="w-5 h-5 inline-block mr-2"
+            />
+            Login with Google
+          </button>
         </form>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default Login
+export default Login;
