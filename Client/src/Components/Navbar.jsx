@@ -2,7 +2,6 @@
 import { useState } from "react"
 import { Link, useLocation, useNavigate } from "react-router-dom"
 import { Menu, X, Home, User, Settings, Bell, LogOut } from "lucide-react"
-import AuthModal from "./AuthModal"
 import { useAuth } from "../context/AuthProvider"
 import toast from "react-hot-toast"
 
@@ -141,27 +140,7 @@ const Navbar = ({ sidebarOpen, setSidebarOpen }) => {
         </div>
       </nav>
 
-      {/* Auth Modals */}
-      <AuthModal
-        isOpen={showLoginModal}
-        onClose={() => setShowLoginModal(false)}
-        type="login"
-        onSwitchToSignup={() => {
-          setShowLoginModal(false)
-          setShowSignupModal(true)
-        }}
-      />
-
-      <AuthModal
-        isOpen={showSignupModal}
-        onClose={() => setShowSignupModal(false)}
-        type="signup"
-        onSwitchToLogin={() => {
-          setShowSignupModal(false)
-          setShowLoginModal(true)
-        }}
-      />
-
+      
     </>
   )
 }
