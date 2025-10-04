@@ -8,12 +8,8 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
   const sidebarItems = [
     { name: "Dashboard", path: "/", icon: Home },
     { name: "About", path: "/about", icon: User },
-    { name: "Code Editor", path: "/test-editor", icon: Code },
-    { name: "ADD-PROBLEM", path: "/analytics", icon: BarChart3 },
-    { name: "ProblemSet", path: "/problems", icon: FileText },
     { name: "Calendar", path: "/calendar", icon: Calendar },
     { name: "Profile", path: "/profile", icon: Mail },
-    { name: "Settings", path: "/settings", icon: Settings },
   ]
 
   return (
