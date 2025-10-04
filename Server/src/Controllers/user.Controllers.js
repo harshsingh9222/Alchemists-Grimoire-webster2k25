@@ -13,7 +13,10 @@ const options = {
 
 const registerUser = asyncHandler(async (req, res) => {
     try {
+        console.log("Printing the request->",req);
         const { email, password } = req.body;
+        console.log("Register Email->",email);
+        console.log("Password->",password);
         const username = req.body.username.trim().toLowerCase();
         // Validate that required fields are present
         if (!username || !email || !password) {
@@ -60,6 +63,7 @@ const registerUser = asyncHandler(async (req, res) => {
 const localLogin = asyncHandler(async (req, res) => {
     try {
         const { email, password } = req.body;
+        console.log("Email from login:",email);
         // Validate input
         if (!email || !password) {
             return res.status(400).json({ message: 'Email and password are required.' });

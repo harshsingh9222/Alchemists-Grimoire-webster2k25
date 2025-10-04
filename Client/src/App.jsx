@@ -1,9 +1,12 @@
 import { useState } from 'react'
+
 import { BrowserRouter as Router, Routes, Route, useParams } from "react-router-dom";
 
 import './App.css'
 import MainLayout from './Layouts/MainLayout';
 import Home from './Pages/Home';
+import Signup from './Pages/Signup';
+import Login from './Pages/Login';
 
 function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -12,6 +15,8 @@ function App() {
     <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen}>
           <Routes>
             <Route path="/" element={<Home />} />
+            <Route path="/Signup" element={<Signup />} />
+            <Route path="/login" element={<Login />} />
             {/* Add more routes as needed */}
           </Routes>
         </MainLayout>
