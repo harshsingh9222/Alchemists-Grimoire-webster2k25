@@ -5,6 +5,7 @@ import {
   getCurrentUser,
   logoutUser,
   refreshAccessToken,
+  addMedicine,
 } from '../Controllers/user.Controllers.js';
 import { upload } from '../Middlewares/multer.middleware.js';
 import {upload_cloud} from "../Middlewares/cloudinary_multer.middleware.js"
@@ -28,6 +29,10 @@ router.route('/logout').post(verifyJWT,logoutUser)
 
 //RefreshAccessToken
 router.route('/refreshaccesstoken').post(verifyJWT,refreshAccessToken)
+
+
+
+router.post("/medicines", addMedicine);
 
 
 // Current user

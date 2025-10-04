@@ -33,3 +33,5 @@ connectDB()
     console.log("❌ Error connecting to the database", error);
     process.exit(1);
   });
+
+  
