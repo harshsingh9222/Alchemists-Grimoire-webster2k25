@@ -1,5 +1,5 @@
 // API Configuration
-const API_BASE_URL = "http://localhost:4000"
+const API_BASE_URL = "http://localhost:8000"
 
 // ✅ Helper function to make requests with proper error handling
 const fetchAPI = async (endpoint, method = "GET", data = null, isFormData = false) => {
@@ -42,52 +42,14 @@ const fetchAPI = async (endpoint, method = "GET", data = null, isFormData = fals
   }
 }
 
-// ✅ Google Authentication API Call
-export const googleAuth = async (code) => {
-  return fetchAPI(`/user/google?code=${code}`, "GET")
+// ✅ User Signup
+export const userSignup = async (formData) => {
+  return fetchAPI("/auth/register", "POST", formData, false)
 }
 
 // ✅ User Login
-export const userLogin = async (credentials) => {
-  return fetchAPI("/user/login", "POST", credentials)
+export const userLogin = async (formData) => {
+  return fetchAPI("/auth/login", "POST", formData, false) // send JSON
 }
 
-// ✅ Admin Login
-export const adminLogin = async (credentials) => {
-  return fetchAPI("/user/admin/login", "POST", credentials)
-}
 
-// ✅ User Logout
-export const userLogout = async () => {
-  return fetchAPI("/user/logout", "POST")
-}
-
-// ✅ User Signup
-export const userSignup = async (formData) => {
-  return fetchAPI("/user/signup", "POST", formData, true)
-}
-
-// ✅ Admin Signup
-export const adminSignup = async (formData) => {
-  return fetchAPI("/admin/signup", "POST", formData, true)
-}
-
-// ✅ Send OTP
-export const sendOTP = async (email) => {
-  return fetchAPI("/user/send-otp", "POST", { email })
-}
-
-// ✅ Verify OTP
-export const verifyOTP = async (email, otp) => {
-  return fetchAPI("/user/verify-otp", "POST", { email, otp })
-}
-
-// ✅ Upload File (if needed)
-export const uploadFile = async (formData) => {
-  return fetchAPI("/upload", "POST", formData, true)
-}
-
-// ✅ Get User Profile
-export const getUserProfile = async () => {
-  return fetchAPI("/user/profile", "GET")
-}
