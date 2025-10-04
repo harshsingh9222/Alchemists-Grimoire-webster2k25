@@ -5,10 +5,323 @@ import { ApiResponse } from "../Utils/ApiResponse.js";
 import { asyncHandler } from "../Utils/asyncHandler.js";
 import { generateAccessAndRefreshToken } from "../Utils/tokens.js";
 import Medicine from "../Models/medicineModel.js";
+import nodemailer from 'nodemailer'
+import crypto from 'crypto'
+import oauth2Client from "../Utils/googleConfig.js"
+import axios from "axios"
 
 const options = {
     httpOnly: true,
     secure: true
+}
+
+const secret = "jn4k5n6n5nnn6oi4n"
+
+// OTP storage (in-memory for now - use Redis in production)
+const otpStorage = new Map()
+
+// Generate 6-digit OTP
+const generateOTP = () => {
+  return Math.floor(100000 + Math.random() * 900000).toString()
+}
+
+// Create email transporter
+const createEmailTransporter = () => {
+  // If credentials are not set, create a test account (Ethereal) for local testing
+  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+    console.warn('EMAIL_USER or EMAIL_PASS not set. Using Ethereal test account for local email testing.')
+    // createTestAccount is async, but nodemailer provides a sync alternative via createTransport with direct transport
+    // We'll create a test account synchronously via nodemailer.createTestAccount (returns promise)
+    // To keep this function synchronous, we return a transporter created for Ethereal if available.
+    // In the sendOTP flow we will fallback to creating the test account when needed.
+    return null
+  }
+
+  return nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS
+    }
+  })
+}
+
+const googleLogin = async (req, res) => {
+  try {
+    const { code } = req.query
+    if (!code) {
+      return res.status(400).json({ message: "Authorization code is required" })
+    }
+
+    console.log("Google OAuth code received:", code)
+
+    // Exchange code for tokens
+    const { tokens } = await oauth2Client.getToken(code)
+    oauth2Client.setCredentials(tokens)
+
+    console.log("Tokens received from Google")
+
+    // Fetch user info from Google
+    const userRes = await axios.get(
+      `https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token=${tokens.access_token}`,
+    )
+    const { email, name, picture } = userRes.data
+
+    console.log("Google user info:", { email, name })
+
+    // If the frontend requested OTP verification only, send OTP to the Google email
+    // and return early (the verifyOTP endpoint will finish login).
+    if (req.query?.requireOtp === 'true') {
+      console.log('googleLogin: requireOtp=true, sending OTP to', email)
+      // Reuse sendOTP implementation by calling it with a fake req object
+      await sendOTP({ body: { email } }, res)
+      return
+    }
+
+    // Otherwise proceed with normal Google login: find/create user and issue tokens
+    let user = await User.findOne({ email })
+    if (!user) {
+      console.log("Creating new user from Google OAuth")
+      user = await User.create({
+        username: name,
+        email,
+        provider: 'google',
+        profilePic: picture
+      })
+    } else {
+      console.log("Existing user found:", user.username)
+    }
+
+    // Ensure user provider and username are set
+    if (!user.provider || user.provider !== 'google') {
+      user.provider = 'google'
+    }
+    if (!user.username) {
+      user.username = email.split('@')[0]
+    }
+    await user.save()
+
+    // Generate access and refresh tokens consistent with other flows
+    const { accessToken, refreshToken } = await generateAccessAndRefreshToken(user._id)
+
+    // Set cookies same as register/login flows
+    res
+      .status(200)
+      .cookie("accessToken", accessToken, options)
+      .cookie("refreshToken", refreshToken, options)
+      .json({
+        message: "Login successful",
+        user: {
+          _id: user._id,
+          fullname: user.fullname,
+          email: user.email,
+          role: user.role || 'user',
+          location: user.location,
+          profilePic: user.profilePic,
+        },
+      })
+  } catch (error) {
+    // Improved error logging to surface Google / token exchange errors
+    console.error("Error in Google login:", error?.response?.data || error?.message || error)
+
+    // If this is an OAuth error from Google, include the details in the response
+    const googleError = error?.response?.data || error?.response || error?.message || error
+    return res.status(500).json({ message: "Internal server error", error: googleError })
+  }
+}
+
+
+
+// Send OTP via email
+const sendOTP = async (req, res) => {
+  try {
+    const { email } = req.body
+
+    if (!email) {
+      return res.status(400).json({ message: "Email is required" })
+    }
+
+    // It's OK if the user does not exist yet. We allow sending OTP to any email
+    // so the OTP flow can be used for passwordless signup/login.
+    const user = await User.findOne({ email })
+    if (!user) {
+      console.log(`sendOTP: no existing user for ${email} - proceeding to send OTP`)
+    }
+
+    // Generate OTP
+    const otp = generateOTP()
+    const expiresAt = Date.now() + 10 * 60 * 1000 // 10 minutes
+
+    // Store OTP with expiration
+    otpStorage.set(email, {
+      otp,
+      expiresAt,
+      attempts: 0,
+    })
+
+    // Create email transporter; if no real credentials are configured, create an Ethereal test account
+    let transporter = createEmailTransporter()
+    let isEthereal = false
+    let etherealAccount = null
+    if (!transporter) {
+      // Create a test account for local development
+      etherealAccount = await nodemailer.createTestAccount()
+      transporter = nodemailer.createTransport({
+        host: 'smtp.ethereal.email',
+        port: 587,
+        auth: {
+          user: etherealAccount.user,
+          pass: etherealAccount.pass,
+        },
+      })
+      isEthereal = true
+    }
+
+    // Email content
+    const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to: email,
+      subject: "Your OTP Code - MyApp",
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #333; text-align: center;">Your OTP Code</h2>
+          <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; text-align: center;">
+            <h1 style="color: #007bff; font-size: 32px; margin: 0; letter-spacing: 5px;">${otp}</h1>
+          </div>
+          <p style="color: #666; text-align: center; margin-top: 20px;">
+            This OTP will expire in 10 minutes. Do not share this code with anyone.
+          </p>
+          <p style="color: #999; font-size: 12px; text-align: center;">
+            If you didn't request this code, please ignore this email.
+          </p>
+        </div>
+      `,
+    }
+
+    // Send email and handle errors from the transporter
+    try {
+      const info = await transporter.sendMail(mailOptions)
+      console.log(`OTP sent to ${email}: ${otp}. transporter response:`, info)
+
+      const responsePayload = { message: 'OTP sent successfully', email }
+      // If using Ethereal, include preview URL so developer can view the message in browser
+      if (isEthereal) {
+        const previewUrl = nodemailer.getTestMessageUrl(info)
+        console.log('Ethereal preview URL:', previewUrl)
+        responsePayload.previewUrl = previewUrl
+      }
+
+      res.status(200).json(responsePayload)
+    } catch (mailErr) {
+      console.error('Error sending mail via transporter:', mailErr)
+      return res.status(500).json({ message: 'Failed to send OTP email', details: mailErr.message || mailErr })
+    }
+  } catch (error) {
+    console.error("Error sending OTP:", error)
+    res.status(500).json({ message: "Failed to send OTP" })
+  }
+}
+
+// Verify OTP
+const verifyOTP = async (req, res) => {
+  try {
+    const { email, otp } = req.body
+
+    if (!email || !otp) {
+      return res.status(400).json({ message: "Email and OTP are required" })
+    }
+
+    // Get stored OTP data
+    const storedOTPData = otpStorage.get(email)
+
+    if (!storedOTPData) {
+      return res.status(400).json({ message: "OTP not found or expired" })
+    }
+
+    // Check if OTP is expired
+    if (Date.now() > storedOTPData.expiresAt) {
+      otpStorage.delete(email)
+      return res.status(400).json({ message: "OTP has expired" })
+    }
+
+    // Check attempts (max 3 attempts)
+    if (storedOTPData.attempts >= 3) {
+      otpStorage.delete(email)
+      return res.status(400).json({ message: "Too many failed attempts. Please request a new OTP." })
+    }
+
+    // Verify OTP
+    if (storedOTPData.otp !== otp.toString()) {
+      storedOTPData.attempts += 1
+      otpStorage.set(email, storedOTPData)
+      return res.status(400).json({
+        message: "Invalid OTP",
+        attemptsLeft: 3 - storedOTPData.attempts,
+      })
+    }
+
+    // OTP is valid - remove from storage
+    otpStorage.delete(email)
+
+    // Get or create user data - allow OTP to act as passwordless signup
+    let user = await User.findOne({ email })
+    if (!user) {
+      console.log(`verifyOTP: creating new user for ${email}`)
+      const username = email.split('@')[0]
+      const randomPassword = crypto.randomBytes(16).toString('hex')
+      user = await User.create({ username, email, password: randomPassword, provider: 'local' })
+    }
+
+    // Generate access and refresh tokens consistent with other auth flows
+    const { accessToken, refreshToken } = await generateAccessAndRefreshToken(user._id)
+
+    // Set cookies for authenticated session
+    res
+      .status(200)
+      .cookie('accessToken', accessToken, options)
+      .cookie('refreshToken', refreshToken, options)
+      .json({
+        message: 'OTP verified successfully',
+        user: {
+          _id: user._id,
+          fullname: user.username,
+          email: user.email,
+        },
+      })
+  } catch (error) {
+    console.error("Error verifying OTP:", error)
+    res.status(500).json({ message: "Failed to verify OTP" })
+  }
+}
+
+// Resend OTP
+const resendOTP = async (req, res) => {
+  try {
+    const { email } = req.body
+
+    if (!email) {
+      return res.status(400).json({ message: "Email is required" })
+    }
+
+    // Check if there's an existing OTP request
+    const existingOTP = otpStorage.get(email)
+    if (existingOTP && Date.now() < existingOTP.expiresAt) {
+      // Check if it's been at least 1 minute since last OTP
+      const timeSinceLastOTP = Date.now() - (existingOTP.expiresAt - 10 * 60 * 1000)
+      if (timeSinceLastOTP < 60 * 1000) {
+        return res.status(429).json({
+          message: "Please wait before requesting a new OTP",
+          waitTime: Math.ceil((60 * 1000 - timeSinceLastOTP) / 1000),
+        })
+      }
+    }
+
+    // Use the same sendOTP logic
+    await sendOTP(req, res)
+  } catch (error) {
+    console.error("Error resending OTP:", error)
+    res.status(500).json({ message: "Failed to resend OTP" })
+  }
 }
 
 const registerUser = asyncHandler(async (req, res) => {
@@ -209,4 +522,4 @@ const addMedicine = async (req, res) => {
 };
 
 
-export { addMedicine,registerUser, localLogin, getCurrentUser, logoutUser, refreshAccessToken };
+export { googleLogin, sendOTP, verifyOTP,resendOTP,addMedicine,registerUser, localLogin, getCurrentUser, logoutUser, refreshAccessToken };

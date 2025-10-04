@@ -1,4 +1,6 @@
-import dotenv from "dotenv";
+// Load environment variables as early as possible so other modules (which may read
+// env vars at import time) see them.
+import 'dotenv/config';
 dotenv.config({ path: "./.env" });
 // console.log("Loaded MONGODB_URI =", process.env.MONGODB_URI);
 
@@ -8,8 +10,6 @@ import { app } from "./app.js";
 import { connectDB } from "./DB/connectDB.js";
 import userRouter from './Routes/user.Routes.js'
 
-
-dotenv.config({ path: '.env' });
 console.log("Loaded MONGODB_URI =", process.env.MONGODB_URI);
 
 

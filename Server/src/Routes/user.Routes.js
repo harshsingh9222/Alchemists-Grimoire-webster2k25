@@ -6,6 +6,10 @@ import {
   logoutUser,
   refreshAccessToken,
   addMedicine,
+  googleLogin,
+  verifyOTP,
+  resendOTP,
+  sendOTP,
 } from '../Controllers/user.Controllers.js';
 import { upload } from '../Middlewares/multer.middleware.js';
 import {upload_cloud} from "../Middlewares/cloudinary_multer.middleware.js"
@@ -30,7 +34,13 @@ router.route('/logout').post(verifyJWT,logoutUser)
 //RefreshAccessToken
 router.route('/refreshaccesstoken').post(verifyJWT,refreshAccessToken)
 
+// Google OAuth route
+router.get("/google", googleLogin)
 
+// Add these new routes after the existing ones:
+router.post("/send-otp", sendOTP)
+router.post("/verify-otp", verifyOTP)
+router.post("/resend-otp", resendOTP)
 
 router.post("/medicines", addMedicine);
 
