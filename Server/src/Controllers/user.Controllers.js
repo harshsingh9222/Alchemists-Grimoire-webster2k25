@@ -1,5 +1,4 @@
 import User from "../Models/user.models.js";
-import axios from 'axios'
 import jwt from 'jsonwebtoken'
 import { ApiError } from "../Utils/ApiError.js";
 import { ApiResponse } from "../Utils/ApiResponse.js";
