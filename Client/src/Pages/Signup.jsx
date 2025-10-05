@@ -51,7 +51,7 @@ const Signup = () => {
           type="text"
           name="username"
           placeholder="Full Name"
-          value={formData.name}
+          value={formData.username}
           onChange={handleChange}
           className="w-full p-2 mb-3 border rounded"
           required

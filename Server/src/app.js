@@ -1,10 +1,9 @@
 ﻿import express from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
-
+import userRouter from './Routes/user.Routes.js';
 
 const app = express();
-const PORT = process.env.PORT || 5000;
 
 // Middleware
 app.use(cors({
@@ -12,18 +11,18 @@ app.use(cors({
   credentials: true,
 }));
 
-app.use(express.json(
-    {
-        limit:'16kb'
-    }
-));
+app.use(express.json({
+  limit: '16kb'
+}));
 
-app.use(express.urlencoded({ extended: true, limit:'16kb' }));
+app.use(express.urlencoded({ 
+  extended: true, 
+  limit: '16kb' 
+}));
 
 app.use(cookieParser());
 
-
-// Basic route
+// Routes
 app.get('/', (req, res) => {
   res.json({
     message: 'Welcome to Alchemist\'s Grimoire API',
@@ -32,21 +31,24 @@ app.get('/', (req, res) => {
   });
 });
 
-// API routes placeholder
+// API routes
 app.get('/api', (req, res) => {
   res.json({
-    message: 'API endpoints will be available here',
+    message: 'API endpoints are available here',
     version: '1.0.0'
   });
 });
 
-// Error handling middleware
-// app.use((err, req, res, next) => {
-//   console.error(err.stack);
-//   res.status(500).json({
-//     error: 'Something went wrong!',
-//     message: process.env.NODE_ENV === 'development' ? err.message : 'Internal server error'
-//   });
-// });
+// Auth routes
+app.use('/auth', userRouter);
 
-export {app};
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({
+    error: 'Something went wrong!',
+    message: process.env.NODE_ENV === 'development' ? err.message : 'Internal server error'
+  });
+});
+
+export { app };

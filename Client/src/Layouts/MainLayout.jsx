@@ -1,6 +1,6 @@
-import Navbar from "../components/Navbar"
-import Sidebar from "../components/Sidebar"
-import Footer from "../components/Footer"
+import Navbar from "../Components/Navbar"
+import Sidebar from "../Components/Sidebar"
+import Footer from "../Components/Footer"
 
 const MainLayout = ({ children, sidebarOpen, setSidebarOpen }) => {
   return (
