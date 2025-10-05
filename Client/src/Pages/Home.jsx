@@ -1,9 +1,11 @@
-"use client"
+// "use client"
 
 import { ArrowRight, Sparkles, Moon, Flame, Shield, TrendingUp, Play, Stars } from "lucide-react"
 import { useEffect, useRef } from "react"
+import { useNavigate } from "react-router-dom"
 
 const Home = () => {
+  const navigate = useNavigate()
   const canvasRef = useRef(null)
 
   // Magical particle effect
@@ -158,12 +160,18 @@ const Home = () => {
               </p>
 
               <div className="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-4">
-                <button className="group w-full sm:w-auto bg-gradient-to-r from-purple-600 to-pink-600 text-white px-8 py-4 rounded-xl font-semibold hover:from-purple-500 hover:to-pink-500 transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg shadow-purple-500/50 hover:shadow-purple-500/70 hover:scale-105">
+                <button 
+                  onClick={() => navigate('/signup')}
+                  className="group w-full sm:w-auto bg-gradient-to-r from-purple-600 to-pink-600 text-white px-8 py-4 rounded-xl font-semibold hover:from-purple-500 hover:to-pink-500 transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg shadow-purple-500/50 hover:shadow-purple-500/70 hover:scale-105"
+                >
                   <span>Begin Your Journey</span>
                   <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </button>
 
-                <button className="w-full sm:w-auto border-2 border-purple-400/50 text-purple-200 px-8 py-4 rounded-xl font-semibold hover:bg-purple-500/10 hover:border-purple-400 transition-all duration-300 flex items-center justify-center space-x-2 backdrop-blur-sm">
+                <button 
+                  onClick={() => navigate('/login')}
+                  className="w-full sm:w-auto border-2 border-purple-400/50 text-purple-200 px-8 py-4 rounded-xl font-semibold hover:bg-purple-500/10 hover:border-purple-400 transition-all duration-300 flex items-center justify-center space-x-2 backdrop-blur-sm"
+                >
                   <Play className="w-5 h-5" />
                   <span>See the Magic</span>
                 </button>
@@ -233,10 +241,16 @@ const Home = () => {
                 Join performers worldwide who trust the Grimoire to keep them healthy, focused, and at peak performance.
               </p>
               <div className="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-4">
-                <button className="w-full sm:w-auto bg-white text-purple-900 px-8 py-4 rounded-xl font-semibold hover:bg-purple-50 transition-all duration-300 shadow-lg hover:scale-105">
+                <button 
+                  onClick={() => navigate('/signup')}
+                  className="w-full sm:w-auto bg-white text-purple-900 px-8 py-4 rounded-xl font-semibold hover:bg-purple-50 transition-all duration-300 shadow-lg hover:scale-105"
+                >
                   Start Free Trial
                 </button>
-                <button className="w-full sm:w-auto border-2 border-white/50 text-white px-8 py-4 rounded-xl font-semibold hover:bg-white/10 hover:border-white transition-all duration-300 backdrop-blur-sm">
+                <button 
+                  onClick={() => navigate('/medicine-form')}
+                  className="w-full sm:w-auto border-2 border-white/50 text-white px-8 py-4 rounded-xl font-semibold hover:bg-white/10 hover:border-white transition-all duration-300 backdrop-blur-sm"
+                >
                   Learn More
                 </button>
               </div>

@@ -137,16 +137,6 @@
   50% {
     opacity: 1;
     transform: scale(1.1) translateZ(0);
-@import "tailwindcss";
-
-@layer base {
-  html {
-    scroll-behavior: smooth;
-  }
-
-  body {
-    background-color: rgb(249 250 251);
-    color: rgb(17 24 39);
   }
 }
 

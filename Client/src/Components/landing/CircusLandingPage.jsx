@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence, useMotionValue, useTransform } from 'framer-motion';
 import { Howl } from 'howler';
+import { useNavigate } from 'react-router-dom';
 import drumrollUrl from '../../assets/Sounds/drumroll.wav';
 
 
 const CircusLandingPage = () => {
+    const navigate = useNavigate();
     const sounds = {
       drumroll: new Howl({ src: [drumrollUrl], volume: 0.25 }),
       // enter: new Howl({ src: ['/sounds/tada.mp3'], volume: 0.3 })
@@ -13,7 +15,7 @@ const CircusLandingPage = () => {
     // Play on page load
     useEffect(() => {
       sounds.drumroll.play();
-    },);
+    }, []);
   const [isLoading, setIsLoading] = useState(true);
   const [showContent, setShowContent] = useState(false);
   const [selectedCharacter, setSelectedCharacter] = useState(null);
@@ -351,7 +353,7 @@ const CircusLandingPage = () => {
                     whileHover={{ scale: 1.05, rotate: -1 }}
                     whileTap={{ scale: 0.95 }}
                     className="relative bg-gradient-to-br from-yellow-400 to-yellow-500 text-gray-900 px-8 py-4 rounded-lg font-bold text-lg shadow-lg transform transition-all duration-200 hover:shadow-xl"
-                    onClick={() => console.log('Sign Up')}
+                    onClick={() => navigate('/signup')}
                     style={{ fontWeight: 700 }}
                   >
                     <div className="absolute top-2 right-3 text-xs opacity-50 font-mono">
@@ -365,7 +367,7 @@ const CircusLandingPage = () => {
                     whileHover={{ scale: 1.05, rotate: 1 }}
                     whileTap={{ scale: 0.95 }}
                     className="relative bg-gradient-to-br from-purple-300 to-purple-400 text-gray-900 px-8 py-4 rounded-lg font-bold text-lg shadow-lg transform transition-all duration-200 hover:shadow-xl"
-                    onClick={() => console.log('Login')}
+                    onClick={() => navigate('/login')}
                     style={{ fontWeight: 700 }}
                   >
                     <div className="absolute top-2 right-3 text-xs opacity-50 font-mono">
@@ -380,6 +382,7 @@ const CircusLandingPage = () => {
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   className="border-2 border-gray-100 text-gray-100 px-6 py-3 rounded-full font-semibold hover:bg-gray-100 hover:text-red-700 transition-all duration-200"
+                  onClick={() => navigate('/home')}
                 >
                   ✨ Watch the Magic (Demo) ✨
                 </motion.button>
