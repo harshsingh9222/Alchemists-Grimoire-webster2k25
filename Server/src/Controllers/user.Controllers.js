@@ -5,7 +5,6 @@ import { ApiResponse } from "../Utils/ApiResponse.js";
 import { asyncHandler } from "../Utils/asyncHandler.js";
 import { generateAccessAndRefreshToken } from "../Utils/tokens.js";
 
-import Medicine from "../Models/medicineModel.js";
 import nodemailer from 'nodemailer'
 import crypto from 'crypto'
 import oauth2Client from "../Utils/googleConfig.js"
@@ -497,5 +496,5 @@ const getCurrentUser = async (req, res) => {
 
 
 
-export {registerUser, localLogin, getCurrentUser, logoutUser, refreshAccessToken };
-export { googleLogin, sendOTP, verifyOTP,resendOTP,addMedicine,registerUser, localLogin, getCurrentUser, logoutUser, refreshAccessToken };
+
+export { googleLogin, sendOTP, verifyOTP,resendOTP,registerUser, localLogin, getCurrentUser, logoutUser, refreshAccessToken };

@@ -63,7 +63,6 @@ export const fetchMedicines = async () => {
   return fetchAPI("/medicines/fetchMedicines", "GET");
 };
 
-//////////////////
 
 // ✅ Google Authentication API Call
 export const googleAuth = async (code, requireOtp = false) => {
