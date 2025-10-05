@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 import { app } from "./app.js";
 import { connectDB } from "./DB/connectDB.js";
 import userRouter from './Routes/user.Routes.js'
+import medicineRouter from "./Routes/medicine.Router.js"
 
 
 dotenv.config({ path: '.env' });
@@ -19,8 +20,8 @@ const PORT = process.env.PORT || 5000;
 app.get('/',(req,res)=>{
   res.send('Hello, World');
 });
-
 app.use('/auth',userRouter);
+app.use('/medicines',medicineRouter);
 
 connectDB()
   .then(() => {
