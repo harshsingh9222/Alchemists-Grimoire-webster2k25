@@ -15,7 +15,6 @@
     "@tailwindcss/vite": "^4.1.14",
     "axios": "^1.12.2",
     "canvas-confetti": "^1.9.3",
-    "cloudinary": "^2.7.0",
     "clsx": "^2.1.1",
     "cloudinary": "^2.7.0",
     "framer-motion": "^11.18.2",

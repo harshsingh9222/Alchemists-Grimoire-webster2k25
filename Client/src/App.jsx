@@ -7,6 +7,7 @@ import Signup from './Pages/Signup';
 import Login from './Pages/Login';
 import MedicineForm from './Pages/MedicineForm';
 import CircusLandingPage from './Components/landing/CircusLandingPage.jsx';
+import MyMedicines from './Pages/MyMedicines.jsx';
 
 function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -20,6 +21,7 @@ function App() {
           <Route path="/signup" element={<Signup />} />
           <Route path="/login" element={<Login />} />
           <Route path="/medicine-form" element={<MedicineForm />} />
+          <Route path="/myMedicines" element={<MyMedicines />} />
           {/* Add more routes as needed */}
         </Routes>
       </MainLayout>
