@@ -2,6 +2,7 @@
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import userRouter from './Routes/user.Routes.js';
+import medicineRouter from './Routes/medicine.Router.js';
 
 const app = express();
 
@@ -31,16 +32,12 @@ app.get('/', (req, res) => {
   });
 });
 
-// API routes
-app.get('/api', (req, res) => {
-  res.json({
-    message: 'API endpoints are available here',
-    version: '1.0.0'
-  });
-});
 
 // Auth routes
 app.use('/auth', userRouter);
+
+// Medicine routes
+app.use('/medicines', medicineRouter);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
@@ -52,3 +49,4 @@ app.use((err, req, res, next) => {
 });
 
 export { app };
+

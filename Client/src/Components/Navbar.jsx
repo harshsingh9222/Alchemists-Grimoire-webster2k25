@@ -1,4 +1,4 @@
-import React from "react"
+// React not required to be imported for JSX runtime
 import { Link, useLocation } from "react-router-dom"
 import { Menu, X, Home, User } from "lucide-react"
 import { useSelector, useDispatch } from "react-redux"
@@ -48,10 +48,10 @@ const Navbar = ({ sidebarOpen, setSidebarOpen }) => {
             </button>
 
             <Link to="/" className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+              <div className="w-8 h-8 bg-gradient-to-r from-yellow-400 to-red-600 rounded-lg flex items-center justify-center">
                 <span className="text-white font-bold text-sm">A</span>
               </div>
-              <span className="text-xl font-bold text-gray-900 hidden sm:block">MyApp</span>
+              <span className="text-xl font-bold text-gray-900 hidden sm:block">Alchemist</span>
             </Link>
           </div>
 
@@ -65,8 +65,8 @@ const Navbar = ({ sidebarOpen, setSidebarOpen }) => {
                   to={item.path}
                   className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 ${
                     location.pathname === item.path
-                      ? "text-blue-600 bg-blue-50"
-                      : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+              ? "text-yellow-600 bg-yellow-50"
+                : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
                   }`}
                 >
                   <Icon className="w-4 h-4" />
@@ -99,7 +99,7 @@ const Navbar = ({ sidebarOpen, setSidebarOpen }) => {
                 </Link>
                 <Link
                   to="/signup"
-                  className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 rounded-md transition-all duration-200 shadow-md hover:shadow-lg"
+                  className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-yellow-400 to-red-600 hover:from-yellow-300 hover:to-red-700 rounded-md transition-all duration-200 shadow-md hover:shadow-lg"
                 >
                   Sign Up
                 </Link>

@@ -1,4 +1,5 @@
-import React, { useState } from "react"
+// React import not required with new JSX runtime
+import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { toast } from "react-toastify"
 import { userSignup } from "../api"
@@ -79,7 +80,7 @@ const Signup = () => {
 
         <button
           type="submit"
-          className="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600"
+          className="w-full bg-gradient-to-r from-yellow-400 to-red-600 text-white py-2 rounded hover:from-yellow-300 hover:to-red-700"
         >
           Sign Up
         </button>
