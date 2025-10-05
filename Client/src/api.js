@@ -53,7 +53,16 @@ export const userLogin = async (formData) => {
 }
 
 
-//////////////////
+// for setting the medicines
+export const addMedicines = async (formData) =>{
+  return fetchAPI("/medicines/addMedicines","POST",formData,false);
+}
+
+// this is for the fetching the medicines
+export const fetchMedicines = async () => {
+  return fetchAPI("/medicines/fetchMedicines", "GET");
+};
+
 
 // ✅ Google Authentication API Call
 export const googleAuth = async (code, requireOtp = false) => {
