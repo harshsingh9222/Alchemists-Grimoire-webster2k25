@@ -76,7 +76,7 @@ const Navbar = ({ sidebarOpen, setSidebarOpen }) => {
 
           {/* Right (Login / Signup or Profile) */}
           <div className="flex items-center space-x-4">
-            {auth?.status && user ? (
+            {user ? (
               <div className="flex items-center space-x-3">
                 {user.profilePic ? (
                   <img src={user.profilePic} alt="Profile" className="w-9 h-9 rounded-full object-cover" />
