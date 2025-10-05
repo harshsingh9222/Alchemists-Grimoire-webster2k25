@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
-
-const API_URL = "http://localhost:8000/api/medicines";
+import { addMedicines, fetchMedicines } from "../api";
+import { useSelector } from "react-redux";
 
 const MedicineForm = () => {
+  const { userData } = useSelector((state) => state.auth);
   const [userId, setUserId] = useState("");
   const [formData, setFormData] = useState({
     medicineName: "",
@@ -14,16 +14,16 @@ const MedicineForm = () => {
     endDate: "",
     notes: "",
   });
-
   const [medicines, setMedicines] = useState([]);
 
   useEffect(() => {
-    const savedUser = JSON.parse(localStorage.getItem("authUser"));
-    if (savedUser?._id) {
-      setUserId(savedUser._id);
-      fetchMedicines(savedUser._id);
+    if (userData?._id) {
+      setUserId(userData._id);
+      fetchMedicines(userData._id)
+        .then((res) => setMedicines(res)) 
+        .catch((err) => console.error("Error fetching medicines", err));
     }
-  }, []);
+  }, [userData]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -43,22 +43,18 @@ const MedicineForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post(API_URL, { ...formData, userId });
-      alert(res.data.message || "Medicine saved!");
-      fetchMedicines(userId);
-    } catch (error) {
-      console.error(error);
-      alert(error.response?.data?.message || "Error saving medicine");
-    }
-  };
+      const payload = { ...formData}; // do not need to include the userId bcz when i am requesting it is will
+      // get the userId form the middleware
 
-  const fetchMedicines = async (userId) => {
-    try {
-      const res = await axios.get(`${API_URL}/${userId}`);
-      setMedicines(res.data);
+      const res = await addMedicines(payload);
+      alert(res.message || "Medicine saved!");
+
+      const fetched = await fetchMedicines(); // ✅ refresh medicines
+      setMedicines(fetched);
+      console.log("Fetched Medicines->",fetched);
     } catch (error) {
       console.error(error);
-      alert("Error fetching medicines");
+      alert(error.message || "Error saving medicine");
     }
   };
 
@@ -77,8 +73,9 @@ const MedicineForm = () => {
           value={formData.medicineName}
           onChange={handleChange}
           required
-          className="w-full mb-3 p-3 rounded-lg bg-gray-700 border border-gray-600 text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
+          className="w-full mb-3 p-3 rounded-lg bg-gray-700 border border-gray-600 text-white"
         />
+
         <input
           type="text"
           name="dosage"
@@ -86,14 +83,14 @@ const MedicineForm = () => {
           value={formData.dosage}
           onChange={handleChange}
           required
-          className="w-full mb-3 p-3 rounded-lg bg-gray-700 border border-gray-600 text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
+          className="w-full mb-3 p-3 rounded-lg bg-gray-700 border border-gray-600 text-white"
         />
 
         <select
           name="frequency"
           value={formData.frequency}
           onChange={handleChange}
-          className="w-full mb-3 p-3 rounded-lg bg-gray-700 border border-gray-600 text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
+          className="w-full mb-3 p-3 rounded-lg bg-gray-700 border border-gray-600 text-white"
         >
           <option value="daily">Daily</option>
           <option value="weekly">Weekly</option>
@@ -107,7 +104,7 @@ const MedicineForm = () => {
             value={time}
             onChange={(e) => handleTimeChange(i, e.target.value)}
             required
-            className="w-full mb-3 p-3 rounded-lg bg-gray-700 border border-gray-600 text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
+            className="w-full mb-3 p-3 rounded-lg bg-gray-700 border border-gray-600 text-white"
           />
         ))}
 
@@ -126,7 +123,7 @@ const MedicineForm = () => {
           value={formData.startDate}
           onChange={handleChange}
           required
-          className="w-full mb-3 p-3 rounded-lg bg-gray-700 border border-gray-600 text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
+          className="w-full mb-3 p-3 rounded-lg bg-gray-700 border border-gray-600 text-white"
         />
 
         <label className="block mb-2 text-gray-300">End Date (optional):</label>
@@ -135,7 +132,7 @@ const MedicineForm = () => {
           name="endDate"
           value={formData.endDate}
           onChange={handleChange}
-          className="w-full mb-3 p-3 rounded-lg bg-gray-700 border border-gray-600 text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
+          className="w-full mb-3 p-3 rounded-lg bg-gray-700 border border-gray-600 text-white"
         />
 
         <textarea
@@ -143,12 +140,12 @@ const MedicineForm = () => {
           placeholder="Notes"
           value={formData.notes}
           onChange={handleChange}
-          className="w-full mb-3 p-3 rounded-lg bg-gray-700 border border-gray-600 text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
+          className="w-full mb-3 p-3 rounded-lg bg-gray-700 border border-gray-600 text-white"
         />
 
         <button
           type="submit"
-          className="w-full bg-teal-600 hover:bg-teal-500 p-3 rounded-lg font-bold text-lg shadow-md"
+          className="w-full bg-teal-600 hover:bg-teal-500 p-3 rounded-lg font-bold text-lg"
         >
           Save Medicine
         </button>
@@ -162,8 +159,8 @@ const MedicineForm = () => {
             className="bg-gray-700 p-3 rounded-lg shadow-sm flex justify-between"
           >
             <span>
-              <span className="font-semibold text-teal-300">{med.medicineName}</span>{" "}
-              - {med.dosage} ({med.frequency})
+              <span className="font-semibold text-teal-300">{med.medicineName}</span> -{" "}
+              {med.dosage} ({med.frequency})
             </span>
           </li>
         ))}
