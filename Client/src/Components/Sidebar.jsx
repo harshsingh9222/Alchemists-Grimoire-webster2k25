@@ -1,22 +1,21 @@
 "use client"
 import { Link, useLocation } from "react-router-dom"
-import { Home, User, Settings, FileText, BarChart3, Calendar, Mail, X ,Code} from 'lucide-react'
-import CircusDecor from "./CircusDecor";
+import { Home, User, Calendar, Mail, X } from 'lucide-react'
+// ...existing code...
 import PropTypes from "prop-types";
 
 const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
   const location = useLocation()
 
   const sidebarItems = [
-    { name: "Dashboard", path: "/", icon: Home },
+    { name: "Dashboard", path: "/dashboard", icon: Home },
     { name: "About", path: "/about", icon: User },
-    { name: "Calendar", path: "/calendar", icon: Calendar },
     { name: "Profile", path: "/profile", icon: Mail },
-    { name: "MEDS", path: "/medicine-form", icon: Settings },
+    { name: "Calendar", path: "/calendar", icon: Calendar },
+    { name: "MEDS", path: "/medicine-form", icon: Calendar },
   ]
 
   return (
-    <CircusDecor>
       <>
         {/* Overlay for mobile */}
         {sidebarOpen && (
@@ -25,11 +24,12 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
 
         {/* Sidebar */}
         <div
-          className={`fixed left-0 top-16 h-[calc(100vh-4rem)] w-64 bg-white shadow-lg border-r border-gray-200 z-50 sidebar-transition lg:translate-x-0 ${
+          className={`fixed left-0 top-0 h-screen w-64 bg-white shadow-lg border-r border-gray-200 z-50 sidebar-transition lg:translate-x-0 ${
             sidebarOpen ? "translate-x-0" : "-translate-x-full"
           }`}
         >
-          <div className="flex flex-col h-full">
+          {/* keep content below the fixed navbar height (4rem) */}
+          <div className="flex flex-col h-full pt-16">
             {/* Sidebar Header */}
             <div className="p-4 border-b border-gray-200">
               <div className="flex items-center justify-between">
@@ -84,7 +84,6 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
           </div>
         </div>
       </>
-    </CircusDecor>
   )
 }
 

@@ -5,7 +5,6 @@ import { useSelector, useDispatch } from "react-redux"
 import { useNavigate } from "react-router-dom"
 import { performLogout } from "../store/authAction"
 import { toast } from "react-hot-toast"
-import CircusDecor from "./CircusDecor"
 import PropTypes from "prop-types";
 
 const Navbar = ({ sidebarOpen, setSidebarOpen }) => {
@@ -35,8 +34,7 @@ const Navbar = ({ sidebarOpen, setSidebarOpen }) => {
   }
 
   return (
-    <CircusDecor>
-      <nav className="bg-white shadow-lg border-b border-gray-200 fixed w-full top-0 z-50">
+      <nav className="bg-white shadow-lg border-b border-gray-200 fixed w-full top-0 z-[9999]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             {/* Left */}
@@ -110,7 +108,6 @@ const Navbar = ({ sidebarOpen, setSidebarOpen }) => {
           </div>
         </div>
       </nav>
-    </CircusDecor>
   )
 }
 

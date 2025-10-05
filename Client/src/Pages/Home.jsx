@@ -3,7 +3,7 @@
 import { ArrowRight, Sparkles, Moon, Flame, Shield, TrendingUp, Play, Stars } from "lucide-react"
 import { useEffect, useRef } from "react"
 import { useNavigate } from "react-router-dom"
-import CircusDecor from "../Components/CircusDecor"
+// ...existing code...
 
 const Home = () => {
   const navigate = useNavigate()
@@ -104,7 +104,6 @@ const Home = () => {
   ]
 
   return (
-    <CircusDecor>
       <div className="relative min-h-screen bg-gradient-to-b from-gray-900 via-purple-900 to-gray-900 text-white overflow-hidden">
         {/* Magical particle canvas */}
         <canvas ref={canvasRef} className="fixed inset-0 pointer-events-none z-0" />
@@ -261,7 +260,7 @@ const Home = () => {
           </section>
         </div>
       </div>
-    </CircusDecor>
+    
   )
 }
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence, useMotionValue, useTransform } from 'framer-motion';
 import { Howl } from 'howler';
 import { useNavigate } from 'react-router-dom';
@@ -7,15 +7,44 @@ import drumrollUrl from '../../assets/Sounds/drumroll.wav';
 
 const CircusLandingPage = () => {
     const navigate = useNavigate();
-    const sounds = {
-      drumroll: new Howl({ src: [drumrollUrl], volume: 0.25 }),
-      // enter: new Howl({ src: ['/sounds/tada.mp3'], volume: 0.3 })
-    };
-    
-    // Play on page load
+
+    // muted state (persisted) - fix ReferenceError by defining it
+    const [muted, setMuted] = useState(() => {
+      try {
+        return localStorage.getItem('circus_muted') === 'true'
+      } catch (e) {
+        return false
+      }
+    })
+
+    // Use a ref to hold Howl instances so they aren't recreated every render
+    const soundsRef = useRef(null)
+
+    // Initialize sounds once and play depending on `muted`
     useEffect(() => {
-      sounds.drumroll.play();
-    }, []);
+      soundsRef.current = {
+        drumroll: new Howl({ src: [drumrollUrl], volume: 0.25 }),
+      }
+
+      if (!muted) {
+        try { soundsRef.current.drumroll.play() } catch (e) { console.debug('play failed', e) }
+      }
+
+      return () => {
+        try { soundsRef.current?.drumroll.stop() } catch (e) { /* ignore */ }
+      }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [])
+
+    // Keep playback in sync when muted toggles
+    useEffect(() => {
+      if (!soundsRef.current) return
+      if (muted) {
+        try { soundsRef.current.drumroll.stop() } catch (e) { console.debug('stop failed', e) }
+      } else {
+        try { soundsRef.current.drumroll.play() } catch (e) { console.debug('play failed', e) }
+      }
+    }, [muted])
   const [isLoading, setIsLoading] = useState(true);
   const [showContent, setShowContent] = useState(false);
   const [selectedCharacter, setSelectedCharacter] = useState(null);
@@ -240,7 +269,7 @@ const CircusLandingPage = () => {
                 className="text-4xl md:text-6xl font-bold mb-4 bg-gradient-to-r from-yellow-400 via-yellow-300 to-yellow-400 bg-clip-text text-transparent animate-shimmer bg-[length:200%_100%]"
                 style={{ fontFamily: "'Bungee', cursive" }}
               >
-                🎪 Alchemist's Grimoire 🎪
+                🎪 Alchemist&apos;s Grimoire 🎪
               </h1>
               
               <p className="text-xl text-gray-200 font-light">
@@ -401,14 +430,14 @@ const CircusLandingPage = () => {
                 </div>
 
                 <div className="flex items-center justify-center gap-4">
-                  <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="border-2 border-gray-100 text-gray-100 px-6 py-3 rounded-full font-semibold hover:bg-gray-100 hover:text-red-700 transition-all duration-200" onClick={() => {
+                    <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="border-2 border-gray-100 text-gray-100 px-6 py-3 rounded-full font-semibold hover:bg-gray-100 hover:text-red-700 transition-all duration-200" onClick={() => {
                     // Enter the show (mark visited with timestamp)
                     try {
                       localStorage.setItem(VISIT_KEY, Date.now().toString())
                     } catch (e) {
                       console.debug('localStorage set failed', e)
                     }
-                    try { sounds.drumroll.stop() } catch (e) { console.debug('stop failed', e) }
+                    try { soundsRef.current?.drumroll.stop() } catch (e) { console.debug('stop failed', e) }
                     navigate('/home')
                   }}>
                     ✨ Enter the Show (Demo) ✨
@@ -419,9 +448,9 @@ const CircusLandingPage = () => {
                     setMuted(next)
                     localStorage.setItem('circus_muted', next ? 'true' : 'false')
                     if (next) {
-                      try { sounds.drumroll.stop() } catch (e) { console.debug('stop failed', e) }
+                      try { soundsRef.current?.drumroll.stop() } catch (e) { console.debug('stop failed', e) }
                     } else {
-                      try { sounds.drumroll.play() } catch (e) { console.debug('play failed', e) }
+                      try { soundsRef.current?.drumroll.play() } catch (e) { console.debug('play failed', e) }
                     }
                   }}>
                     {muted ? 'Unmute' : 'Mute'}
@@ -438,14 +467,7 @@ const CircusLandingPage = () => {
                   </button>
                 </div>
                 
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="border-2 border-gray-100 text-gray-100 px-6 py-3 rounded-full font-semibold hover:bg-gray-100 hover:text-red-700 transition-all duration-200"
-                  onClick={() => navigate('/home')}
-                >
-                  ✨ Watch the Magic (Demo) ✨
-                </motion.button>
+                {/* 'Watch the Magic' demo button removed to keep landing page focused */}
               </div>
             </motion.div>
 
@@ -461,7 +483,7 @@ const CircusLandingPage = () => {
       </AnimatePresence>
 
       {/* Inline Styles for Smooth Animations */}
-      <style jsx>{`
+  <style>{`
         @keyframes slideSmooth {
           0% { transform: translateX(0) translateZ(0); }
           100% { transform: translateX(80px) translateZ(0); }

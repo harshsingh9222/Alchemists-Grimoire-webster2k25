@@ -1,10 +1,10 @@
-import React, { useState } from "react"
+import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { toast } from "react-toastify"
 import { userSignup } from "../api"
 import {useDispatch} from "react-redux"
 import {login as authLogin} from "../store/authSlice"
-import CircusDecor from "../Components/CircusDecor";
+// ...existing code...
 
 const Signup = () => {
   const navigate = useNavigate()
@@ -42,7 +42,6 @@ const Signup = () => {
   }
 
   return (
-    <CircusDecor>
       <div className="flex items-center justify-center min-h-screen bg-gray-100">
         <form
           onSubmit={handleSubmit}
@@ -88,7 +87,7 @@ const Signup = () => {
           </button>
         </form>
       </div>
-    </CircusDecor>
+    
   )
 }
 

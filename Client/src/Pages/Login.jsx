@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import { userLogin } from "../api";
@@ -7,7 +7,7 @@ import { useDispatch } from "react-redux";
 import { googleAuth, verifyOTP as apiVerifyOTP } from "../api.js";
 import { useGoogleLogin } from "@react-oauth/google";
 import { useEffect, useCallback } from "react";
-import CircusDecor from "../Components/CircusDecor";
+// ...existing code...
 
 const Login = () => {
   const navigate = useNavigate();
@@ -112,7 +112,6 @@ const Login = () => {
   });
 
   return (
-    <CircusDecor>
       <div className="flex justify-center items-center min-h-screen bg-gray-100">
         <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-sm">
           <h2 className="text-2xl font-bold mb-4 text-center">Login</h2>
@@ -157,7 +156,7 @@ const Login = () => {
           </form>
         </div>
       </div>
-    </CircusDecor>
+    
   );
 };
 
