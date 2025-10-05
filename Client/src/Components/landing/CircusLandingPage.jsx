@@ -69,9 +69,25 @@ const CircusLandingPage = () => {
     }
   }, [mouseX, mouseY])
 
+  // Visit tracking: use a timestamp so we can expire the "visited" state
+  const VISIT_KEY = 'circus_visited_at'
+  const VISIT_EXPIRY_DAYS = 7 // after this many days the landing page will show again
+
+  const isVisitFresh = () => {
+    try {
+      const ts = localStorage.getItem(VISIT_KEY)
+      if (!ts) return false
+      const t = parseInt(ts, 10)
+      if (Number.isNaN(t)) return false
+      const age = Date.now() - t
+      return age <= VISIT_EXPIRY_DAYS * 24 * 60 * 60 * 1000
+    } catch (e) {
+      return false
+    }
+  }
+
   useEffect(() => {
-    const visited = localStorage.getItem('circus_visited') === 'true'
-    if (visited) {
+    if (isVisitFresh()) {
       const id = setTimeout(() => navigate('/home'), 350)
       return () => clearTimeout(id)
     }
@@ -234,8 +250,12 @@ const CircusLandingPage = () => {
 
                 <div className="flex items-center justify-center gap-4">
                   <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="border-2 border-gray-100 text-gray-100 px-6 py-3 rounded-full font-semibold hover:bg-gray-100 hover:text-red-700 transition-all duration-200" onClick={() => {
-                    // Enter the show (mark visited)
-                    localStorage.setItem('circus_visited', 'true')
+                    // Enter the show (mark visited with timestamp)
+                    try {
+                      localStorage.setItem(VISIT_KEY, Date.now().toString())
+                    } catch (e) {
+                      console.debug('localStorage set failed', e)
+                    }
                     try { sounds.drumroll.stop() } catch (e) { console.debug('stop failed', e) }
                     navigate('/home')
                   }}>
@@ -254,6 +274,16 @@ const CircusLandingPage = () => {
                   }}>
                     {muted ? 'Unmute' : 'Mute'}
                   </motion.button>
+                </div>
+                
+                <div className="text-center mt-4">
+                  <button className="text-sm text-gray-300 underline hover:text-white" onClick={() => {
+                    // Allow user to see the landing again immediately
+                    try { localStorage.removeItem(VISIT_KEY) } catch (e) { console.debug('remove failed', e) }
+                    navigate('/circus')
+                  }}>
+                    See Landing Again
+                  </button>
                 </div>
               </div>
             </motion.div>

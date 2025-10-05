@@ -8,6 +8,7 @@ import { useDispatch } from "react-redux";
 import { googleAuth, verifyOTP as apiVerifyOTP } from "../api.js";
 import { useGoogleLogin } from "@react-oauth/google";
 import { useEffect, useCallback } from "react";
+import CircusDecor from "../Components/CircusDecor";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -27,9 +28,7 @@ const Login = () => {
       window.removeEventListener("message", handleMessage);
       modal?.close();
     };
-  }, [navigate]);
-
-
+  }, [navigate, modal]);
 
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [loading, setLoading] = useState(false);
@@ -54,48 +53,48 @@ const Login = () => {
     setLoading(false);
   };
 
-
-
-
-
   const responseGoogle = useCallback(
     async (authResult) => {
       try {
         if (authResult.code) {
           // Instead of completing login on the server, request OTP be sent to the Google email
-          const sendOtpResp = await googleAuth(authResult.code, true)
-          toast.success('OTP sent to your Google email (check preview URL in response if using Ethereal)')
+          const sendOtpResp = await googleAuth(authResult.code, true);
+          toast.success(
+            "OTP sent to your Google email (check preview URL in response if using Ethereal)"
+          );
 
           // If server returned an Ethereal preview URL (local dev), show it to the user
           if (sendOtpResp.previewUrl) {
             // Show preview link so the developer/tester can open it
             // In production you would not show this
             // eslint-disable-next-line no-alert
-            alert(`Preview URL for OTP email:\n${sendOtpResp.previewUrl}`)
+            alert(`Preview URL for OTP email:\n${sendOtpResp.previewUrl}`);
           }
 
           // Prompt user to enter OTP (simple flow). You can replace with a modal form.
           // eslint-disable-next-line no-alert
-          const userOtp = window.prompt('Enter the OTP sent to your email:')
+          const userOtp = window.prompt("Enter the OTP sent to your email:");
           if (!userOtp) {
-            toast.error('OTP entry cancelled')
-            return
+            toast.error("OTP entry cancelled");
+            return;
           }
 
           // Verify OTP with backend
-          const verifyResp = await apiVerifyOTP(sendOtpResp.email, userOtp)
+          const verifyResp = await apiVerifyOTP(sendOtpResp.email, userOtp);
 
           // On success, server sets cookies; update client state
-          dispatch(authLogin(verifyResp.user))
-          localStorage.setItem('User', JSON.stringify(verifyResp.user))
-          toast.success(`Welcome, ${verifyResp.user.fullname || verifyResp.user.email}!`)
+          dispatch(authLogin(verifyResp.user));
+          localStorage.setItem("User", JSON.stringify(verifyResp.user));
+          toast.success(
+            `Welcome, ${verifyResp.user.fullname || verifyResp.user.email}!`
+          );
 
           if (window.opener) {
-            window.opener.postMessage('googleLoginSuccess', '*')
-            window.close()
+            window.opener.postMessage("googleLoginSuccess", "*");
+            window.close();
           } else {
-            modal?.close()
-            navigate('/')
+            modal?.close();
+            navigate("/");
           }
         }
       } catch (error) {
@@ -103,7 +102,7 @@ const Login = () => {
         toast.error("Google authentication failed!");
       }
     },
-    [navigate, authLogin]
+    [navigate, modal, dispatch]
   );
 
   const googleLogin = useGoogleLogin({
@@ -113,56 +112,53 @@ const Login = () => {
     ux_mode: "popup",
   });
 
-
-
-
-
-
   return (
-    <div className="flex justify-center items-center min-h-screen bg-gray-100">
-      <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-sm">
-        <h2 className="text-2xl font-bold mb-4 text-center">Login</h2>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <input
-            type="email"
-            name="email"
-            placeholder="Email"
-            value={formData.email}
-            onChange={handleChange}
-            required
-            className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:border-blue-500"
-          />
-          <input
-            type="password"
-            name="password"
-            placeholder="Password"
-            value={formData.password}
-            onChange={handleChange}
-            required
-            className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:border-blue-500"
-          />
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-gradient-to-r from-purple-600 to-yellow-400 text-white py-2 rounded hover:from-purple-500 hover:to-yellow-300 transition"
-          >
-            {loading ? "Logging in..." : "Login"}
-          </button>
-          <button
-            type="button"
-            onClick={googleLogin}
-            className="btn btn-outline w-80"
-          >
-            <img
-              src="https://cdn1.iconfinder.com/data/icons/google-s-logo/150/Google_Icons-09-1024.png"
-              alt="Google"
-              className="w-5 h-5 inline-block mr-2"
+    <CircusDecor>
+      <div className="flex justify-center items-center min-h-screen bg-gray-100">
+        <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-sm">
+          <h2 className="text-2xl font-bold mb-4 text-center">Login</h2>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <input
+              type="email"
+              name="email"
+              placeholder="Email"
+              value={formData.email}
+              onChange={handleChange}
+              required
+              className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:border-blue-500"
             />
-            Login with Google
-          </button>
-        </form>
+            <input
+              type="password"
+              name="password"
+              placeholder="Password"
+              value={formData.password}
+              onChange={handleChange}
+              required
+              className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:border-blue-500"
+            />
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-gradient-to-r from-purple-600 to-yellow-400 text-white py-2 rounded hover:from-purple-500 hover:to-yellow-300 transition"
+            >
+              {loading ? "Logging in..." : "Login"}
+            </button>
+            <button
+              type="button"
+              onClick={googleLogin}
+              className="btn btn-outline w-80"
+            >
+              <img
+                src="https://cdn1.iconfinder.com/data/icons/google-s-logo/150/Google_Icons-09-1024.png"
+                alt="Google"
+                className="w-5 h-5 inline-block mr-2"
+              />
+              Login with Google
+            </button>
+          </form>
+        </div>
       </div>
-    </div>
+    </CircusDecor>
   );
 };
 
