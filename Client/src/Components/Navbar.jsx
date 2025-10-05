@@ -3,8 +3,7 @@ import { Link, useLocation } from "react-router-dom"
 import { Menu, X, Home, User } from "lucide-react"
 import { useSelector, useDispatch } from "react-redux"
 import { useNavigate } from "react-router-dom"
-import { userLogout } from "../api"
-import { logout as logoutAction } from "../store/authSlice"
+import { performLogout } from "../store/authAction"
 import { toast } from "react-hot-toast"
 
 const Navbar = ({ sidebarOpen, setSidebarOpen }) => {
@@ -23,10 +22,9 @@ const Navbar = ({ sidebarOpen, setSidebarOpen }) => {
 
   const handleLogout = async () => {
     try {
-      await userLogout()
-      dispatch(logoutAction())
-      localStorage.removeItem('User')
-      toast.success('Logged out')
+      const ok = await dispatch(performLogout())
+      if (ok) toast.success('Logged out')
+      else toast.success('Logged out (client)')
       navigate('/')
     } catch (err) {
       console.error('Logout failed', err)
