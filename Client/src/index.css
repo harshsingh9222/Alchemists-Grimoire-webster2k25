@@ -1,3 +1,142 @@
+/* Import Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Bungee&family=Creepster&family=Kalam:wght@400;700&family=Fredoka:wght@300;400;600;700&display=swap');
+
+@import "tailwindcss";
+/* ---------------- Base Layer ---------------- */
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    @apply bg-slate-900 text-gray-100 antialiased;
+    font-family: 'Fredoka', system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  img, video, canvas, svg {
+    display: block;
+    max-width: 100%;
+    height: auto;
+  }
+
+  button, a, input, textarea, select {
+    touch-action: manipulation;
+  }
+}
+
+/* ---------------- Components Layer ---------------- */
+@layer components {
+  /* Smooth reusable animation wrapper */
+  .smooth-animation {
+    @apply transition-all duration-300 ease-out;
+    transform: translateZ(0);
+    will-change: transform;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    perspective: 1000px;
+  }
+
+  /* Card with hover lift */
+  .circus-card {
+    @apply rounded-xl transition-all duration-300;
+    transform: translateZ(0);
+    will-change: transform, box-shadow;
+  }
+  .circus-card:hover {
+    @apply shadow-2xl;
+    transform: translateY(-8px) translateZ(0);
+  }
+
+  /* Button with smooth scaling */
+  .circus-button {
+    @apply px-6 py-3 rounded-lg font-semibold transition-all duration-200;
+    transform: translateZ(0);
+    will-change: transform;
+  }
+  .circus-button:hover {
+    transform: scale(1.05) translateZ(0);
+  }
+  .circus-button:active {
+    transform: scale(0.98) translateZ(0);
+  }
+
+  /* Spinner */
+  .smooth-spin {
+    animation: spin 2s linear infinite;
+    transform: translateZ(0);
+    will-change: transform;
+  }
+
+  /* Marquee light */
+  .marquee-light {
+    @apply w-3 h-3 rounded-full bg-yellow-400;
+    animation: pulse 2s ease-in-out infinite;
+    will-change: transform, opacity;
+    transform: translateZ(0);
+  }
+}
+
+/* ---------------- Utilities Layer ---------------- */
+@layer utilities {
+  .gpu {
+    transform: translateZ(0);
+    will-change: transform;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+  }
+
+  .smooth-scroll {
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .no-tap-highlight {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Custom Scrollbar */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 12px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    @apply bg-slate-800;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    @apply bg-gradient-to-b from-yellow-400 to-red-500 rounded-md;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    @apply bg-gradient-to-b from-yellow-500 to-red-600;
+  }
+
+  /* Reduced Motion Support */
+  @media (prefers-reduced-motion: reduce) {
+    * {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+/* ---------------- Keyframes ---------------- */
+@keyframes spin {
+  from { transform: rotate(0deg) translateZ(0); }
+  to { transform: rotate(360deg) translateZ(0); }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 0.4;
+    transform: scale(0.9) translateZ(0);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.1) translateZ(0);
 @import "tailwindcss";
 
 @layer base {
