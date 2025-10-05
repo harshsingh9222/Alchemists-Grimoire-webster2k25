@@ -5,7 +5,6 @@ import {
   getCurrentUser,
   logoutUser,
   refreshAccessToken,
-  addMedicine,
   googleLogin,
   verifyOTP,
   resendOTP,
@@ -42,7 +41,7 @@ router.post("/send-otp", sendOTP)
 router.post("/verify-otp", verifyOTP)
 router.post("/resend-otp", resendOTP)
 
-router.post("/medicines", addMedicine);
+
 
 
 // Current user
