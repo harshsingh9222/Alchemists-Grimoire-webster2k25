@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { addMedicines, fetchMedicines } from "../api";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
+import { addMedicine , setMedicines } from "../store/medicineSlice";
+import { useNavigate } from "react-router-dom";
 
 const MedicineForm = () => {
   const { userData } = useSelector((state) => state.auth);
@@ -14,14 +16,13 @@ const MedicineForm = () => {
     endDate: "",
     notes: "",
   });
-  const [medicines, setMedicines] = useState([]);
+
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (userData?._id) {
       setUserId(userData._id);
-      fetchMedicines(userData._id)
-        .then((res) => setMedicines(res)) 
-        .catch((err) => console.error("Error fetching medicines", err));
     }
   }, [userData]);
 
@@ -40,18 +41,25 @@ const MedicineForm = () => {
     setFormData({ ...formData, times: [...formData.times, ""] });
   };
 
+
+  // here is the function for adding the medicne
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const payload = { ...formData}; // do not need to include the userId bcz when i am requesting it is will
-      // get the userId form the middleware
+      const payload = { ...formData };
 
+      // Save to backend
       const res = await addMedicines(payload);
       alert(res.message || "Medicine saved!");
 
-      const fetched = await fetchMedicines(); // ✅ refresh medicines
-      setMedicines(fetched);
-      console.log("Fetched Medicines->",fetched);
+      // Fetch updated medicines for user
+      const fetched = await fetchMedicines();
+
+      // Save in Redux
+      dispatch(setMedicines(fetched));
+
+      // Redirect to MyMedicines page
+      navigate("/myMedicines");
     } catch (error) {
       console.error(error);
       alert(error.message || "Error saving medicine");
@@ -150,21 +158,6 @@ const MedicineForm = () => {
           Save Medicine
         </button>
       </form>
-
-      <h2 className="text-2xl font-bold mt-8 mb-4 text-teal-400">📋 My Medicines</h2>
-      <ul className="bg-gray-800 p-4 rounded-xl w-full max-w-lg space-y-2">
-        {medicines.map((med) => (
-          <li
-            key={med._id}
-            className="bg-gray-700 p-3 rounded-lg shadow-sm flex justify-between"
-          >
-            <span>
-              <span className="font-semibold text-teal-300">{med.medicineName}</span> -{" "}
-              {med.dosage} ({med.frequency})
-            </span>
-          </li>
-        ))}
-      </ul>
     </div>
   );
 };

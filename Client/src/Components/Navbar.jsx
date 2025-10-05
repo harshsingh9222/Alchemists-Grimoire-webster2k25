@@ -3,8 +3,7 @@ import { Link, useLocation } from "react-router-dom"
 import { Menu, X, Home, User } from "lucide-react"
 import { useSelector, useDispatch } from "react-redux"
 import { useNavigate } from "react-router-dom"
-import { userLogout } from "../api"
-import { logout as logoutAction } from "../store/authSlice"
+import { performLogout } from "../store/authAction"
 import { toast } from "react-hot-toast"
 import CircusDecor from "./CircusDecor"
 import PropTypes from "prop-types";
@@ -25,10 +24,9 @@ const Navbar = ({ sidebarOpen, setSidebarOpen }) => {
 
   const handleLogout = async () => {
     try {
-      await userLogout()
-      dispatch(logoutAction())
-      localStorage.removeItem('User')
-      toast.success('Logged out')
+      const ok = await dispatch(performLogout())
+      if (ok) toast.success('Logged out')
+      else toast.success('Logged out (client)')
       navigate('/')
     } catch (err) {
       console.error('Logout failed', err)
@@ -81,7 +79,7 @@ const Navbar = ({ sidebarOpen, setSidebarOpen }) => {
 
             {/* Right (Login / Signup or Profile) */}
             <div className="flex items-center space-x-4">
-              {auth?.status && user ? (
+              {user ? (
                 <div className="flex items-center space-x-3">
                   {user.profilePic ? (
                     <img src={user.profilePic} alt="Profile" className="w-9 h-9 rounded-full object-cover" />

@@ -1,5 +1,4 @@
-// React import not required with new JSX runtime
-import { useState } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import { userLogin } from "../api";
@@ -139,7 +138,7 @@ const Login = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-gradient-to-r from-purple-600 to-yellow-400 text-white py-2 rounded hover:from-purple-500 hover:to-yellow-300 transition"
+              className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition"
             >
               {loading ? "Logging in..." : "Login"}
             </button>

@@ -12,6 +12,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
     { name: "About", path: "/about", icon: User },
     { name: "Calendar", path: "/calendar", icon: Calendar },
     { name: "Profile", path: "/profile", icon: Mail },
+    { name: "MEDS", path: "/medicine-form", icon: Settings },
   ]
 
   return (
