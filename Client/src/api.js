@@ -63,3 +63,46 @@ export const fetchMedicines = async () => {
   return fetchAPI("/medicines/fetchMedicines", "GET");
 };
 
+//////////////////
+
+// ✅ Google Authentication API Call
+export const googleAuth = async (code, requireOtp = false) => {
+  const q = requireOtp ? `?code=${code}&requireOtp=true` : `?code=${code}`
+  return fetchAPI(`/auth/google${q}`, "GET")
+}
+
+
+// ✅ Admin Login
+export const adminLogin = async (credentials) => {
+  return fetchAPI("/auth/admin/login", "POST", credentials)
+}
+
+// ✅ User Logout
+export const userLogout = async () => {
+  return fetchAPI("/auth/logout", "POST")
+}
+
+// ✅ Admin Signup
+export const adminSignup = async (formData) => {
+  return fetchAPI("/auth/admin/signup", "POST", formData, true)
+}
+
+// ✅ Send OTP
+export const sendOTP = async (email) => {
+  return fetchAPI("/auth/send-otp", "POST", { email })
+}
+
+// ✅ Verify OTP
+export const verifyOTP = async (email, otp) => {
+  return fetchAPI("/auth/verify-otp", "POST", { email, otp })
+}
+
+// ✅ Upload File (if needed)
+export const uploadFile = async (formData) => {
+  return fetchAPI("/upload", "POST", formData, true)
+}
+
+// ✅ Get User Profile
+export const getUserProfile = async () => {
+  return fetchAPI("/user/profile", "GET")
+}
