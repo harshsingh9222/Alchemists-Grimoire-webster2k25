@@ -62,5 +62,50 @@ const fetchMedicines = async (req, res) => {
   }
 };
 
+// this is the delete function of the medicine
+
+export const deleteMedicine = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user._id; // assuming you have auth middleware
+
+    const medicine = await Medicine.findOneAndDelete({ _id: id, userId });
+
+    if (!medicine) {
+      return res.status(404).json({ message: "Medicine not found or not authorized" });
+    }
+
+    res.json({ message: "Medicine deleted successfully", medicine });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+// here is the function for the edit mediciens
+
+export const updateMedicine = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user._id; // assuming auth middleware attaches user
+
+    const updates = req.body;
+
+    const medicine = await Medicine.findOneAndUpdate(
+      { _id: id, userId }, 
+      updates, 
+      { new: true, runValidators: true }
+    );
+
+    if (!medicine) {
+      return res.status(404).json({ message: "Medicine not found or not authorized" });
+    }
+
+    res.json({ message: "Medicine updated successfully", medicine });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
 
 export {addMedicine,fetchMedicines};

@@ -41,3 +41,11 @@ export const sendOTP = async (email) => request('/auth/send-otp', 'POST', { emai
 export const verifyOTP = async (email, otp) => request('/auth/verify-otp', 'POST', { email, otp });
 export const uploadFile = async (formData) => request('/upload', 'POST', formData, true);
 export const getUserProfile = async () => request('/user/profile', 'GET');
+export const deleteMedicine = async (id) => {
+  return request(`/medicines/deleteMedicine/${id}`, 'DELETE');
+};
+export const updateMedicine = async (id, updates) => {
+   return request(`/medicines/updateMedicine/${id}`, 'PUT', updates);
+};
+
+

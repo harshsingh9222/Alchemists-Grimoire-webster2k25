@@ -10,6 +10,7 @@ import CircusLandingPage from './Components/landing/CircusLandingPage.jsx';
 import Curtain from './Components/Curtain';
 import MyMedicines from './Pages/MyMedicines.jsx';
 import Dashboard from './Pages/Dashboard.jsx';
+import EditMedicine from './Pages/EditMedicines.jsx';
 
 function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -62,7 +63,7 @@ function App() {
             </MainLayout>
           }
         />
-
+         <Route path="/edit-medicine/:id" element={<EditMedicine />} />
         {/* Fallback: render home inside MainLayout for any unmatched /app paths */}
         <Route
           path="/app/*"

@@ -1,29 +1,34 @@
-import React, { useState, useEffect } from "react";
-import { addMedicines } from "../api";
-import { useSelector, useDispatch } from "react-redux";
-import { fetchMedicinesThunk } from "../store/medicineSlice"; 
-import { useNavigate } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { updateMedicine, fetchMedicines } from "../api";
+import { useDispatch } from "react-redux";
+import { fetchMedicinesThunk } from "../store/medicineSlice";
 
-const MedicineForm = () => {
-  const { userData } = useSelector((state) => state.auth);
-  const [formData, setFormData] = useState({
-    medicineName: "",
-    dosage: "",
-    frequency: "daily",
-    times: [""],
-    startDate: "",
-    endDate: "",
-    notes: "",
-  });
-
-  const dispatch = useDispatch();
+const EditMedicine = () => {
+  const { id } = useParams();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const [formData, setFormData] = useState(null);
 
+  // ✅ Load the medicine data for editing
   useEffect(() => {
-    if (!userData?._id) {
-      navigate("/login"); // redirect if not logged in
-    }
-  }, [userData, navigate]);
+    const load = async () => {
+      const all = await fetchMedicines();
+      const med = all.find((m) => m._id === id);
+      if (med) {
+        setFormData({
+          medicineName: med.medicineName || "",
+          dosage: med.dosage || "",
+          frequency: med.frequency || "daily",
+          times: med.times?.length ? med.times : [""],
+          startDate: med.startDate ? med.startDate.slice(0, 10) : "",
+          endDate: med.endDate ? med.endDate.slice(0, 10) : "",
+          notes: med.notes || "",
+        });
+      }
+    };
+    load();
+  }, [id]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -40,22 +45,28 @@ const MedicineForm = () => {
     setFormData({ ...formData, times: [...formData.times, ""] });
   };
 
-  // ✅ Add medicine then refresh store
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await addMedicines(formData); // save to backend
-      await dispatch(fetchMedicinesThunk()); // refresh Redux store
-      navigate("/myMedicines"); // redirect
-    } catch (error) {
-      console.error(error);
-      alert(error.message || "Error saving medicine");
+      await updateMedicine(id, formData);
+      await dispatch(fetchMedicinesThunk());
+      navigate("/myMedicines");
+    } catch (err) {
+      console.error(err);
+      alert("Failed to update medicine");
     }
   };
 
+  if (!formData)
+    return (
+      <div className="min-h-screen flex items-center justify-center text-gray-300">
+        Loading...
+      </div>
+    );
+
   return (
     <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center py-10">
-      <h1 className="text-3xl font-bold mb-6 text-teal-400">💊 Medicine Tracker</h1>
+      <h1 className="text-3xl font-bold mb-6 text-teal-400">✏️ Edit Medicine</h1>
 
       <form
         onSubmit={handleSubmit}
@@ -142,18 +153,19 @@ const MedicineForm = () => {
           type="submit"
           className="w-full bg-teal-600 hover:bg-teal-500 p-3 rounded-lg font-bold text-lg"
         >
-          Save Medicine
+          💾 Save Changes
         </button>
       </form>
+
       <button
-          type="button"
-          onClick={() => navigate("/myMedicines")}
-          className="w-full bg-teal-600 hover:bg-teal-500 p-3 rounded-lg font-bold text-lg"
-        >
-          📋 Go to My Medicines
-        </button>
+        type="button"
+        onClick={() => navigate("/myMedicines")}
+        className="mt-4 w-full max-w-lg bg-gray-700 hover:bg-gray-600 p-3 rounded-lg font-bold text-lg"
+      >
+        📋 Back to My Medicines
+      </button>
     </div>
   );
 };
 
-export default MedicineForm;
+export default EditMedicine;
