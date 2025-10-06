@@ -1,107 +1,43 @@
-// API Configuration
-const API_BASE_URL = "http://localhost:8000"
+import { axiosInstance } from './Utils/axios.helper';
 
-// ✅ Helper function to make requests with proper error handling
-const fetchAPI = async (endpoint, method = "GET", data = null, isFormData = false) => {
+// Small helper to decide headers and format body for axios
+const request = async (endpoint, method = 'GET', data = null, isFormData = false) => {
   try {
-    const options = {
+    const config = {
+      url: endpoint,
       method,
-      credentials: "include", // ✅ Allows sending and receiving cookies
-    }
-
-    // Set headers only if not FormData (FormData sets its own boundary)
-    if (!isFormData) {
-      options.headers = {
-        "Content-Type": "application/json",
-      }
-    }
+      withCredentials: true
+    };
 
     if (data) {
       if (isFormData) {
-        options.body = data // FormData object
+        config.data = data;
+        // Let browser set correct multipart boundary
+        config.headers = { 'Content-Type': 'multipart/form-data' };
       } else {
-        options.body = JSON.stringify(data)
+        config.data = data;
       }
     }
 
-    console.log(`Making ${method} request to: ${API_BASE_URL}${endpoint}`)
-
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, options)
-
-    console.log(`Response status: ${response.status}`)
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}))
-      throw new Error(errorData.message || `HTTP Error: ${response.status} ${response.statusText}`)
-    }
-
-    return response.json()
-  } catch (error) {
-    console.error(`API Error for ${endpoint}:`, error)
-    throw error
+    const res = await axiosInstance.request(config);
+    return res.data;
+  } catch (err) {
+    // Normalize axios error
+    const message = err.response?.data?.message || err.message || 'API Error';
+    console.error(`API Error [${method} ${endpoint}]:`, message);
+    throw err;
   }
-}
-
-// ✅ User Signup
-export const userSignup = async (formData) => {
-  return fetchAPI("/auth/register", "POST", formData, false)
-}
-
-// ✅ User Login
-export const userLogin = async (formData) => {
-  return fetchAPI("/auth/login", "POST", formData, false) // send JSON
-}
-
-
-// for setting the medicines
-export const addMedicines = async (formData) =>{
-  return fetchAPI("/medicines/addMedicines","POST",formData,false);
-}
-
-// this is for the fetching the medicines
-export const fetchMedicines = async () => {
-  return fetchAPI("/medicines/fetchMedicines", "GET");
 };
 
-
-// ✅ Google Authentication API Call
-export const googleAuth = async (code, requireOtp = false) => {
-  const q = requireOtp ? `?code=${code}&requireOtp=true` : `?code=${code}`
-  return fetchAPI(`/auth/google${q}`, "GET")
-}
-
-
-// ✅ Admin Login
-export const adminLogin = async (credentials) => {
-  return fetchAPI("/auth/admin/login", "POST", credentials)
-}
-
-// ✅ User Logout
-export const userLogout = async () => {
-  return fetchAPI("/auth/logout", "POST")
-}
-
-// ✅ Admin Signup
-export const adminSignup = async (formData) => {
-  return fetchAPI("/auth/admin/signup", "POST", formData, true)
-}
-
-// ✅ Send OTP
-export const sendOTP = async (email) => {
-  return fetchAPI("/auth/send-otp", "POST", { email })
-}
-
-// ✅ Verify OTP
-export const verifyOTP = async (email, otp) => {
-  return fetchAPI("/auth/verify-otp", "POST", { email, otp })
-}
-
-// ✅ Upload File (if needed)
-export const uploadFile = async (formData) => {
-  return fetchAPI("/upload", "POST", formData, true)
-}
-
-// ✅ Get User Profile
-export const getUserProfile = async () => {
-  return fetchAPI("/user/profile", "GET")
-}
+export const userSignup = async (formData) => request('/auth/register', 'POST', formData, false);
+export const userLogin = async (formData) => request('/auth/login', 'POST', formData, false);
+export const addMedicines = async (formData) => request('/medicines/addMedicines', 'POST', formData, false);
+export const fetchMedicines = async () => request('/medicines/fetchMedicines', 'GET');
+export const googleAuth = async (code, requireOtp = false) => request(`/auth/google?code=${encodeURIComponent(code)}${requireOtp ? '&requireOtp=true' : ''}`, 'GET');
+export const adminLogin = async (credentials) => request('/auth/admin/login', 'POST', credentials);
+export const userLogout = async () => request('/auth/logout', 'POST');
+export const adminSignup = async (formData) => request('/auth/admin/signup', 'POST', formData, true);
+export const sendOTP = async (email) => request('/auth/send-otp', 'POST', { email });
+export const verifyOTP = async (email, otp) => request('/auth/verify-otp', 'POST', { email, otp });
+export const uploadFile = async (formData) => request('/upload', 'POST', formData, true);
+export const getUserProfile = async () => request('/user/profile', 'GET');

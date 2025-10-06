@@ -2,19 +2,11 @@
 import 'dotenv/config';
 import { app } from "./app.js";
 import { connectDB } from "./DB/connectDB.js";
-import userRouter from './Routes/user.Routes.js';
-import medicineRouter from "./Routes/medicine.Router.js";
+// Routers are registered in app.js to keep app configuration centralized
 
 console.log("Loaded MONGODB_URI =", process.env.MONGODB_URI);
 
 const PORT = process.env.PORT || 8000;
-
-// Routes
-app.get('/', (req, res) => {
-  res.send('Hello, World');
-});
-app.use('/auth', userRouter);
-app.use('/medicines', medicineRouter);
 
 // Start server function
 const startServer = async () => {

@@ -2,6 +2,7 @@
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import userRouter from './Routes/user.Routes.js';
+import medicineRouter from './Routes/medicine.Router.js';
 
 const app = express();
 
@@ -41,6 +42,8 @@ app.get('/api', (req, res) => {
 
 // Auth routes
 app.use('/auth', userRouter);
+// Medicines routes
+app.use('/medicines', medicineRouter);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
