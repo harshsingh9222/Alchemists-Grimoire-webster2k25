@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import dotenv from "dotenv";
+import { DB_NAME } from "../constants.js";
 import Medicine from "../Models/medicineModel.js";
 import DoseLog from "../Models/doseLogModel.js";
 import WellnessScore from "../Models/wellnessScoreModel.js";
@@ -7,16 +8,22 @@ import { createDoseLogsForMedicine } from "../Utils/doseLogCreater.js";
 
 dotenv.config();
 
-// Connect to database
-const connectDB = async () => {
-  try {
-    await mongoose.connect(`${process.env.MONGODB_URI}/alchemists_grimoire`);
-    console.log("📊 Connected to MongoDB for data initialization");
-  } catch (error) {
-    console.error("❌ Database connection failed:", error);
-    process.exit(1);
+// Helper: ensure database connection. If mongoose is already connected (e.g. server start), reuse it.
+const ensureConnected = async () => {
+  if (mongoose.connection.readyState === 1) {
+    console.log('initializeUserData: mongoose already connected, reusing connection')
+    return { connected: false }
   }
-};
+
+  try {
+    await mongoose.connect(`${process.env.MONGODB_URI}/${DB_NAME}`)
+    console.log('initializeUserData: connected to MongoDB for data initialization')
+    return { connected: true }
+  } catch (err) {
+    console.error('initializeUserData: failed to connect to DB:', err)
+    throw err
+  }
+}
 
 // Initialize dose logs for existing medicines
 const initializeDoseLogs = async (userId) => {
@@ -143,15 +150,24 @@ const initializeWellnessScores = async (userId) => {
 
 // Main initialization function
 export const initializeUserData = async (userId) => {
+  let connInfo = null
   try {
-    await connectDB();
+    connInfo = await ensureConnected();
     await initializeDoseLogs(userId);
     await initializeWellnessScores(userId);
     console.log("🎉 Data initialization completed successfully!");
   } catch (error) {
     console.error("❌ Data initialization failed:", error);
   } finally {
-    await mongoose.disconnect();
+    // Only disconnect if this script opened a fresh connection
+    try {
+      if (connInfo && connInfo.connected) {
+        await mongoose.disconnect();
+        console.log('initializeUserData: disconnected DB after initialization')
+      }
+    } catch (e) {
+      // if we didn't start the connection, do not close it
+    }
   }
 };
 
