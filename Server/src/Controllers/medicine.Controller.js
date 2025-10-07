@@ -1,13 +1,18 @@
 import Medicine from "../Models/medicineModel.js";
 import User from "../Models/user.models.js";
 import DoseLog from "../Models/doseLogModel.js";
-import { createDoseLogsForMedicine } from "../Utils/doseLogCreater.js";
+import { createDoseLogsForMedicine } from "../Utils/doseLogCreater.js";import { createCalendarEventForUser } from "../Utils/googleCalendar.js"
+
 
 const addMedicine = async (req, res) => {
   try {
     console.log("in AddMe->", req.body);
     const { medicineName, dosage, frequency, times, startDate, endDate, notes } = req.body;
-    const userId = req.user._id;
+    // Ensure auth middleware attached user
+    if (!req.user) {
+      return res.status(401).json({ message: 'Unauthorized - user missing from request' })
+    }
+    const userId = req.userId || req.user._id;
     console.log("In Addmedincines user->", userId);
 
     if (!medicineName || !dosage || !frequency || !times?.length) {
@@ -16,8 +21,11 @@ const addMedicine = async (req, res) => {
 
     const user = await User.findById(userId);
     if (!user) {
+      console.log("user not found in add medicines");
       return res.status(404).json({ message: "User not found" });
     }
+    else console.log("user found in add medicines:", user._id);
+    
 
     // Create the medicine
     const newMedicine = new Medicine({
@@ -32,6 +40,42 @@ const addMedicine = async (req, res) => {
     });
 
     await newMedicine.save();
+
+    // Try to create a Google Calendar event for this medicine if the user has connected Google
+    try {
+      const eventPayload = {
+        summary: `Medicine: ${medicineName}`,
+        description: notes || `Dosage: ${dosage} | Frequency: ${frequency}`,
+        start: {
+          // Use startDate as the base; Google requires dateTime or date depending on all-day events
+          dateTime: new Date(startDate).toISOString(),
+          timeZone: 'UTC'
+        },
+        end: {
+          dateTime: new Date(startDate).toISOString(),
+          timeZone: 'UTC'
+        },
+        // Optionally create reminders
+        reminders: {
+          useDefault: false,
+          overrides: [
+            { method: 'popup', minutes: 10 }
+          ]
+        }
+      }
+
+      const calendarResult = await createCalendarEventForUser(userId, eventPayload)
+      if (calendarResult?.success && calendarResult?.eventId) {
+        newMedicine.googleEventId = calendarResult.eventId
+        newMedicine.googleCalendarCreatedAt = new Date()
+        await newMedicine.save()
+        console.log('Google Calendar event created with id:', calendarResult.eventId)
+      } else {
+        console.log('Google Calendar event not created:', calendarResult?.error)
+      }
+    } catch (err) {
+      console.error('Error while creating Google Calendar event for medicine:', err)
+    }
 
     // 🎯 IMPORTANT: Create dose logs for the next 30 days
     await createDoseLogsForMedicine(newMedicine, userId);

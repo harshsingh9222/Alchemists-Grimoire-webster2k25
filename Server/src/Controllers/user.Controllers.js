@@ -9,6 +9,7 @@ import nodemailer from 'nodemailer'
 import crypto from 'crypto'
 import oauth2Client from "../Utils/googleConfig.js"
 import axios from "axios"
+import { createCalendarEventForUser } from '../Utils/googleCalendar.js'
 
 const options = {
     httpOnly: true,
@@ -59,7 +60,10 @@ const googleLogin = async (req, res) => {
     const { tokens } = await oauth2Client.getToken(code)
     oauth2Client.setCredentials(tokens)
 
-    console.log("Tokens received from Google")
+  // Log which token fields were returned (do not log full token values in production)
+  console.log("Tokens received from Google. Keys:", Object.keys(tokens || {}))
+    // Log requested/granted scopes
+    console.log('tokens.scope:', tokens?.scope)
 
     // Fetch user info from Google
     const userRes = await axios.get(
@@ -73,6 +77,27 @@ const googleLogin = async (req, res) => {
     // and return early (the verifyOTP endpoint will finish login).
     if (req.query?.requireOtp === 'true') {
       console.log('googleLogin: requireOtp=true, sending OTP to', email)
+      // Ensure user exists and persist Google refresh token so Calendar calls can work later
+      let user = await User.findOne({ email })
+      if (!user) {
+        console.log("Creating new user (OTP flow) from Google OAuth")
+        user = await User.create({
+          username: name,
+          email,
+          provider: 'google',
+          profilePic: picture
+        })
+      }
+
+      // Persist refresh token if provided
+      if (tokens?.refresh_token) {
+        user.google = user.google || {}
+        user.google.refreshToken = tokens.refresh_token
+        if (userRes.data?.id) user.google.id = userRes.data.id
+        await user.save()
+        console.log('Persisted google refresh token for user (OTP flow)')
+      }
+
       // Reuse sendOTP implementation by calling it with a fake req object
       await sendOTP({ body: { email } }, res)
       return
@@ -99,6 +124,13 @@ const googleLogin = async (req, res) => {
     if (!user.username) {
       user.username = email.split('@')[0]
     }
+    // If Google returned a refresh_token, persist it to the user record for later Calendar API calls
+    if (tokens?.refresh_token) {
+      user.google = user.google || {}
+      user.google.refreshToken = tokens.refresh_token
+      // also persist the googleId if available
+      if (userRes.data?.id) user.google.id = userRes.data.id
+    }
     await user.save()
 
     // Generate access and refresh tokens consistent with other flows
@@ -107,12 +139,16 @@ const googleLogin = async (req, res) => {
     await initializeUserData(user._id);
 
     // Set cookies same as register/login flows
+    const calendarScopeGranted = !!(tokens?.scope && tokens.scope.includes('https://www.googleapis.com/auth/calendar.events'))
+    if (!calendarScopeGranted) console.warn('Google login: calendar scope NOT granted. To create calendar events, re-consent with calendar scope (prompt=consent).')
+
     res
       .status(200)
       .cookie("accessToken", accessToken, options)
       .cookie("refreshToken", refreshToken, options)
       .json({
         message: "Login successful",
+        calendarScopeGranted,
         user: {
           _id: user._id,
           fullname: user.fullname,
@@ -497,7 +533,41 @@ const getCurrentUser = async (req, res) => {
 };
 
 
+// Debug controller: try to create a minimal calendar event for the current user and return helper result
+const testCreateGoogleEvent = async (req, res) => {
+  try {
+    const user = req.user
+    if (!user) return res.status(401).json({ message: 'Unauthorized' })
+
+    const payload = {
+      summary: 'Test event from server',
+      description: 'Diagnostic event',
+      start: { dateTime: new Date().toISOString(), timeZone: 'UTC' },
+      end: { dateTime: new Date(new Date().getTime() + 15 * 60000).toISOString(), timeZone: 'UTC' }
+    }
+
+    const result = await createCalendarEventForUser(user, payload)
+    return res.status(200).json({ result })
+  } catch (err) {
+    console.error('testCreateGoogleEvent error:', err)
+    return res.status(500).json({ message: 'Internal error', error: String(err) })
+  }
+}
 
 
+export { testCreateGoogleEvent, getGoogleClientInfo, googleLogin, sendOTP, verifyOTP,resendOTP,registerUser, localLogin, getCurrentUser, logoutUser, refreshAccessToken };
 
-export { googleLogin, sendOTP, verifyOTP,resendOTP,registerUser, localLogin, getCurrentUser, logoutUser, refreshAccessToken };
+// Debug: return Google OAuth client info (client id and redirect URI) to confirm server config
+const getGoogleClientInfo = async (req, res) => {
+  try {
+    return res.status(200).json({
+      clientId: process.env.GOOGLE_CLIENT_ID || null,
+      redirectUri: process.env.GOOGLE_REDIRECT_URI || null,
+      project: process.env.GOOGLE_PROJECT || null
+    })
+  } catch (err) {
+    return res.status(500).json({ error: 'Failed to read client info' })
+  }
+}
+
+

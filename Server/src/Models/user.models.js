@@ -42,6 +42,11 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: null
   },
+  // Google specific data (store refresh token for Calendar API use)
+  google: {
+    refreshToken: { type: String, default: null },
+    id: { type: String, default: null }
+  },
 }, { timestamps: true });
 
 userSchema.pre('save', async function (next) {
