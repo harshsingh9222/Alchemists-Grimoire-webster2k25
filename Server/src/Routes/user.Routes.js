@@ -42,7 +42,7 @@ router.get("/google", googleLogin)
 router.post("/send-otp", sendOTP)
 router.post("/verify-otp", verifyOTP)
 router.post("/resend-otp", resendOTP)
-
+router.route('/current-user').get(verifyJWT, getCurrentUser);
 
 
 

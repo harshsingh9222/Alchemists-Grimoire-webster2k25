@@ -12,9 +12,34 @@ import MyMedicines from './Pages/MyMedicines.jsx';
 import Dashboard from './Pages/Dashboard.jsx';
 import EditMedicine from './Pages/EditMedicines.jsx';
 import DoseTrackerPage from './Pages/DoseTrackerPage.jsx';
+import { useEffect } from 'react';
+import { useDispatch,useSelector } from 'react-redux';
+import { getCurrentUser } from './Hooks/getCurrentUser.js';
 
 function App() {
+  const dispatch = useDispatch();
+  const authStatus = useSelector(state => state.auth.status);
+  const userData = useSelector(state => state.auth.userData);
+  const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  console.log("Auth Status:", authStatus);
+  useEffect(() => {
+    getCurrentUser(dispatch)
+    .finally(() => setLoading(false));
+  },[authStatus,dispatch]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-green-500 border-solid mx-auto mb-4"></div>
+          <p className="text-lg text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
 
   return (
     <>

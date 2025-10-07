@@ -520,6 +520,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
 
 })
 
+// this is for the current user
 const getCurrentUser = async (req, res) => {
     if (!req.user) {
         return res.status(401).json({ message: "Unauthorized" });
@@ -553,6 +554,8 @@ const testCreateGoogleEvent = async (req, res) => {
     return res.status(500).json({ message: 'Internal error', error: String(err) })
   }
 }
+
+
 
 
 export { testCreateGoogleEvent, getGoogleClientInfo, googleLogin, sendOTP, verifyOTP,resendOTP,registerUser, localLogin, getCurrentUser, logoutUser, refreshAccessToken };
