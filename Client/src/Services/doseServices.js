@@ -37,6 +37,12 @@ export const doseService = {
     return res.data;
   },
 
+  // Check pending doses (server will mark overdue pending doses as missed)
+  checkPendingDoses: async () => {
+    const res = await axiosInstance.post('/doses/check-pending');
+    return res.data;
+  },
+
   // Medicines
   getMedicines: async () => {
     // backend uses /medicines/fetchMedicines for list

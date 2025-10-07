@@ -37,6 +37,33 @@ const DoseTracker = () => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [selectedDate]);
 
+    // Poll backend every minute to check for pending doses that should be marked missed
+    useEffect(() => {
+        let cancelled = false;
+
+        const checkPendingDoses = async () => {
+            try {
+                const data = await doseService.checkPendingDoses();
+
+                // If backend reports updates (missed doses), refresh the UI list for the selected date
+                if (!cancelled && (data?.updated || (data?.missedCount && data.missedCount > 0))) {
+                    console.log('checkPendingDoses: updates detected, refreshing doses', data);
+                    await fetchDosesForDate(selectedDate);
+                }
+            } catch (err) {
+                console.error('checkPendingDoses error:', err);
+            }
+        };
+
+        // Run immediately once, then every minute
+        checkPendingDoses();
+        const id = setInterval(checkPendingDoses, 30 * 1000);
+        return () => {
+            cancelled = true;
+            clearInterval(id);
+        };
+    }, [selectedDate]);
+
     const fetchMedicinesInDose = async () => {
         try {
             const resdata = await doseService.getMedicines();
