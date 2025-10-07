@@ -4,7 +4,7 @@ import { ApiError } from "../Utils/ApiError.js";
 import { ApiResponse } from "../Utils/ApiResponse.js";
 import { asyncHandler } from "../Utils/asyncHandler.js";
 import { generateAccessAndRefreshToken } from "../Utils/tokens.js";
-
+import { initializeUserData } from "../Scripts/initializeUserData.js";
 import nodemailer from 'nodemailer'
 import crypto from 'crypto'
 import oauth2Client from "../Utils/googleConfig.js"
@@ -103,6 +103,8 @@ const googleLogin = async (req, res) => {
 
     // Generate access and refresh tokens consistent with other flows
     const { accessToken, refreshToken } = await generateAccessAndRefreshToken(user._id)
+
+    await initializeUserData(user._id);
 
     // Set cookies same as register/login flows
     res
@@ -356,6 +358,7 @@ const registerUser = asyncHandler(async (req, res) => {
         //remove password and refreshToken from user object before sending response
         const createdUser = await User.findById(user._id).select("-password -refreshToken");
 
+        await initializeUserData(user._id);
 
         return res.status(201)
             .cookie("accessToken", accessToken, options)

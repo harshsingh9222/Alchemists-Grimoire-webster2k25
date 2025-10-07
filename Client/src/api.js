@@ -47,5 +47,9 @@ export const deleteMedicine = async (id) => {
 export const updateMedicine = async (id, updates) => {
    return request(`/medicines/updateMedicine/${id}`, 'PUT', updates);
 };
+export const fetchDoses = async (date) => {
+  const dateStr = date.toISOString().split('T')[0];
+  return request(`/doses/by-date?date=${dateStr}`, 'GET');
+};
 
 

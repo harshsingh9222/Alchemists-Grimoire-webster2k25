@@ -11,6 +11,7 @@ import Curtain from './Components/Curtain';
 import MyMedicines from './Pages/MyMedicines.jsx';
 import Dashboard from './Pages/Dashboard.jsx';
 import EditMedicine from './Pages/EditMedicines.jsx';
+import DoseTrackerPage from './Pages/DoseTrackerPage.jsx';
 
 function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -35,7 +36,14 @@ function App() {
           }
         />
 
-        
+        <Route
+          path="/dose-tracker"
+          element={
+            <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen}>
+              <DoseTrackerPage />
+            </MainLayout>
+          }
+        />
 
         <Route
           path="/medicine-form"

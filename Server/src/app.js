@@ -3,6 +3,10 @@ import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import userRouter from './Routes/user.Routes.js';
 import medicineRouter from './Routes/medicine.Router.js';
+import dashboardRoutes from "./Routes/dashboad.Routes.js";
+import doseScheduler from "./schedulers/doseSchedulers.js";
+import wellnessRoutes from './Routes/wellness.Routes.js';
+import doseRoutes from './Routes/dose.Route.js';
 
 const app = express();
 
@@ -45,6 +49,15 @@ app.use('/auth', userRouter);
 // Medicines routes
 app.use('/medicines', medicineRouter);
 
+// Dashboard routes
+app.use('/dashboard', dashboardRoutes);
+
+// Wellness routes
+app.use('/wellness', wellnessRoutes);
+
+// Dose routes
+app.use('/doses', doseRoutes);
+
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);
@@ -54,4 +67,5 @@ app.use((err, req, res, next) => {
   });
 });
 
+doseScheduler.init();  
 export { app };
