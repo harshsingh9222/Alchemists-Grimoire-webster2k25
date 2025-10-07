@@ -15,6 +15,7 @@ import DoseTrackerPage from './Pages/DoseTrackerPage.jsx';
 import { useEffect } from 'react';
 import { useDispatch,useSelector } from 'react-redux';
 import { getCurrentUser } from './Hooks/getCurrentUser.js';
+import About from './Pages/About.jsx';
 
 function App() {
   const dispatch = useDispatch();
@@ -50,6 +51,7 @@ function App() {
         <Route path="/circus" element={<CircusLandingPage />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
+        <Route path="/about" element={<About />} />
 
         {/* App routes wrapped with MainLayout so Navbar/Sidebar/Footer appear */}
         <Route
@@ -60,6 +62,7 @@ function App() {
             </MainLayout>
           }
         />
+
 
         <Route
           path="/dose-tracker"
