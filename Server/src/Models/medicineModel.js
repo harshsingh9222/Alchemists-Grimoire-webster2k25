@@ -37,6 +37,15 @@ const medicineSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
+    // Google calendar event id (if created)
+    googleEventId: {
+      type: String,
+      default: null,
+    },
+    googleCalendarCreatedAt: {
+      type: Date,
+      default: null,
+    },
   },
   { timestamps: true }
 );

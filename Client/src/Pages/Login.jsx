@@ -109,6 +109,14 @@ const Login = () => {
     onError: responseGoogle,
     flow: "auth-code",
     ux_mode: "popup",
+    // Request offline access and calendar scopes so server receives a refresh_token
+    // include_granted_scopes helps retain previously granted scopes
+    scope: 'openid profile email https://www.googleapis.com/auth/calendar.events',
+    authorizationParams: {
+      access_type: 'offline',
+      prompt: 'consent',
+      include_granted_scopes: 'true'
+    }
   });
 
   return (

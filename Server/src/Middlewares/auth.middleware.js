@@ -27,6 +27,8 @@ export const verifyJWT = asyncHandler(async (req, res, next) => {
         }
 
         req.user = user;
+    // convenience: attach userId directly for handlers that expect it
+    req.userId = user?._id;
         next();
     } catch (error) {
         console.error("Error while verifying token:", error.message);
