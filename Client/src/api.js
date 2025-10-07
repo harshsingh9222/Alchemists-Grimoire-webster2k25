@@ -52,4 +52,8 @@ export const fetchDoses = async (date) => {
   return request(`/doses/by-date?date=${dateStr}`, 'GET');
 };
 
+export const getUser = async ()=>{
+  return request('/auth/current-user', 'GET');
+}
+
 
