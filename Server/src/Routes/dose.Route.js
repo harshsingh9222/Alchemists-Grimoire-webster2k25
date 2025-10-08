@@ -3,18 +3,26 @@ import { verifyJWT } from "../Middlewares/auth.middleware.js";
 import {
   getDosesByDate,
   updateDoseStatus,
-  getDoseHistory
+  getDoseHistory,
 } from "../Controllers/dose.Controller.js";
+
+import {
+  getDailyDoseSummary, 
+} from "../Controllers/doseLogController.js";
 
 const router = Router();
 
-// All routes require authentication
+
 router.use(verifyJWT);
 
-// Dose routes
+
 router.get("/by-date", getDosesByDate);
 router.get("/history", getDoseHistory);
 router.post("/update", updateDoseStatus);
-router.post("/skip", updateDoseStatus); // Same handler, status comes from body
+router.post("/skip", updateDoseStatus); 
+
+// ===================== Dose Log Summary ===================== //
+
+router.get("/summary", getDailyDoseSummary);
 
 export default router;

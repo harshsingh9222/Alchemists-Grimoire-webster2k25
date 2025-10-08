@@ -3,7 +3,14 @@ import { axiosInstance } from '../Utils/axios.helper';
 export const doseService = {
   // Fetch doses by date
   getDosesByDate: async (date) => {
-    const dateStr = date.toISOString().split('T')[0];
+    // Build a local YYYY-MM-DD string to avoid UTC shift from toISOString()
+    const pad = (n) => String(n).padStart(2, '0');
+    const year = date.getFullYear();
+    const month = pad(date.getMonth() + 1); // 0-indexed
+    const day = pad(date.getDate());
+    const dateStr = `${year}-${month}-${day}`;
+    console.log("Fetching doses for date (local):", dateStr);
+
     const res = await axiosInstance.get('/doses/by-date', { params: { date: dateStr } });
     // Normalize to an array so callers can safely map
     return res.data?.doses ?? res.data ?? [];
