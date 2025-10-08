@@ -13,18 +13,23 @@ const DoseSummaryCard = ({ time, medicines }) => {
       </div>
 
       <ul className="space-y-2">
-        {medicines.map((med, i) => (
-          <li
-            key={i}
-            className="flex items-center gap-2 text-purple-200 bg-purple-950/50 p-2 rounded-lg"
-          >
-            <Pill className="w-4 h-4 text-pink-400" />
-            <span>{med.name}</span>
-            <span className="text-purple-400 text-sm ml-auto">
-              {med.status}
-            </span>
-          </li>
-        ))}
+        {medicines.map((med, i) => {
+          const isMissed = med.status === 'missed';
+          return (
+            <li
+              key={i}
+              className={`flex items-center gap-2 text-purple-200 p-2 rounded-lg ${
+                isMissed ? 'bg-red-900/50 border border-red-600/30 text-red-200' : 'bg-purple-950/50'
+              }`}
+            >
+              <Pill className={`w-4 h-4 ${isMissed ? 'text-red-400' : 'text-pink-400'}`} />
+              <span className={isMissed ? 'line-through opacity-80' : ''}>{med.name}</span>
+              <span className={`text-sm ml-auto ${isMissed ? 'text-red-200' : 'text-purple-400'}`}>
+                {med.status}
+              </span>
+            </li>
+          );
+        })}
       </ul>
     </div>
   );
