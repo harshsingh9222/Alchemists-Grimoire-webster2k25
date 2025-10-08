@@ -13,27 +13,40 @@ export const getDosesByDate = asyncHandler(async (req, res) => {
   const { date } = req.query;
   const userId = req.user._id;
   
-  if (!date) {
-    throw new ApiError(400, "Date is required");
-  }
-  
-  // Parse the date and set time boundaries
-  const startDate = new Date(date);
-  startDate.setHours(0, 0, 0, 0);
-  
-  const endDate = new Date(date);
-  endDate.setHours(23, 59, 59, 999);
+  console.log("Requested date for doses:", date);
+    if (!date) {
+      throw new ApiError(400, 'Date is required');
+    }
+
+    // Parse YYYY-MM-DD into local start and end Date objects (start inclusive, end exclusive)
+    // This avoids timezone shifts when clients send local dates.
+    const parts = date.split('-').map(Number);
+    if (parts.length !== 3) throw new ApiError(400, 'Date must be in YYYY-MM-DD format');
+    const [year, month, day] = parts;
+
+    // Local midnight for start
+    const startDate = new Date(year, month - 1, day, 0, 0, 0, 0);
+    // Next day local midnight for exclusive end
+    const endDate = new Date(startDate);
+    endDate.setDate(endDate.getDate() + 1);
+
+    // Debug logging to help troubleshoot off-by-one issues
+    console.log('getDosesByDate - user:', String(userId), 'search between', startDate.toISOString(), 'and', endDate.toISOString());
   
   // Check if dose logs exist for this date, if not create them
   const existingLogs = await DoseLog.find({
     userId,
-    scheduledTime: { $gte: startDate, $lte: endDate }
+    scheduledTime: { $gte: startDate, $lt: endDate }
   });
+
+  console.log(`Existing dose logs for ${date}:`, existingLogs);
   
   // If no logs exist and date is today or future, create them
-  if (existingLogs.length === 0 && startDate >= new Date().setHours(0, 0, 0, 0)) {
-    await createDoseLogsForDate(userId, startDate);
-  }
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    if (existingLogs.length === 0 && startDate >= todayStart) {
+      await createDoseLogsForDate(userId, startDate);
+    }
   
   // Fetch dose logs with medicine details
   const doses = await DoseLog.find({
@@ -59,6 +72,8 @@ export const getDosesByDate = asyncHandler(async (req, res) => {
     status: dose.status,
     notes: dose.notes
   }));
+
+  console.log("Doses from the today Doses callling->", formattedDoses);
   
   return res.status(200).json(
     new ApiResponse(200, formattedDoses, "Doses retrieved successfully")

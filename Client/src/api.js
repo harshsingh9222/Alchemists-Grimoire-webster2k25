@@ -52,8 +52,11 @@ export const fetchDoses = async (date) => {
   return request(`/doses/by-date?date=${dateStr}`, 'GET');
 };
 
-export const getUser = async ()=>{
+export const getUser = async ()=> {
   return request('/auth/current-user', 'GET');
-}
+};
 
-
+export const fetchDoseSummary = async (date) => {
+  const dateStr = date.toISOString().split('T')[0];
+  return request(`/doses/summary?date=${dateStr}`, 'GET');
+};

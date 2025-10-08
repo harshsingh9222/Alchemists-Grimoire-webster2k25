@@ -162,7 +162,7 @@ export const deleteMedicine = async (req, res) => {
     // 🎯 IMPORTANT: Delete all future dose logs for this medicine
     await DoseLog.deleteMany({
       medicineId: id,
-      status: 'pending',
+      status: 'pending', 
       scheduledTime: { $gte: new Date() }
     });
 
