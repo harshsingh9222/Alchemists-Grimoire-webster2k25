@@ -27,7 +27,8 @@
     "multer": "^2.0.2",
     "multer-storage-cloudinary": "^4.0.0",
     "node-cron": "^4.2.1",
-    "nodemailer": "^7.0.6"
+    "nodemailer": "^7.0.6",
+    "openai": "^6.2.0"
   },
   "devDependencies": {
     "nodemon": "^3.1.10",

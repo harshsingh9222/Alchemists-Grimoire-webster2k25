@@ -3,6 +3,8 @@ import { Link, useLocation } from "react-router-dom"
 import { Home, User, Calendar, Mail, X } from 'lucide-react'
 // ...existing code...
 import PropTypes from "prop-types";
+import { MessageSquare } from "lucide-react";
+
 
 const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
   const location = useLocation()
@@ -14,7 +16,8 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
     { name: "Calendar", path: "/calendar", icon: Calendar },
     { name: "MEDS", path: "/medicine-form", icon: Calendar },
     { name: "Dose Tracker", path: "/dose-tracker", icon: Calendar },
-  ]
+    { name: "Chatty Chat", path: "/chat-bot", icon: MessageSquare },
+  ];
 
   return (
       <>

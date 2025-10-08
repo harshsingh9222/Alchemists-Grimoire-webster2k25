@@ -403,3 +403,77 @@ const updateDailyAdherence = async (userId) => {
     { upsert: true }
   );
 };
+
+// ========================================
+// controllers/doseController.js
+// ========================================
+
+/**
+ * Get user dose data summary for chatbot
+ * This function will return:
+ * - Recent 7 days of doses
+ * - Count of taken, missed, and pending doses
+ * - List of upcoming doses
+ */
+export const getUserDoseData = async (userId) => {
+  try {
+    // 1️⃣ Fetch last 7 days of dose logs
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - 7);
+
+    const recentLogs = await DoseLog.find({
+      userId,
+      scheduledTime: { $gte: startDate },
+    })
+      .populate("medicineId", "medicineName dosage frequency") // assuming Medicine model has these
+      .sort({ scheduledTime: 1 })
+      .lean();
+
+      console.log("Recent log in the calling the function to the AI->",recentLogs);
+    if (!recentLogs.length) {
+      return {
+        message: "No recent dose data found for this user.",
+        summary: {},
+      };
+    }
+
+    // 2️⃣ Categorize doses by status
+    const summary = {
+      total: recentLogs.length,
+      taken: 0,
+      missed: 0,
+      pending: 0,
+      skipped: 0,
+    };
+
+    const upcoming = [];
+    const pastDoses = [];
+
+    const now = new Date();
+
+    for (const log of recentLogs) {
+      summary[log.status] = (summary[log.status] || 0) + 1;
+
+      const doseInfo = {
+        medicineName: log.medicineId?.medicineName || "Unknown",
+        dosage: log.medicineId?.dosage,
+        time: log.scheduledTime,
+        status: log.status,
+      };
+
+
+      if (log.scheduledTime > now) upcoming.push(doseInfo);
+      else pastDoses.push(doseInfo);
+    }
+
+    return {
+      summary,
+      recentLogs: pastDoses.slice(-10), // last 10 taken/missed
+      upcomingDoses: upcoming.slice(0, 5),
+    };
+  } catch (error) {
+    console.error("Error fetching dose data:", error);
+    throw new Error("Failed to retrieve user dose data");
+  }
+};
+
