@@ -12,69 +12,75 @@ import { ApiError } from "../Utils/ApiError.js";
 export const getDosesByDate = asyncHandler(async (req, res) => {
   const { date } = req.query;
   const userId = req.user._id;
-  
+
   console.log("Requested date for doses:", date);
-    if (!date) {
-      throw new ApiError(400, 'Date is required');
-    }
+  if (!date) {
+    throw new ApiError(400, 'Date is required');
+  }
 
-    // Parse YYYY-MM-DD into local start and end Date objects (start inclusive, end exclusive)
-    // This avoids timezone shifts when clients send local dates.
-    const parts = date.split('-').map(Number);
-    if (parts.length !== 3) throw new ApiError(400, 'Date must be in YYYY-MM-DD format');
-    const [year, month, day] = parts;
+  // Parse YYYY-MM-DD into local start and end Date objects (start inclusive, end exclusive)
+  const parts = date.split('-').map(Number);
+  if (parts.length !== 3 || parts.some(Number.isNaN)) {
+    throw new ApiError(400, 'Date must be in YYYY-MM-DD format');
+  }
+  const [year, month, day] = parts;
 
-    // Local midnight for start
-    const startDate = new Date(year, month - 1, day, 0, 0, 0, 0);
-    // Next day local midnight for exclusive end
-    const endDate = new Date(startDate);
-    endDate.setDate(endDate.getDate() + 1);
+  // Local midnight for start (inclusive)
+  const startDate = new Date(year, month - 1, day, 0, 0, 0, 0);
+  // Next day local midnight for exclusive end
+  const endDate = new Date(startDate);
+  endDate.setDate(endDate.getDate() + 1);
 
-    // Debug logging to help troubleshoot off-by-one issues
-    console.log('getDosesByDate - user:', String(userId), 'search between', startDate.toISOString(), 'and', endDate.toISOString());
-  
+  // Debug logging
+  console.log('getDosesByDate - user:', String(userId), 'search between', startDate.toISOString(), 'and', endDate.toISOString());
+
   // Check if dose logs exist for this date, if not create them
   const existingLogs = await DoseLog.find({
     userId,
     scheduledTime: { $gte: startDate, $lt: endDate }
   });
 
-  console.log(`Existing dose logs for ${date}:`, existingLogs);
-  
+  console.log(`Existing dose logs for ${date}: count=${existingLogs.length}`);
+
   // If no logs exist and date is today or future, create them
-    const todayStart = new Date();
-    todayStart.setHours(0, 0, 0, 0);
-    if (existingLogs.length === 0 && startDate >= todayStart) {
-      await createDoseLogsForDate(userId, startDate);
-    }
-  
-  // Fetch dose logs with medicine details
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+  if (existingLogs.length === 0 && startDate >= todayStart) {
+    await createDoseLogsForDate(userId, startDate);
+  }
+
+  // Fetch dose logs with medicine details (use $lt for exclusive end)
   const doses = await DoseLog.find({
     userId,
-    scheduledTime: { $gte: startDate, $lte: endDate }
+    scheduledTime: { $gte: startDate, $lt: endDate }
   })
-  .populate('medicineId', 'medicineName dosage frequency notes')
-  .sort({ scheduledTime: 1 });
-  
-  // Format doses for frontend
-  const formattedDoses = doses.map(dose => ({
-    _id: dose._id,
-    medicineId: dose.medicineId._id,
-    medicineName: dose.medicineId.medicineName,
-    dosage: dose.medicineId.dosage,
-    time: dose.scheduledTime.toLocaleTimeString('en-US', { 
-      hour: '2-digit', 
-      minute: '2-digit',
-      hour12: false 
-    }),
-    scheduledTime: dose.scheduledTime,
-    actualTime: dose.actualTime,
-    status: dose.status,
-    notes: dose.notes
-  }));
+    .populate('medicineId', 'medicineName dosage frequency notes')
+    .sort({ scheduledTime: 1 });
 
-  console.log("Doses from the today Doses callling->", formattedDoses);
-  
+  // Format doses for frontend with safe optional chaining
+  const formattedDoses = doses.map(dose => {
+    const med = dose.medicineId || {};
+    return {
+      _id: dose._id,
+      medicineId: med._id ?? null,
+      medicineName: med.medicineName ?? "Unknown",
+      dosage: med.dosage ?? null,
+      time: dose.scheduledTime
+        ? dose.scheduledTime.toLocaleTimeString('en-US', {
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false
+          })
+        : null,
+      scheduledTime: dose.scheduledTime,
+      actualTime: dose.actualTime,
+      status: dose.status,
+      notes: dose.notes
+    };
+  });
+
+  console.log("Doses from the today Doses call ->", formattedDoses);
+
   return res.status(200).json(
     new ApiResponse(200, formattedDoses, "Doses retrieved successfully")
   );
@@ -90,25 +96,34 @@ const createDoseLogsForDate = async (userId, date) => {
     ],
     startDate: { $lte: date }
   });
-  
+
   for (const medicine of medicines) {
     // Check if this medicine should be taken on this date
     if (shouldTakeMedicine(medicine, date)) {
-      for (const timeStr of medicine.times) {
+      for (const timeStr of medicine.times || []) {
         const [hours, minutes] = timeStr.split(':').map(Number);
+        if (Number.isNaN(hours) || Number.isNaN(minutes)) {
+          console.warn('Skipping invalid time string for medicine', medicine._id, timeStr);
+          continue;
+        }
         const scheduledTime = new Date(date);
         scheduledTime.setHours(hours, minutes, 0, 0);
-        
-        // Check if log already exists
+
+        // Look for existing log in the same minute window (use Date objects)
+        const scheduledStart = new Date(scheduledTime);
+        scheduledStart.setSeconds(0, 0);
+        const scheduledEnd = new Date(scheduledTime);
+        scheduledEnd.setSeconds(59, 999);
+
         const existingLog = await DoseLog.findOne({
           userId: medicine.userId,
           medicineId: medicine._id,
           scheduledTime: {
-            $gte: new Date(scheduledTime).setSeconds(0, 0),
-            $lt: new Date(scheduledTime).setSeconds(59, 999)
+            $gte: scheduledStart,
+            $lte: scheduledEnd
           }
         });
-        
+
         if (!existingLog) {
           await DoseLog.create({
             userId: medicine.userId,
@@ -126,16 +141,22 @@ const createDoseLogsForDate = async (userId, date) => {
 
 // Helper to check if medicine should be taken on a date
 const shouldTakeMedicine = (medicine, date) => {
+  if (!medicine) return false;
   if (medicine.frequency === 'daily') return true;
-  
+
   if (medicine.frequency === 'weekly') {
+    // If the medicine has an array of days e.g. [1,3,5] prefer that; else fallback to startDate's weekday
+    if (Array.isArray(medicine.days) && medicine.days.length > 0) {
+      const checkDay = date.getDay();
+      return medicine.days.includes(checkDay);
+    }
     const startDay = new Date(medicine.startDate).getDay();
     const checkDay = date.getDay();
     return startDay === checkDay;
   }
-  
+
   if (medicine.frequency === 'as-needed') return false;
-  
+
   return true;
 };
 
@@ -143,9 +164,9 @@ const shouldTakeMedicine = (medicine, date) => {
 export const updateDoseStatus = asyncHandler(async (req, res) => {
   const { doseId, medicineId, scheduledTime, status, notes } = req.body;
   const userId = req.user._id;
-  
+
   let doseLog;
-  
+
   if (doseId) {
     // Update existing dose log
     doseLog = await DoseLog.findOneAndUpdate(
@@ -161,14 +182,18 @@ export const updateDoseStatus = asyncHandler(async (req, res) => {
   } else if (medicineId && scheduledTime) {
     // Create or update dose log
     const scheduled = new Date(scheduledTime);
-    
+
+    // Build a +/- 30 minute search window using Date objects
+    const windowStart = new Date(scheduled.getTime() - 30 * 60 * 1000);
+    const windowEnd = new Date(scheduled.getTime() + 30 * 60 * 1000);
+
     doseLog = await DoseLog.findOneAndUpdate(
       {
         userId,
         medicineId,
         scheduledTime: {
-          $gte: new Date(scheduled).setMinutes(scheduled.getMinutes() - 30),
-          $lte: new Date(scheduled).setMinutes(scheduled.getMinutes() + 30)
+          $gte: windowStart,
+          $lte: windowEnd
         }
       },
       {
@@ -177,23 +202,23 @@ export const updateDoseStatus = asyncHandler(async (req, res) => {
         notes: notes || undefined,
         confirmedBy: 'user'
       },
-      { 
-        new: true, 
+      {
+        new: true,
         upsert: true,
-        setDefaultsOnInsert: true 
+        setDefaultsOnInsert: true
       }
     );
   } else {
     throw new ApiError(400, "Either doseId or medicineId with scheduledTime required");
   }
-  
+
   if (!doseLog) {
     throw new ApiError(404, "Dose log not found");
   }
-  
+
   // Update today's adherence in wellness score
   await updateDailyAdherence(userId);
-  
+
   return res.status(200).json(
     new ApiResponse(200, doseLog, `Dose marked as ${status}`)
   );
@@ -203,18 +228,18 @@ export const updateDoseStatus = asyncHandler(async (req, res) => {
 export const getDoseHistory = asyncHandler(async (req, res) => {
   const { days = 30 } = req.query;
   const userId = req.user._id;
-  
+
   const startDate = new Date();
   startDate.setDate(startDate.getDate() - parseInt(days));
   startDate.setHours(0, 0, 0, 0);
-  
+
   const doses = await DoseLog.find({
     userId,
     scheduledTime: { $gte: startDate }
   })
-  .populate('medicineId', 'medicineName')
-  .sort({ scheduledTime: -1 });
-  
+    .populate('medicineId', 'medicineName')
+    .sort({ scheduledTime: -1 });
+
   return res.status(200).json(
     new ApiResponse(200, doses, "Dose history retrieved")
   );
@@ -232,7 +257,7 @@ export const checkPendingDoses = asyncHandler(async (req, res) => {
   // Also check for doses that are exactly ~30 minutes in the future to send a reminder
   const now = new Date();
   const thirtyMinMs = 30 * 60 * 1000;
-  const toleranceMs = 180 * 1000; // +/- 30 seconds tolerance around 30 minutes
+  const toleranceMs = 180 * 1000; // +/- 3 minutes tolerance around 30 minutes
   const reminderWindowStart = new Date(now.getTime() + thirtyMinMs - toleranceMs);
   const reminderWindowEnd = new Date(now.getTime() + thirtyMinMs + toleranceMs);
 
@@ -366,12 +391,12 @@ export const checkPendingDoses = asyncHandler(async (req, res) => {
 const updateDailyAdherence = async (userId) => {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  
+
   const tomorrow = new Date(today);
   tomorrow.setDate(tomorrow.getDate() + 1);
-  
+
   const adherenceRate = await DoseLog.calculateAdherence(userId, today, tomorrow);
-  
+
   await WellnessScore.findOneAndUpdate(
     { userId, date: today },
     { adherenceRate },
