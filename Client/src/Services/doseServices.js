@@ -3,14 +3,7 @@ import { axiosInstance } from '../Utils/axios.helper';
 export const doseService = {
   // Fetch doses by date
   getDosesByDate: async (date) => {
-    // Build a local YYYY-MM-DD string to avoid UTC shift from toISOString()
-    const pad = (n) => String(n).padStart(2, '0');
-    const year = date.getFullYear();
-    const month = pad(date.getMonth() + 1); // 0-indexed
-    const day = pad(date.getDate());
-    const dateStr = `${year}-${month}-${day}`;
-    console.log("Fetching doses for date (local):", dateStr);
-
+    const dateStr = date.toISOString().split('T')[0];
     const res = await axiosInstance.get('/doses/by-date', { params: { date: dateStr } });
     // Normalize to an array so callers can safely map
     return res.data?.doses ?? res.data ?? [];
@@ -39,16 +32,12 @@ export const doseService = {
     return res.data;
   },
 
+  // wellness
   getTodayWellness: async () => {
     const res = await axiosInstance.get('/wellness/today');
-    return res.data;
+    return res.data?.data ?? res.data ?? null;
   },
 
-  // Check pending doses (server will mark overdue pending doses as missed)
-  checkPendingDoses: async () => {
-    const res = await axiosInstance.post('/doses/check-pending');
-    return res.data;
-  },
 
   // Medicines
   getMedicines: async () => {

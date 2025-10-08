@@ -3,7 +3,7 @@ import { verifyJWT } from "../Middlewares/auth.middleware.js";
 import {
   getDosesByDate,
   updateDoseStatus,
-  getDoseHistory,,
+  getDoseHistory,
   checkPendingDoses
 } from "../Controllers/dose.Controller.js";
 
