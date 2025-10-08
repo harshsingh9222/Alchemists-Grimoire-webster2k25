@@ -425,10 +425,11 @@ export const getUserDoseData = async (userId) => {
       userId,
       scheduledTime: { $gte: startDate },
     })
-      .populate("medicineId", "name dosage frequency") // assuming Medicine model has these
+      .populate("medicineId", "medicineName dosage frequency") // assuming Medicine model has these
       .sort({ scheduledTime: 1 })
       .lean();
 
+      console.log("Recent log in the calling the function to the AI->",recentLogs);
     if (!recentLogs.length) {
       return {
         message: "No recent dose data found for this user.",
@@ -454,11 +455,12 @@ export const getUserDoseData = async (userId) => {
       summary[log.status] = (summary[log.status] || 0) + 1;
 
       const doseInfo = {
-        medicineName: log.medicineId?.name || "Unknown",
+        medicineName: log.medicineId?.medicineName || "Unknown",
         dosage: log.medicineId?.dosage,
         time: log.scheduledTime,
         status: log.status,
       };
+
 
       if (log.scheduledTime > now) upcoming.push(doseInfo);
       else pastDoses.push(doseInfo);

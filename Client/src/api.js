@@ -61,8 +61,16 @@ export const fetchDoseSummary = async (date) => {
   return request(`/doses/summary?date=${dateStr}`, 'GET');
 };
 
-// 💬 AI Chatbot Assistant API
-export const sendChatMessage = async (message) => {
-  return request('/chat', 'POST', { message });
-};
+
+// 💬 AI Health Chatbot APIs
+
+// 💬 AI Chat Management
+// Chat endpoints
+export const getAllChats = async () => request("/chat/all", "GET");
+export const getChatHistory = async (id) => request(`/chat/${id}`, "GET");
+export const deleteChat = async (id) => request(`/chat/${id}`, "DELETE");
+export const sendChatMessage = async (message, chatId = null) =>
+  request("/chat", "POST", { message, chatId });
+export const clearAllChats = async () => request("/chat", "DELETE");
+
 
