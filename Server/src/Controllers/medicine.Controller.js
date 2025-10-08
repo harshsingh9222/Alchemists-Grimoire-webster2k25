@@ -43,38 +43,76 @@ const addMedicine = async (req, res) => {
 
     // Try to create a Google Calendar event for this medicine if the user has connected Google
     try {
-      const eventPayload = {
-        summary: `Medicine: ${medicineName}`,
-        description: notes || `Dosage: ${dosage} | Frequency: ${frequency}`,
-        start: {
-          // Use startDate as the base; Google requires dateTime or date depending on all-day events
-          dateTime: new Date(startDate).toISOString(),
-          timeZone: 'UTC'
-        },
-        end: {
-          dateTime: new Date(startDate).toISOString(),
-          timeZone: 'UTC'
-        },
-        // Optionally create reminders
-        reminders: {
-          useDefault: false,
-          overrides: [
-            { method: 'popup', minutes: 10 }
-          ]
+      // Helper to format a date into RRULE UNTIL format: YYYYMMDDTHHMMSSZ
+      const formatDateToRRuleUntil = (d) => {
+        const dt = new Date(d);
+        const Y = dt.getUTCFullYear();
+        const M = String(dt.getUTCMonth() + 1).padStart(2, '0');
+        const D = String(dt.getUTCDate()).padStart(2, '0');
+        const h = String(dt.getUTCHours()).padStart(2, '0');
+        const m = String(dt.getUTCMinutes()).padStart(2, '0');
+        const s = String(dt.getUTCSeconds()).padStart(2, '0');
+        return `${Y}${M}${D}T${h}${m}${s}Z`;
+      };
+
+      const createdEventIds = [];
+
+      // Create one recurring event per time in the medicine.times array
+      for (const timeStr of times) {
+        const [hours, minutes] = timeStr.split(':').map(Number);
+
+        // Build a start DateTime using startDate's date and the medicine time
+        const startDt = new Date(startDate);
+        startDt.setHours(hours, minutes, 0, 0);
+
+        // Use a short default duration for the event (15 minutes)
+        const endDt = new Date(startDt.getTime() + 15 * 60 * 1000);
+
+        const eventPayload = {
+          summary: `Medicine: ${medicineName}`,
+          description: notes || `Dosage: ${dosage} | Frequency: ${frequency}`,
+          start: { dateTime: startDt.toISOString(), timeZone: 'UTC' },
+          end: { dateTime: endDt.toISOString(), timeZone: 'UTC' },
+          reminders: { useDefault: false, overrides: [{ method: 'popup', minutes: 10 }] }
+        };
+
+        // Add recurrence based on frequency
+        if (frequency === 'daily') {
+          if (endDate) {
+            eventPayload.recurrence = [`RRULE:FREQ=DAILY;UNTIL=${formatDateToRRuleUntil(endDate)}`];
+          } else {
+            eventPayload.recurrence = ['RRULE:FREQ=DAILY'];
+          }
+        } else if (frequency === 'weekly') {
+          // Use the weekday of startDate for BYDAY
+          const weekdayMap = ['SU', 'MO', 'TU', 'WE', 'TH', 'FR', 'SA'];
+          const byday = weekdayMap[new Date(startDate).getDay()];
+          if (endDate) {
+            eventPayload.recurrence = [`RRULE:FREQ=WEEKLY;BYDAY=${byday};UNTIL=${formatDateToRRuleUntil(endDate)}`];
+          } else {
+            eventPayload.recurrence = [`RRULE:FREQ=WEEKLY;BYDAY=${byday}`];
+          }
+        } else {
+          // as-needed -> no recurrence (single event at startDate/time)
+        }
+
+        const calendarResult = await createCalendarEventForUser(userId, eventPayload);
+        if (calendarResult?.success && calendarResult?.eventId) {
+          createdEventIds.push(calendarResult.eventId);
+          console.log('Google Calendar event created with id:', calendarResult.eventId);
+        } else {
+          console.log('Google Calendar event not created for time', timeStr, ':', calendarResult?.error);
         }
       }
 
-      const calendarResult = await createCalendarEventForUser(userId, eventPayload)
-      if (calendarResult?.success && calendarResult?.eventId) {
-        newMedicine.googleEventId = calendarResult.eventId
-        newMedicine.googleCalendarCreatedAt = new Date()
-        await newMedicine.save()
-        console.log('Google Calendar event created with id:', calendarResult.eventId)
-      } else {
-        console.log('Google Calendar event not created:', calendarResult?.error)
+      if (createdEventIds.length > 0) {
+        // Store created event IDs as JSON string (model currently holds a string)
+        newMedicine.googleEventId = JSON.stringify(createdEventIds);
+        newMedicine.googleCalendarCreatedAt = new Date();
+        await newMedicine.save();
       }
     } catch (err) {
-      console.error('Error while creating Google Calendar event for medicine:', err)
+      console.error('Error while creating Google Calendar event(s) for medicine:', err);
     }
 
     // 🎯 IMPORTANT: Create dose logs for the next 30 days
