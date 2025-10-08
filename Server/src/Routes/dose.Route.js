@@ -3,7 +3,8 @@ import { verifyJWT } from "../Middlewares/auth.middleware.js";
 import {
   getDosesByDate,
   updateDoseStatus,
-  getDoseHistory,
+  getDoseHistory,,
+  checkPendingDoses
 } from "../Controllers/dose.Controller.js";
 
 import {
@@ -24,5 +25,6 @@ router.post("/skip", updateDoseStatus);
 // ===================== Dose Log Summary ===================== //
 
 router.get("/summary", getDailyDoseSummary);
+router.post('/check-pending', checkPendingDoses);
 
 export default router;
