@@ -60,3 +60,9 @@ export const fetchDoseSummary = async (date) => {
   const dateStr = date.toISOString().split('T')[0];
   return request(`/doses/summary?date=${dateStr}`, 'GET');
 };
+
+// 💬 AI Chatbot Assistant API
+export const sendChatMessage = async (message) => {
+  return request('/chat', 'POST', { message });
+};
+
