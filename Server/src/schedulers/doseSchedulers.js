@@ -158,20 +158,27 @@ class DoseScheduler {
             sentAt: new Date()
           });
 
-          // send email if possible
-          try {
-            const toEmail = dose.userId?.email || (await User.findById(dose.userId))?.email;
-            if (transporter && toEmail) {
-              await transporter.sendMail({
-                from: process.env.EMAIL_USER,
-                to: toEmail,
-                subject: note.title,
-                html: `<p>${note.message}</p>`
-              });
+            // send email only for Google-authenticated users
+            try {
+              const user = dose.userId || (await User.findById(dose.userId));
+              const toEmail = user?.email;
+              const isGoogleUser = (user?.provider === 'google') || Boolean(user?.google?.refreshToken);
+
+              if (!isGoogleUser) {
+                console.log(`Skipping missed-dose email for non-Google user ${user?.email || user?._id}`);
+              } else if (!transporter) {
+                console.log('Email transporter not configured; skipping missed-dose email send');
+              } else if (toEmail) {
+                await transporter.sendMail({
+                  from: process.env.EMAIL_USER,
+                  to: toEmail,
+                  subject: note.title,
+                  html: `<p>${note.message}</p>`
+                });
+              }
+            } catch (mailErr) {
+              console.warn('Failed to send missed-dose email:', mailErr?.message || mailErr);
             }
-          } catch (mailErr) {
-            console.warn('Failed to send missed-dose email:', mailErr?.message || mailErr);
-          }
         }
 
         console.log(`⚠️ Marked dose as missed and notified: ${dose.medicineId.medicineName}`);
@@ -223,10 +230,17 @@ class DoseScheduler {
                 sentAt: new Date()
               });
 
-              // send email
+              // send email only for Google-authenticated users
               try {
-                const toEmail = dose.userId?.email || (await User.findById(dose.userId))?.email;
-                if (transporter && toEmail) {
+                const user = dose.userId || (await User.findById(dose.userId));
+                const toEmail = user?.email;
+                const isGoogleUser = (user?.provider === 'google') || Boolean(user?.google?.refreshToken);
+
+                if (!isGoogleUser) {
+                  console.log(`Skipping backfill email for non-Google user ${user?.email || user?._id}`);
+                } else if (!transporter) {
+                  console.log('Email transporter not configured; skipping backfill email send');
+                } else if (toEmail) {
                   await transporter.sendMail({ from: process.env.EMAIL_USER, to: toEmail, subject: note.title, html: `<p>${note.message}</p>` });
                 }
               } catch (mailErr) {
@@ -269,6 +283,12 @@ class DoseScheduler {
         scheduledTime: { $gte: windowStart, $lte: windowEnd }
       }).populate('medicineId userId');
 
+      // prepare transporter if email creds provided
+      let transporter = null;
+      if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+        transporter = nodemailer.createTransport({ service: 'gmail', auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS } });
+      }
+
       for (const dose of upcomingDoses) {
         // Avoid duplicates (also check Notification collection)
         const exists = await Notification.findOne({ relatedDoseLogId: dose._id, type: 'dose_reminder' });
@@ -292,10 +312,17 @@ class DoseScheduler {
           sentAt: new Date()
         });
 
-        // send email if transporter available
+        // send email only for Google-authenticated users (avoid stuck or fake emails)
         try {
-          const toEmail = dose.userId?.email || (await User.findById(dose.userId))?.email;
-          if (transporter && toEmail) {
+          const user = dose.userId || (await User.findById(dose.userId));
+          const toEmail = user?.email;
+          const isGoogleUser = (user?.provider === 'google') || Boolean(user?.google?.refreshToken);
+
+          if (!isGoogleUser) {
+            console.log(`Skipping email for non-Google user ${user?.email || user?._id}`);
+          } else if (!transporter) {
+            console.log('Email transporter not configured; skipping email send');
+          } else if (toEmail) {
             await transporter.sendMail({
               from: process.env.EMAIL_USER,
               to: toEmail,

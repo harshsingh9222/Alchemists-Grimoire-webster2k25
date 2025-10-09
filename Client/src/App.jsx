@@ -54,7 +54,6 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/about" element={<About />} />
-        <Route path="/chat-bot" element={< HealthChat/>} />
 
         {/* App routes wrapped with MainLayout so Navbar/Sidebar/Footer appear */}
         <Route
@@ -62,6 +61,14 @@ function App() {
           element={
             <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen}>
               <Home />
+            </MainLayout>
+          }
+        />
+        <Route
+          path="/chat-bot"
+          element={
+            <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen}>
+              <HealthChat />
             </MainLayout>
           }
         />
