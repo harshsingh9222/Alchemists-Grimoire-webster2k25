@@ -5,7 +5,7 @@ import bcrypt from 'bcryptjs';
 const userSchema = new mongoose.Schema({
   username: {
     type: String,
-    unique: true,
+    unique: false,
     required: true,
     lowercase: true,
     trim: true,
@@ -47,6 +47,18 @@ const userSchema = new mongoose.Schema({
     refreshToken: { type: String, default: null },
     id: { type: String, default: null }
   },
+  // Has the user completed onboarding (profile, first-run setup)?
+  onboarded: {
+    type: Boolean,
+    default: false,
+    index: true
+  },
+  // i had added the character feild
+  character: { 
+    type: String, 
+    enum: ["ringmaster", "acrobat", "magician", "juggler"], 
+    default: null 
+  }
 }, { timestamps: true });
 
 userSchema.pre('save', async function (next) {

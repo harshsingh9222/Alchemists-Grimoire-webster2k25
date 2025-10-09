@@ -45,7 +45,7 @@ const Login = () => {
       console.log("User logged in:", res);
       dispatch(authLogin(res.user));
 
-      navigate("/"); // redirect to homepage after login
+      navigate("/home"); // redirect to homepage after login
     } catch (err) {
       toast.error(err.message || "Login failed");
     }

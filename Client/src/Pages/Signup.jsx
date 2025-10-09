@@ -34,7 +34,7 @@ const Signup = () => {
       dispatch(authLogin(response.user));
 
       toast.success("Registration successful!")
-      navigate("/") // redirect to home page
+      navigate("/circus") // redirect to circus page
     } catch (error) {
       console.error("Signup error:", error.message)
       toast.error(error.message || "Signup failed")
