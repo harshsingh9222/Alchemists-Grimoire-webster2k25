@@ -167,8 +167,41 @@ export const updateDoseStatus = asyncHandler(async (req, res) => {
 
   let doseLog;
 
+  // Server-side guard: prevent marking as 'taken' too early
+  if (status === 'taken') {
+    // If scheduledTime provided, enforce 15-minute pre-window
+    if (scheduledTime) {
+      const scheduled = new Date(scheduledTime);
+      if (Number.isNaN(scheduled.getTime())) {
+        throw new ApiError(400, 'Invalid scheduledTime');
+      }
+      const windowStart = new Date(scheduled.getTime() - 15 * 60 * 1000);
+      const now = new Date();
+      if (now < windowStart) {
+        throw new ApiError(403, 'Too early to mark this dose as taken. You can mark it starting 15 minutes before scheduled time.');
+      }
+    }
+    // If no scheduledTime but doseId exists, we'll lookup the doseLog below and validate scheduledTime
+  }
+
   if (doseId) {
     // Update existing dose log
+    // If status is 'taken' and no scheduledTime provided in body, fetch the dose to check scheduledTime
+    if (status === 'taken' && !scheduledTime) {
+      const existing = await DoseLog.findOne({ _id: doseId, userId });
+      if (!existing) {
+        throw new ApiError(404, 'Dose log not found');
+      }
+      const scheduled = existing.scheduledTime;
+      if (scheduled) {
+        const windowStart = new Date(scheduled.getTime() - 15 * 60 * 1000);
+        const now = new Date();
+        if (now < windowStart) {
+          throw new ApiError(403, 'Too early to mark this dose as taken. You can mark it starting 15 minutes before scheduled time.');
+        }
+      }
+    }
+
     doseLog = await DoseLog.findOneAndUpdate(
       { _id: doseId, userId },
       {

@@ -20,7 +20,7 @@ export const verifyJWT = asyncHandler(async (req, res, next) => {
         const decodedToken = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
 
         const user = await User.findById(decodedToken._id).select("-password -refreshToken");
-        console.log("User in auth middleware:", user);
+        // console.log("User in auth middleware:", user);
 
         if (!user) {
             throw new ApiError(401, " User not found or Invalid Access Token");
