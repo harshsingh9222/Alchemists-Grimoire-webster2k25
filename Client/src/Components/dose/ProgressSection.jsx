@@ -1,4 +1,3 @@
-import React from "react";
 import {
   Calendar,
   ChevronLeft,
@@ -75,7 +74,7 @@ const ProgressSection = ({
       ) : (
         !summaryLoading && (
           <p className="text-indigo-300 text-sm opacity-80 text-center">
-            Click “View Progress Summary" to see the summary for the selected
+            Click the View Progress Summary button to see the summary for the selected
             date.
           </p>
         )
@@ -102,8 +101,12 @@ const ProgressSection = ({
               return (
                 <div
                   key={dose._id || `${dose.medicineId}-${dose.time}`}
-                  className={`relative group overflow-hidden bg-gradient-to-br from-purple-950/90 via-purple-900/80 to-indigo-950/90 backdrop-blur-sm rounded-2xl border border-purple-500/30 p-6 transition-all hover:scale-[1.02] ${
-                    isComplete ? "ring-2 ring-green-500/50" : ""
+                  className={`relative group overflow-hidden bg-gradient-to-br from-purple-950/90 via-purple-900/80 to-indigo-950/90 backdrop-blur-sm rounded-2xl border p-6 transition-all hover:scale-[1.02] ${
+                    isComplete
+                      ? "ring-2 ring-green-500/50"
+                      : isMissed
+                      ? "ring-2 ring-red-500/40 bg-red-900/60 border-red-600/30"
+                      : "border-purple-500/30"
                   }`}
                 >
                   <div className="flex items-start justify-between mb-4">
@@ -154,7 +157,13 @@ const ProgressSection = ({
                             dose.scheduledTime
                           )
                         }
-                        className="flex-1 py-2 px-4 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-lg hover:from-green-600 hover:to-emerald-600 transition-all transform hover:scale-105"
+                        disabled={isMissed}
+                        title={isMissed ? 'This dose was missed and cannot be taken' : 'Mark dose as taken'}
+                        className={`flex-1 py-2 px-4 text-white rounded-lg transition-all transform ${
+                          isMissed
+                            ? 'bg-gray-700/40 opacity-60 cursor-not-allowed pointer-events-none'
+                            : 'bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 hover:scale-105'
+                        }`}
                       >
                         Take
                       </button>
@@ -167,7 +176,13 @@ const ProgressSection = ({
                             dose.scheduledTime
                           )
                         }
-                        className="flex-1 py-2 px-4 bg-gradient-to-r from-yellow-500 to-amber-500 text-white rounded-lg hover:from-yellow-600 hover:to-amber-600 transition-all transform hover:scale-105"
+                        disabled={isMissed}
+                        title={isMissed ? 'This dose was missed and cannot be skipped' : 'Skip this dose'}
+                        className={`flex-1 py-2 px-4 text-white rounded-lg transition-all transform ${
+                          isMissed
+                            ? 'bg-gray-700/40 opacity-60 cursor-not-allowed pointer-events-none'
+                            : 'bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-600 hover:to-amber-600 hover:scale-105'
+                        }`}
                       >
                         Skip
                       </button>

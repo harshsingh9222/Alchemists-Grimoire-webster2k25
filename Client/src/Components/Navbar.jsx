@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom"
 import { performLogout } from "../store/authAction"
 import { toast } from "react-hot-toast"
 import PropTypes from "prop-types";
+import path from "../assets/Images/cure_it_logo.png"
 
 const Navbar = ({ sidebarOpen, setSidebarOpen }) => {
   const location = useLocation()
@@ -47,10 +48,12 @@ const Navbar = ({ sidebarOpen, setSidebarOpen }) => {
               </button>
 
               <Link to="/" className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-gradient-to-r from-yellow-400 to-red-600 rounded-lg flex items-center justify-center">
-                  <span className="text-white font-bold text-sm">A</span>
+                <div className="w-8 h-8 bg-gradient-to-r from-yellow-400 to-red-600 rounded-xl flex items-center justify-center cursor-zoom-in">
+                  <span className="text-white font-bold text-sm"><img src={path} alt="" className="w-9 h-9 rounded-full object-cover" /></span>
                 </div>
-                <span className="text-xl font-bold text-gray-900 hidden sm:block">Alchemist</span>
+                <span className="text-xl font-bold text-gray-900 hidden sm:block">
+                  Cure-It
+                </span>
               </Link>
             </div>
 

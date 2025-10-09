@@ -7,6 +7,7 @@ import dashboardRoutes from "./Routes/dashboad.Routes.js";
 import doseScheduler from "./schedulers/doseSchedulers.js";
 import wellnessRoutes from './Routes/wellness.Routes.js';
 import doseRoutes from './Routes/dose.Route.js';
+import charRoutes from './Routes/chatRoute.js';
 
 const app = express();
 
@@ -57,6 +58,7 @@ app.use('/wellness', wellnessRoutes);
 
 // Dose routes
 app.use('/doses', doseRoutes);
+app.use("/chat", charRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

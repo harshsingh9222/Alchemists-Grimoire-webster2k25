@@ -11,20 +11,14 @@ const DoseTracker = () => {
   const [todayDoses, setTodayDoses] = useState([]);
   const [todayLoading, setTodayLoading] = useState(false);
   const [view, setView] = useState("today"); // "today" | "progress" | "wellness"
-  // Progress state
-  const [progressDate, setProgressDate] = useState(new Date()); // navigation only affects progress
+  const [progressDate, setProgressDate] = useState(new Date());
   const [progressDoses, setProgressDoses] = useState([]);
   const [progressLoading, setProgressLoading] = useState(false);
-
-  // Medicines and wellness/modal states
   const [medicines, setMedicines] = useState([]);
   const [showWellnessModal, setShowWellnessModal] = useState(false);
-
-  // Summary data for the currently selected progress date
   const [summaryData, setSummaryData] = useState([]);
   const [summaryLoading, setSummaryLoading] = useState(false);
 
-  // Helper: low-level fetch that normalizes response and returns array (does NOT change component-level loading states)
   const getDosesForDate = useCallback(async (date) => {
     try {
       const resdata = await doseService.getDosesByDate(date);
@@ -37,10 +31,7 @@ const DoseTracker = () => {
         : [];
 
       if (!Array.isArray(fetched)) {
-        console.debug(
-          "getDosesForDate: normalized fetched is not array",
-          resdata
-        );
+        console.debug("getDosesForDate: normalized fetched is not array", resdata);
         return [];
       }
 
@@ -58,6 +49,7 @@ const DoseTracker = () => {
       try {
         const fetched = await getDosesForDate(date);
         setProgressDoses(fetched);
+        return fetched; // <-- return the array so callers can use fresh data
       } finally {
         setProgressLoading(false);
       }
@@ -80,10 +72,7 @@ const DoseTracker = () => {
         !Array.isArray(resdata?.medicines) &&
         !Array.isArray(resdata?.data)
       ) {
-        console.debug(
-          "fetchMedicinesInDose: unexpected response shape",
-          resdata
-        );
+        console.debug("fetchMedicinesInDose: unexpected response shape", resdata);
       }
       setMedicines(meds);
     } catch (error) {
@@ -91,7 +80,6 @@ const DoseTracker = () => {
     }
   }, []);
 
-  // View progress summary for the currently selected progressDate
   const handleViewProgress = async () => {
     try {
       setSummaryLoading(true);
@@ -106,12 +94,7 @@ const DoseTracker = () => {
   };
 
   // shared action (take/skip). After update, refresh both today's doses AND progress doses
-  const handleDoseAction = async (
-    doseId,
-    action,
-    medicineId,
-    scheduledTime
-  ) => {
+  const handleDoseAction = async (doseId, action, medicineId, scheduledTime) => {
     try {
       const payload = doseId
         ? { doseId, status: action === "take" ? "taken" : "skipped" }
@@ -123,14 +106,19 @@ const DoseTracker = () => {
 
       await doseService.updateDoseStatus(payload);
 
-      // refresh both views so UI stays consistent
-      await Promise.all([fetchTodayDoses(), fetchProgressDoses(progressDate)]);
+      // get fresh lists (use returned arrays to avoid stale React state)
+      const [freshToday, freshProgress] = await Promise.all([
+        fetchTodayDoses(), // now returns array
+        fetchProgressDoses(progressDate),
+      ]);
 
       showSuccessAnimation(action);
 
-      // If all today's doses are taken, show wellness modal
+      // compute allTaken from the freshly returned array (not React state)
       const allTaken =
-        todayDoses.length > 0 && todayDoses.every((d) => d.status === "taken");
+        Array.isArray(freshToday) && freshToday.length > 0
+          ? freshToday.every((d) => d.status === "taken")
+          : false;
       if (allTaken) setShowWellnessModal(true);
     } catch (error) {
       console.error("Error recording dose:", error);
@@ -146,29 +134,28 @@ const DoseTracker = () => {
     setTimeout(() => sparkle.remove(), 1000);
   };
 
-  // Navigation for progress only
   const navigateProgressDate = (direction) => {
     const newDate = new Date(progressDate);
     newDate.setDate(progressDate.getDate() + direction);
     setProgressDate(newDate);
   };
 
+  // fetchTodayDoses now returns the fetched array as well as updating state
   const fetchTodayDoses = useCallback(async () => {
     setTodayLoading(true);
     try {
       const datee = new Date();
-      datee.setHours(0, 0, 0, 0); // Set to start of today
-
+      datee.setHours(0, 0, 0, 0);
       const res = await doseService.getDosesByDate(datee);
       const fetched =
-        Array.isArray(res) ||
-        Array.isArray(res?.doses) ||
-        Array.isArray(res?.data)
+        Array.isArray(res) || Array.isArray(res?.doses) || Array.isArray(res?.data)
           ? res.doses || res.data || res
           : [];
       setTodayDoses(fetched);
+      return fetched; // <-- return array for callers
     } catch (err) {
       console.error("Error fetching today's doses:", err);
+      return [];
     } finally {
       setTodayLoading(false);
     }
@@ -178,12 +165,10 @@ const DoseTracker = () => {
     fetchTodayDoses();
   }, [fetchTodayDoses]);
 
-  // load medicines once on mount so TodayDoses can show "Add Your First Potion" correctly
   useEffect(() => {
     fetchMedicinesInDose();
   }, [fetchMedicinesInDose]);
 
-  // When user views progress or navigates the progressDate, fetch the doses for that date
   useEffect(() => {
     if (view === "progress") {
       fetchProgressDoses(progressDate);
@@ -192,7 +177,6 @@ const DoseTracker = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-950 via-indigo-950 to-purple-900 p-6">
-      {/* Magical floating sparkles */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         {[...Array(5)].map((_, i) => (
           <motion.div
@@ -211,24 +195,18 @@ const DoseTracker = () => {
       </div>
 
       <div className="relative z-10 max-w-6xl mx-auto">
-        {/* Header */}
         <div className="mb-8 text-center">
           <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-purple-300 via-pink-300 to-yellow-300 bg-clip-text text-transparent">
             🧪 Potion Tracker
           </h1>
-          <p className="text-purple-300/70">
-            Track your magical elixirs and wellness
-          </p>
+          <p className="text-purple-300/70">Track your magical elixirs and wellness</p>
         </div>
 
-        {/* Buttons for navigation */}
         <div className="flex justify-center gap-4 mb-8">
           <button
             onClick={() => setView("today")}
             className={`px-4 py-2 rounded-lg text-white font-medium transition-all ${
-              view === "today"
-                ? "bg-purple-600 scale-105"
-                : "bg-purple-900/50 hover:bg-purple-800/70"
+              view === "today" ? "bg-purple-600 scale-105" : "bg-purple-900/50 hover:bg-purple-800/70"
             }`}
           >
             Today’s Doses
@@ -236,9 +214,7 @@ const DoseTracker = () => {
           <button
             onClick={() => setView("progress")}
             className={`px-4 py-2 rounded-lg text-white font-medium transition-all ${
-              view === "progress"
-                ? "bg-indigo-600 scale-105"
-                : "bg-indigo-900/50 hover:bg-indigo-800/70"
+              view === "progress" ? "bg-indigo-600 scale-105" : "bg-indigo-900/50 hover:bg-indigo-800/70"
             }`}
           >
             View Progress
@@ -246,9 +222,7 @@ const DoseTracker = () => {
           <button
             onClick={() => setView("wellness")}
             className={`px-4 py-2 rounded-lg text-white font-medium transition-all ${
-              view === "wellness"
-                ? "bg-pink-600 scale-105"
-                : "bg-pink-900/50 hover:bg-pink-800/70"
+              view === "wellness" ? "bg-pink-600 scale-105" : "bg-pink-900/50 hover:bg-pink-800/70"
             }`}
           >
             Update Wellness
@@ -257,13 +231,7 @@ const DoseTracker = () => {
 
         <AnimatePresence mode="wait">
           {view === "today" && (
-            <motion.div
-              key="today"
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -30 }}
-              transition={{ duration: 0.4 }}
-            >
+            <motion.div key="today" initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -30 }} transition={{ duration: 0.4 }}>
               <TodayDoses
                 todayLoading={todayLoading}
                 todayDoses={todayDoses}
@@ -276,13 +244,7 @@ const DoseTracker = () => {
           )}
 
           {view === "progress" && (
-            <motion.div
-              key="progress"
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -30 }}
-              transition={{ duration: 0.4 }}
-            >
+            <motion.div key="progress" initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -30 }} transition={{ duration: 0.4 }}>
               <ProgressSection
                 progressDate={progressDate}
                 progressDoses={progressDoses}
@@ -297,19 +259,12 @@ const DoseTracker = () => {
           )}
 
           {view === "wellness" && (
-            <motion.div
-              key="wellness"
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -30 }}
-              transition={{ duration: 0.4 }}
-            >
-              <UpdateWellness onClose={() => setView("today")} />
+            <motion.div key="wellness" initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -30 }} transition={{ duration: 0.4 }}>
+              <UpdateWellness onClose={async () => { await fetchTodayDoses(); setView("today"); }} />
             </motion.div>
           )}
         </AnimatePresence>
 
-        {/* Render wellness modal when triggered by actions */}
         {showWellnessModal && (
           <UpdateWellness
             onClose={() => {
