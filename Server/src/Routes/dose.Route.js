@@ -4,7 +4,8 @@ import {
   getDosesByDate,
   updateDoseStatus,
   getDoseHistory,
-  checkPendingDoses
+  checkPendingDoses,
+  getUpcomingDoseRisks
 } from "../Controllers/dose.Controller.js";
 
 import {
@@ -26,5 +27,8 @@ router.post("/skip", updateDoseStatus);
 
 router.get("/summary", getDailyDoseSummary);
 router.post('/check-pending', checkPendingDoses);
+
+// Get upcoming dose miss-risk for logged-in user
+router.get('/upcoming-risks', getUpcomingDoseRisks);
 
 export default router;
