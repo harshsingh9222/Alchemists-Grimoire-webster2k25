@@ -36,8 +36,10 @@ class DoseScheduler {
       this.updateDailyWellnessScores();
     });
     
-    // Send reminder notifications (every 1 minute)
-    cron.schedule('* * * * *', () => {
+    // Send reminder notifications (every 15 minutes)
+    // Running every 15 minutes is fine as long as the reminder window
+    // (windowMs + 2 * toleranceMs) is larger than the scheduling interval.
+    cron.schedule('*/15 * * * *', () => {
       this.sendDoseReminders();
     });
     // Run a one-time backfill for missed doses before today (non-blocking)
@@ -272,7 +274,10 @@ class DoseScheduler {
       const now = new Date();
       // We'll consider upcoming doses within ~30 minutes (with tolerance)
       const windowMs = 30 * 60 * 1000;
-      const toleranceMs = 2 * 60 * 1000; // 2 min tolerance
+  // Increase tolerance so the reminder window safely overlaps
+  // between 15-minute runs. A 15 minute tolerance expands the
+  // query window on both sides by 15 minutes.
+  const toleranceMs = 15 * 60 * 1000; // 15 min tolerance
       const windowStart = new Date(now.getTime() - toleranceMs);
       const windowEnd = new Date(now.getTime() + windowMs + toleranceMs);
 

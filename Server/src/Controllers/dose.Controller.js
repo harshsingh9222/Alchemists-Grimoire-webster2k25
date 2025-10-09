@@ -3,6 +3,7 @@ import Medicine from "../Models/medicineModel.js";
 import WellnessScore from "../Models/wellnessScoreModel.js";
 import Notification from "../Models/notificationModel.js";
 import User from "../Models/user.models.js";
+import Risk from '../Models/riskModel.js';
 import nodemailer from 'nodemailer'
 import { asyncHandler } from "../Utils/asyncHandler.js";
 import { ApiResponse } from "../Utils/ApiResponse.js";
@@ -338,6 +339,82 @@ export const checkPendingDoses = asyncHandler(async (req, res) => {
   const userId = req.user._id;
   const result = await processPendingDosesForUser(userId);
   return res.status(result.status || 200).json(result.body);
+});
+
+// Compute upcoming-dose missed probability for logged-in user
+export const getUpcomingDoseRisks = asyncHandler(async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const now = new Date();
+    const thirtyMinMs = 30 * 60 * 1000;
+    const toleranceMs = 2 * 60 * 1000;
+    const windowStart = new Date(now.getTime() + thirtyMinMs - toleranceMs);
+    const windowEnd = new Date(now.getTime() + thirtyMinMs + toleranceMs);
+
+    // Find upcoming dose logs for this user in the 30min window
+    const upcoming = await DoseLog.find({
+      userId,
+      status: 'pending',
+      scheduledTime: { $gte: windowStart, $lte: windowEnd }
+    }).populate('medicineId');
+
+    const slots = [
+      { id: 0, start: 0, end: 6, label: '00:00-06:00' },
+      { id: 1, start: 6, end: 12, label: '06:00-12:00' },
+      { id: 2, start: 12, end: 18, label: '12:00-18:00' },
+      { id: 3, start: 18, end: 24, label: '18:00-24:00' },
+    ];
+
+    const lookbackDays = 30;
+    const since = new Date();
+    since.setDate(since.getDate() - lookbackDays);
+    since.setHours(0, 0, 0, 0);
+
+    const risks = [];
+
+    for (const dose of upcoming) {
+      const hr = dose.hour != null ? dose.hour : (dose.scheduledTime ? dose.scheduledTime.getHours() : null);
+      const slot = slots.find(s => hr >= s.start && hr < s.end) || slots[0];
+
+      const logs = await DoseLog.find({
+        userId,
+        scheduledTime: { $gte: since },
+        hour: { $gte: slot.start, $lt: slot.end },
+      });
+
+      const total = logs.length;
+      const missed = logs.filter(l => l.status === 'missed').length;
+      const missedProb = total === 0 ? 0 : missed / total;
+
+      if (missedProb > 0.4) {
+        const existingRisk = await Risk.findOne({ doseLogId: dose._id });
+        if (!existingRisk) {
+          const riskDetails = {
+            medicineName: dose.medicineId?.medicineName || 'Medicine',
+            scheduledTime: dose.scheduledTime,
+            missedProb,
+          };
+
+          await Risk.create({
+            userId,
+            doseId: dose.medicineId?._id,
+            doseLogId: dose._id,
+            riskDetails,
+          });
+
+          risks.push({
+            doseId: dose._id,
+            ...riskDetails,
+          });
+        }
+      }
+    }
+
+    return res.status(200).json({ risks });
+  } catch (err) {
+    console.error('getUpcomingDoseRisks error', err);
+    return res.status(500).json({ message: 'Failed to compute upcoming risks', error: String(err) });
+  }
 });
 
 // Helper to update daily adherence

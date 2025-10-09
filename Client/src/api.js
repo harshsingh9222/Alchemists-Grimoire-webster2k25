@@ -67,6 +67,8 @@ export const fetchDoseSummary = async (date) => {
   return request(`/doses/summary?date=${dateStr}`, 'GET');
 };
 
+export const fetchUpcomingRisks = async () => request('/doses/upcoming-risks', 'GET');
+
 
 // 💬 AI Health Chatbot APIs
 
