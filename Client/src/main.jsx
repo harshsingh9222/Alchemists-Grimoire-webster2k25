@@ -9,6 +9,7 @@ import ReactDOM from 'react-dom/client';
 import { Provider } from 'react-redux'
 import {store} from "./store/store.js";
 import { GoogleOAuthProvider } from '@react-oauth/google'
+import ToastProvider from './Components/Toast/ToastProvider.jsx'
 
 
 ReactDOM.createRoot(document.getElementById('root')).render(
@@ -16,7 +17,9 @@ ReactDOM.createRoot(document.getElementById('root')).render(
   <GoogleOAuthProvider clientId="576465356327-501k2vs4bv48ibc54f4c4519j8gitj9g.apps.googleusercontent.com">
       <Provider store={store}>
         <BrowserRouter>
-          <App />
+          <ToastProvider>
+            <App />
+          </ToastProvider>
         </BrowserRouter>
       </Provider>
      </GoogleOAuthProvider> 

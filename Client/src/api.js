@@ -79,4 +79,7 @@ export const sendChatMessage = async (message, chatId = null) =>
   request("/chat", "POST", { message, chatId });
 export const clearAllChats = async () => request("/chat", "DELETE");
 
+export const updateUserCharacter = async (characterId) => {
+  return request('/auth/character', 'PUT', { characterId });
+};
 

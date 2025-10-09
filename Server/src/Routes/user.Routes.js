@@ -12,6 +12,7 @@ import {
   testCreateGoogleEvent,
   getGoogleClientInfo,
   getCalendarEventsForMonth,
+  updateCharacter,
 } from '../Controllers/user.Controllers.js';
 import { upload } from '../Middlewares/multer.middleware.js';
 import {upload_cloud} from "../Middlewares/cloudinary_multer.middleware.js"
@@ -44,7 +45,7 @@ router.post("/send-otp", sendOTP)
 router.post("/verify-otp", verifyOTP)
 router.post("/resend-otp", resendOTP)
 router.route('/current-user').get(verifyJWT, getCurrentUser);
-
+router.route("/character").put(verifyJWT, updateCharacter);
 
 
 // Current user

@@ -1,7 +1,8 @@
 import Medicine from "../Models/medicineModel.js";
 import User from "../Models/user.models.js";
 import DoseLog from "../Models/doseLogModel.js";
-import { createDoseLogsForMedicine } from "../Utils/doseLogCreater.js";import { createCalendarEventForUser } from "../Utils/googleCalendar.js"
+import { createDoseLogsForMedicine } from "../Utils/doseLogCreater.js";
+import { createCalendarEventForUser } from "../Utils/googleCalendar.js"
 
 
 const addMedicine = async (req, res) => {

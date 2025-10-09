@@ -81,12 +81,13 @@ const googleLogin = async (req, res) => {
       let user = await User.findOne({ email })
       if (!user) {
         console.log("Creating new user (OTP flow) from Google OAuth")
-        user = await User.create({
-          username: name,
-          email,
-          provider: 'google',
-          profilePic: picture
-        })
+       user = await User.create({
+         username: name,
+         email,
+         provider: 'google',
+         profilePic: picture,
+         onboarded: false
+       })
       }
 
       // Persist refresh token if provided
@@ -107,12 +108,13 @@ const googleLogin = async (req, res) => {
     let user = await User.findOne({ email })
     if (!user) {
       console.log("Creating new user from Google OAuth")
-      user = await User.create({
-        username: name,
-        email,
-        provider: 'google',
-        profilePic: picture
-      })
+       user = await User.create({
+         username: name,
+         email,
+         provider: 'google',
+         profilePic: picture,
+         onboarded: false
+       })
     } else {
       console.log("Existing user found:", user.username)
     }
@@ -307,7 +309,7 @@ const verifyOTP = async (req, res) => {
       console.log(`verifyOTP: creating new user for ${email}`)
       const username = email.split('@')[0]
       const randomPassword = crypto.randomBytes(16).toString('hex')
-      user = await User.create({ username, email, password: randomPassword, provider: 'local' })
+       user = await User.create({ username, email, password: randomPassword, provider: 'local', onboarded: false })
     }
 
     // Generate access and refresh tokens consistent with other auth flows
@@ -380,13 +382,14 @@ const registerUser = asyncHandler(async (req, res) => {
             return res.status(400).json({ message: 'User already exists.' });
         }
 
-        // Create new user
-        const user = await User.create({
-            username: username.toLowerCase(),
-            email,
-            password,
-            provider: 'local'
-        });
+    // Create new user
+    const user = await User.create({
+      username: username.toLowerCase(),
+      email,
+      password,
+      provider: 'local',
+      onboarded: false
+    });
 
         // Generate JWT token
         const { accessToken, refreshToken } = await generateAccessAndRefreshToken(user._id);
@@ -613,5 +616,23 @@ const getCalendarEventsForMonth = async (req, res) => {
 }
 
 export { getCalendarEventsForMonth };
+
+// PUT /api/users/character
+export const updateCharacter = async (req, res) => {
+  try {
+    const { characterId } = req.body;
+    const userId = req.user.id; // assuming you use JWT middleware
+    // console.log("Character ID to update:", characterId);
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { character: characterId },
+      { new: true }
+    );
+    // console.log("Updated user after selecting the character:", updatedUser);
+    res.json(updatedUser);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to update character" });
+  }
+};
 
 

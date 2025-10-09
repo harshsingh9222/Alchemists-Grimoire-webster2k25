@@ -14,6 +14,9 @@ const getDateRange = (timeRange) => {
   const endDate = new Date();
   endDate.setHours(23, 59, 59, 999);
   const startDate = new Date();
+  console.log("Start Date before switch:", startDate);
+
+  
   
   switch (timeRange) {
     case 'day':
@@ -33,6 +36,8 @@ const getDateRange = (timeRange) => {
   }
   
   startDate.setHours(0, 0, 0, 0);
+  console.log('Date Range:', { startDate, endDate });
+  
   return { startDate, endDate };
 };
 
