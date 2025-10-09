@@ -7,6 +7,8 @@ import nodemailer from 'nodemailer'
 import { asyncHandler } from "../Utils/asyncHandler.js";
 import { ApiResponse } from "../Utils/ApiResponse.js";
 import { ApiError } from "../Utils/ApiError.js";
+import { msFromISO, isNowWithinWindow } from "../Utils/time.helper.js";
+import { localTimeToUTCDate } from "../Utils/timezone.helper.js";
 
 // Get doses for a specific date
 export const getDosesByDate = asyncHandler(async (req, res) => {
@@ -105,8 +107,13 @@ const createDoseLogsForDate = async (userId, date) => {
           console.warn('Skipping invalid time string for medicine', medicine._id, timeStr);
           continue;
         }
-        const scheduledTime = new Date(date);
-        scheduledTime.setHours(hours, minutes, 0, 0);
+        let scheduledTime;
+        if (medicine.timezone) {
+          scheduledTime = localTimeToUTCDate(date, timeStr, medicine.timezone);
+        } else {
+          scheduledTime = new Date(date);
+          scheduledTime.setHours(hours, minutes, 0, 0);
+        }
 
         // Look for existing log in the same minute window (use Date objects)
         const scheduledStart = new Date(scheduledTime);
@@ -160,17 +167,9 @@ export const updateDoseStatus = asyncHandler(async (req, res) => {
 
   // Server-side guard: prevent marking as 'taken' too early
   if (status === 'taken') {
-    // If scheduledTime provided, enforce 15-minute pre-window
+    // If scheduledTime provided, enforce 15-minute pre-window using ms helper
     if (scheduledTime) {
-      const scheduled = new Date(scheduledTime);
-      if (Number.isNaN(scheduled.getTime())) {
-        throw new ApiError(400, 'Invalid scheduledTime');
-      }
-      const windowStart = new Date(scheduled.getTime() - 15 * 60 * 1000);
-      const now = new Date();
-      if (now < windowStart) {
-        throw new ApiError(403, 'Too early to mark this dose as taken. You can mark it starting 15 minutes before scheduled time.');
-      }
+  if (!isNowWithinWindow(scheduledTime, 15)) throw new ApiError(403, 'Too early to mark this dose as taken. You can mark it starting 15 minutes before scheduled time.');
     }
     // If no scheduledTime but doseId exists, we'll lookup the doseLog below and validate scheduledTime
   }
@@ -185,11 +184,7 @@ export const updateDoseStatus = asyncHandler(async (req, res) => {
       }
       const scheduled = existing.scheduledTime;
       if (scheduled) {
-        const windowStart = new Date(scheduled.getTime() - 15 * 60 * 1000);
-        const now = new Date();
-        if (now < windowStart) {
-          throw new ApiError(403, 'Too early to mark this dose as taken. You can mark it starting 15 minutes before scheduled time.');
-        }
+  if (!isNowWithinWindow(scheduled, 15)) throw new ApiError(403, 'Too early to mark this dose as taken. You can mark it starting 15 minutes before scheduled time.');
       }
     }
 
@@ -204,11 +199,12 @@ export const updateDoseStatus = asyncHandler(async (req, res) => {
       { new: true }
     );
   } else if (medicineId && scheduledTime) {
-    const scheduled = new Date(scheduledTime);
+  const scheduledMs = msFromISO(scheduledTime);
+  if (scheduledMs === null) throw new ApiError(400, 'Invalid scheduledTime');
 
-    // Build a +/- 30 minute search window using Date objects
-    const windowStart = new Date(scheduled.getTime() - 30 * 60 * 1000);
-    const windowEnd = new Date(scheduled.getTime() + 30 * 60 * 1000);
+  // Build a +/- 30 minute search window using ms
+  const windowStart = new Date(scheduledMs - 30 * 60 * 1000);
+  const windowEnd = new Date(scheduledMs + 30 * 60 * 1000);
 
     doseLog = await DoseLog.findOneAndUpdate(
       {

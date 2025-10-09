@@ -1,0 +1,1766 @@
+[
+  {
+    "medicine": {
+      "_id": "68e4940f2a5e380679bd9983",
+      "userId": "68e127f7b57313e9a4a960b4",
+      "medicineName": "uyghvdee",
+      "dosage": "400",
+      "frequency": "daily",
+      "times": [
+        "09:51"
+      ],
+      "startDate": "2025-10-07T00:00:00.000Z",
+      "endDate": "2025-10-08T00:00:00.000Z",
+      "notes": "egstgsreg",
+      "googleEventId": null,
+      "googleCalendarCreatedAt": null,
+      "createdAt": "2025-10-07T04:16:15.954Z",
+      "updatedAt": "2025-10-07T04:16:15.954Z",
+      "__v": 0
+    },
+    "doseLogs": []
+  },
+  {
+    "medicine": {
+      "_id": "68e497ca5dbfdeed6aced08c",
+      "userId": "68e127f7b57313e9a4a960b4",
+      "medicineName": "debo",
+      "dosage": "666",
+      "frequency": "daily",
+      "times": [
+        "11:00",
+        "12:04"
+      ],
+      "startDate": "2025-10-07T00:00:00.000Z",
+      "endDate": "2025-10-08T00:00:00.000Z",
+      "notes": "le le meds",
+      "googleEventId": null,
+      "googleCalendarCreatedAt": null,
+      "createdAt": "2025-10-07T04:32:10.197Z",
+      "updatedAt": "2025-10-07T04:32:10.197Z",
+      "__v": 0
+    },
+    "doseLogs": []
+  },
+  {
+    "medicine": {
+      "_id": "68e498382f0de0d8e0498d21",
+      "userId": "68e127f7b57313e9a4a960b4",
+      "medicineName": "priyo",
+      "dosage": "888",
+      "frequency": "daily",
+      "times": [
+        "11:03"
+      ],
+      "startDate": "2025-10-07T00:00:00.000Z",
+      "endDate": "2025-10-08T00:00:00.000Z",
+      "notes": "bsdiwaale",
+      "googleEventId": null,
+      "googleCalendarCreatedAt": null,
+      "createdAt": "2025-10-07T04:34:00.878Z",
+      "updatedAt": "2025-10-07T04:34:00.878Z",
+      "__v": 0
+    },
+    "doseLogs": []
+  },
+  {
+    "medicine": {
+      "_id": "68e498b3c221076fa0610c4a",
+      "userId": "68e127f7b57313e9a4a960b4",
+      "medicineName": "satyam",
+      "dosage": "222",
+      "frequency": "daily",
+      "times": [
+        "11:05"
+      ],
+      "startDate": "2025-10-07T00:00:00.000Z",
+      "endDate": "2025-10-08T00:00:00.000Z",
+      "notes": "kaisa h bhai",
+      "googleEventId": null,
+      "googleCalendarCreatedAt": null,
+      "createdAt": "2025-10-07T04:36:03.948Z",
+      "updatedAt": "2025-10-07T04:36:03.948Z",
+      "__v": 0
+    },
+    "doseLogs": []
+  },
+  {
+    "medicine": {
+      "_id": "68e499c8553329bbbf0abc31",
+      "userId": "68e127f7b57313e9a4a960b4",
+      "medicineName": "satyam bhau",
+      "dosage": "111",
+      "frequency": "daily",
+      "times": [
+        "11:10"
+      ],
+      "startDate": "2025-10-07T00:00:00.000Z",
+      "endDate": "2025-10-08T00:00:00.000Z",
+      "notes": "take notes bhai",
+      "googleEventId": null,
+      "googleCalendarCreatedAt": null,
+      "createdAt": "2025-10-07T04:40:40.641Z",
+      "updatedAt": "2025-10-07T04:40:40.641Z",
+      "__v": 0
+    },
+    "doseLogs": []
+  },
+  {
+    "medicine": {
+      "_id": "68e49dd9ab2e4ca80fd88c05",
+      "userId": "68e127f7b57313e9a4a960b4",
+      "medicineName": "harsh",
+      "dosage": "111",
+      "frequency": "daily",
+      "times": [
+        "11:27"
+      ],
+      "startDate": "2025-10-07T00:00:00.000Z",
+      "endDate": "2025-10-08T00:00:00.000Z",
+      "notes": "horse bhai",
+      "googleEventId": null,
+      "googleCalendarCreatedAt": null,
+      "createdAt": "2025-10-07T04:58:01.802Z",
+      "updatedAt": "2025-10-07T04:58:01.802Z",
+      "__v": 0
+    },
+    "doseLogs": []
+  },
+  {
+    "medicine": {
+      "_id": "68e49e56e4b85df57bf6178e",
+      "userId": "68e127f7b57313e9a4a960b4",
+      "medicineName": "animesh",
+      "dosage": "001",
+      "frequency": "daily",
+      "times": [
+        "11:29"
+      ],
+      "startDate": "2025-10-07T00:00:00.000Z",
+      "endDate": "2025-10-08T00:00:00.000Z",
+      "notes": "anii",
+      "googleEventId": "2p4vu52c801kch0rnhfrom8jd4",
+      "googleCalendarCreatedAt": "2025-10-07T05:00:08.319Z",
+      "createdAt": "2025-10-07T05:00:06.170Z",
+      "updatedAt": "2025-10-07T05:00:08.321Z",
+      "__v": 0
+    },
+    "doseLogs": []
+  },
+  {
+    "medicine": {
+      "_id": "68e4b2f878393c32a8ef3ee0",
+      "userId": "68e127f7b57313e9a4a960b4",
+      "medicineName": "daaru desi",
+      "dosage": "1",
+      "frequency": "daily",
+      "times": [
+        "15:00",
+        "04:01",
+        "00:00",
+        "12:58"
+      ],
+      "startDate": "2025-10-08T00:00:00.000Z",
+      "endDate": "2025-10-14T00:00:00.000Z",
+      "notes": "laura lasun",
+      "googleEventId": "v4o0sq87gj2t5oafbe888fc010",
+      "googleCalendarCreatedAt": "2025-10-07T06:28:10.670Z",
+      "createdAt": "2025-10-07T06:28:08.912Z",
+      "updatedAt": "2025-10-07T06:28:10.671Z",
+      "__v": 0
+    },
+    "doseLogs": [
+      {
+        "_id": "68e59468fbaf16f9dbb7f5dd",
+        "userId": "68e127f7b57313e9a4a960b4",
+        "medicineId": "68e4b2f878393c32a8ef3ee0",
+        "scheduledTime": "2025-10-07T22:31:00.000Z",
+        "actualTime": null,
+        "status": "missed",
+        "reminderSent": false,
+        "confirmedBy": null,
+        "dayOfWeek": 3,
+        "hour": 4,
+        "createdAt": "2025-10-07T22:30:00.725Z",
+        "updatedAt": "2025-10-08T05:30:01.152Z",
+        "__v": 0
+      },
+      {
+        "_id": "68e6e5e847ecb391263d827c",
+        "userId": "68e127f7b57313e9a4a960b4",
+        "medicineId": "68e4b2f878393c32a8ef3ee0",
+        "scheduledTime": "2025-10-08T22:31:00.000Z",
+        "actualTime": null,
+        "status": "missed",
+        "reminderSent": false,
+        "confirmedBy": null,
+        "dayOfWeek": 4,
+        "hour": 4,
+        "createdAt": "2025-10-08T22:30:00.547Z",
+        "updatedAt": "2025-10-09T05:00:00.178Z",
+        "__v": 0
+      },
+      {
+        "_id": "68e75668550edff846df622c",
+        "userId": "68e127f7b57313e9a4a960b4",
+        "medicineId": "68e4b2f878393c32a8ef3ee0",
+        "scheduledTime": "2025-10-09T07:28:00.000Z",
+        "actualTime": null,
+        "status": "missed",
+        "reminderSent": true,
+        "confirmedBy": null,
+        "dayOfWeek": 4,
+        "hour": 12,
+        "createdAt": "2025-10-09T06:30:00.634Z",
+        "updatedAt": "2025-10-09T07:58:00.311Z",
+        "__v": 0
+      },
+      {
+        "_id": "68e77288ce05e2bee8c38555",
+        "userId": "68e127f7b57313e9a4a960b4",
+        "medicineId": "68e4b2f878393c32a8ef3ee0",
+        "scheduledTime": "2025-10-09T09:30:00.000Z",
+        "actualTime": null,
+        "status": "missed",
+        "reminderSent": true,
+        "notificationSent": true,
+        "confirmedBy": null,
+        "dayOfWeek": 4,
+        "hour": 15,
+        "createdAt": "2025-10-09T08:30:00.803Z",
+        "updatedAt": "2025-10-09T10:00:01.887Z",
+        "__v": 0
+      }
+    ]
+  },
+  {
+    "medicine": {
+      "_id": "68e4c3eafb299c3437800c21",
+      "userId": "68e4c338fb299c3437800bfc",
+      "medicineName": "debo baba ki goli",
+      "dosage": "666",
+      "frequency": "daily",
+      "times": [
+        "10:10"
+      ],
+      "startDate": "2025-10-06T00:00:00.000Z",
+      "endDate": "2025-10-13T00:00:00.000Z",
+      "notes": "Bht jaruri hai",
+      "googleEventId": null,
+      "googleCalendarCreatedAt": null,
+      "createdAt": "2025-10-07T07:40:26.477Z",
+      "updatedAt": "2025-10-07T07:40:26.477Z",
+      "__v": 0
+    },
+    "doseLogs": []
+  },
+  {
+    "medicine": {
+      "_id": "68e5202cb8299a2cf322574b",
+      "userId": "68e1fd207a00d9817c4aeb0d",
+      "medicineName": "Paracetamol",
+      "dosage": "300",
+      "frequency": "daily",
+      "times": [
+        "20:20"
+      ],
+      "startDate": "2025-10-07T00:00:00.000Z",
+      "endDate": "2025-10-13T00:00:00.000Z",
+      "notes": "Take it",
+      "googleEventId": "ubh3uvo3s99njrth56l2dfmre0",
+      "googleCalendarCreatedAt": "2025-10-07T14:14:07.670Z",
+      "createdAt": "2025-10-07T14:14:04.993Z",
+      "updatedAt": "2025-10-07T14:14:07.671Z",
+      "__v": 0
+    },
+    "doseLogs": [
+      {
+        "_id": "68e5202fb8299a2cf322574f",
+        "userId": "68e1fd207a00d9817c4aeb0d",
+        "medicineId": "68e5202cb8299a2cf322574b",
+        "scheduledTime": "2025-10-07T14:50:00.000Z",
+        "actualTime": null,
+        "status": "missed",
+        "reminderSent": true,
+        "confirmedBy": null,
+        "dayOfWeek": 2,
+        "hour": 20,
+        "__v": 0,
+        "createdAt": "2025-10-07T14:14:07.953Z",
+        "updatedAt": "2025-10-07T16:30:00.889Z"
+      },
+      {
+        "_id": "68e5202fb8299a2cf3225750",
+        "userId": "68e1fd207a00d9817c4aeb0d",
+        "medicineId": "68e5202cb8299a2cf322574b",
+        "scheduledTime": "2025-10-08T14:50:00.000Z",
+        "actualTime": null,
+        "status": "missed",
+        "reminderSent": true,
+        "confirmedBy": null,
+        "dayOfWeek": 3,
+        "hour": 20,
+        "__v": 0,
+        "createdAt": "2025-10-07T14:14:07.954Z",
+        "updatedAt": "2025-10-08T17:00:00.768Z"
+      },
+      {
+        "_id": "68e5202fb8299a2cf3225751",
+        "userId": "68e1fd207a00d9817c4aeb0d",
+        "medicineId": "68e5202cb8299a2cf322574b",
+        "scheduledTime": "2025-10-09T14:50:00.000Z",
+        "actualTime": "2025-10-09T06:31:37.320Z",
+        "status": "taken",
+        "reminderSent": false,
+        "confirmedBy": "user",
+        "dayOfWeek": 4,
+        "hour": 20,
+        "__v": 0,
+        "createdAt": "2025-10-07T14:14:07.954Z",
+        "updatedAt": "2025-10-09T06:31:37.321Z"
+      },
+      {
+        "_id": "68e5202fb8299a2cf3225752",
+        "userId": "68e1fd207a00d9817c4aeb0d",
+        "medicineId": "68e5202cb8299a2cf322574b",
+        "scheduledTime": "2025-10-10T14:50:00.000Z",
+        "actualTime": null,
+        "status": "pending",
+        "reminderSent": false,
+        "confirmedBy": null,
+        "dayOfWeek": 5,
+        "hour": 20,
+        "__v": 0,
+        "createdAt": "2025-10-07T14:14:07.954Z",
+        "updatedAt": "2025-10-07T14:14:07.954Z"
+      },
+      {
+        "_id": "68e5202fb8299a2cf3225753",
+        "userId": "68e1fd207a00d9817c4aeb0d",
+        "medicineId": "68e5202cb8299a2cf322574b",
+        "scheduledTime": "2025-10-11T14:50:00.000Z",
+        "actualTime": null,
+        "status": "pending",
+        "reminderSent": false,
+        "confirmedBy": null,
+        "dayOfWeek": 6,
+        "hour": 20,
+        "__v": 0,
+        "createdAt": "2025-10-07T14:14:07.954Z",
+        "updatedAt": "2025-10-07T14:14:07.954Z"
+      },
+      {
+        "_id": "68e5202fb8299a2cf3225754",
+        "userId": "68e1fd207a00d9817c4aeb0d",
+        "medicineId": "68e5202cb8299a2cf322574b",
+        "scheduledTime": "2025-10-12T14:50:00.000Z",
+        "actualTime": null,
+        "status": "pending",
+        "reminderSent": false,
+        "confirmedBy": null,
+        "dayOfWeek": 0,
+        "hour": 20,
+        "__v": 0,
+        "createdAt": "2025-10-07T14:14:07.955Z",
+        "updatedAt": "2025-10-07T14:14:07.955Z"
+      },
+      {
+        "_id": "68e5202fb8299a2cf3225755",
+        "userId": "68e1fd207a00d9817c4aeb0d",
+        "medicineId": "68e5202cb8299a2cf322574b",
+        "scheduledTime": "2025-10-13T14:50:00.000Z",
+        "actualTime": null,
+        "status": "pending",
+        "reminderSent": false,
+        "confirmedBy": null,
+        "dayOfWeek": 1,
+        "hour": 20,
+        "__v": 0,
+        "createdAt": "2025-10-07T14:14:07.955Z",
+        "updatedAt": "2025-10-07T14:14:07.955Z"
+      }
+    ]
+  },
+  {
+    "medicine": {
+      "_id": "68e5647e4c675237a6c23574",
+      "userId": "68e127f7b57313e9a4a960b4",
+      "medicineName": "neww",
+      "dosage": "400",
+      "frequency": "daily",
+      "times": [
+        "00:38"
+      ],
+      "startDate": "2025-10-08T00:00:00.000Z",
+      "endDate": "2025-10-09T00:00:00.000Z",
+      "notes": "chal ja bhai",
+      "googleEventId": "trj5eihiqn0mf43i82867jkk3c",
+      "googleCalendarCreatedAt": "2025-10-07T19:05:36.407Z",
+      "createdAt": "2025-10-07T19:05:34.291Z",
+      "updatedAt": "2025-10-07T19:05:36.408Z",
+      "__v": 0
+    },
+    "doseLogs": [
+      {
+        "_id": "68e564804c675237a6c23578",
+        "userId": "68e127f7b57313e9a4a960b4",
+        "medicineId": "68e5647e4c675237a6c23574",
+        "scheduledTime": "2025-10-07T19:08:00.000Z",
+        "actualTime": null,
+        "status": "missed",
+        "reminderSent": false,
+        "confirmedBy": "auto",
+        "dayOfWeek": 3,
+        "hour": 0,
+        "__v": 0,
+        "createdAt": "2025-10-07T19:05:36.538Z",
+        "updatedAt": "2025-10-07T19:38:57.413Z"
+      },
+      {
+        "_id": "68e564804c675237a6c23579",
+        "userId": "68e127f7b57313e9a4a960b4",
+        "medicineId": "68e5647e4c675237a6c23574",
+        "scheduledTime": "2025-10-08T19:08:00.000Z",
+        "actualTime": null,
+        "status": "missed",
+        "reminderSent": true,
+        "confirmedBy": null,
+        "dayOfWeek": 4,
+        "hour": 0,
+        "__v": 0,
+        "createdAt": "2025-10-07T19:05:36.538Z",
+        "updatedAt": "2025-10-08T20:00:00.778Z"
+      }
+    ]
+  },
+  {
+    "medicine": {
+      "_id": "68e5683e4c675237a6c235cb",
+      "userId": "68e127f7b57313e9a4a960b4",
+      "medicineName": "regsrg",
+      "dosage": "dgserg",
+      "frequency": "daily",
+      "times": [
+        "02:51"
+      ],
+      "startDate": "2025-10-08T00:00:00.000Z",
+      "endDate": "2025-10-09T00:00:00.000Z",
+      "notes": "fxhhdrxdgf",
+      "googleEventId": "j4j4oiromd8qnlj0fp1h4kbv2k",
+      "googleCalendarCreatedAt": "2025-10-07T19:21:37.633Z",
+      "createdAt": "2025-10-07T19:21:34.868Z",
+      "updatedAt": "2025-10-07T19:21:37.634Z",
+      "__v": 0
+    },
+    "doseLogs": [
+      {
+        "_id": "68e568414c675237a6c235cf",
+        "userId": "68e127f7b57313e9a4a960b4",
+        "medicineId": "68e5683e4c675237a6c235cb",
+        "scheduledTime": "2025-10-07T21:21:00.000Z",
+        "actualTime": null,
+        "status": "missed",
+        "reminderSent": true,
+        "confirmedBy": null,
+        "dayOfWeek": 3,
+        "hour": 2,
+        "__v": 0,
+        "createdAt": "2025-10-07T19:21:37.805Z",
+        "updatedAt": "2025-10-07T22:00:00.295Z"
+      },
+      {
+        "_id": "68e568414c675237a6c235d0",
+        "userId": "68e127f7b57313e9a4a960b4",
+        "medicineId": "68e5683e4c675237a6c235cb",
+        "scheduledTime": "2025-10-08T21:21:00.000Z",
+        "actualTime": null,
+        "status": "missed",
+        "reminderSent": true,
+        "confirmedBy": null,
+        "dayOfWeek": 4,
+        "hour": 2,
+        "__v": 0,
+        "createdAt": "2025-10-07T19:21:37.806Z",
+        "updatedAt": "2025-10-08T22:00:01.093Z"
+      }
+    ]
+  },
+  {
+    "medicine": {
+      "_id": "68e56f1250bcdfa354900ffe",
+      "userId": "68e127f7b57313e9a4a960b4",
+      "medicineName": "daaru desi",
+      "dosage": "987",
+      "frequency": "daily",
+      "times": [
+        "01:52"
+      ],
+      "startDate": "2025-10-08T00:00:00.000Z",
+      "endDate": "2025-10-09T00:00:00.000Z",
+      "notes": "chal ja bhai",
+      "googleEventId": "mieldmq790mhd9re36bhg2hnl0",
+      "googleCalendarCreatedAt": "2025-10-07T19:50:44.597Z",
+      "createdAt": "2025-10-07T19:50:42.514Z",
+      "updatedAt": "2025-10-07T19:50:44.600Z",
+      "__v": 0
+    },
+    "doseLogs": [
+      {
+        "_id": "68e56f1450bcdfa354901002",
+        "userId": "68e127f7b57313e9a4a960b4",
+        "medicineId": "68e56f1250bcdfa354900ffe",
+        "scheduledTime": "2025-10-07T20:22:00.000Z",
+        "actualTime": null,
+        "status": "missed",
+        "reminderSent": true,
+        "confirmedBy": null,
+        "dayOfWeek": 3,
+        "hour": 1,
+        "__v": 0,
+        "createdAt": "2025-10-07T19:50:44.737Z",
+        "updatedAt": "2025-10-07T21:00:00.533Z"
+      },
+      {
+        "_id": "68e56f1450bcdfa354901003",
+        "userId": "68e127f7b57313e9a4a960b4",
+        "medicineId": "68e56f1250bcdfa354900ffe",
+        "scheduledTime": "2025-10-08T20:22:00.000Z",
+        "actualTime": null,
+        "status": "missed",
+        "reminderSent": true,
+        "confirmedBy": null,
+        "dayOfWeek": 4,
+        "hour": 1,
+        "__v": 0,
+        "createdAt": "2025-10-07T19:50:44.737Z",
+        "updatedAt": "2025-10-08T21:30:00.616Z"
+      }
+    ]
+  },
+  {
+    "medicine": {
+      "_id": "68e5703d50bcdfa35490103b",
+      "userId": "68e127f7b57313e9a4a960b4",
+      "medicineName": "eerhdsre hsetr  fg",
+      "dosage": "dthstg",
+      "frequency": "daily",
+      "times": [
+        "01:57"
+      ],
+      "startDate": "2025-10-08T00:00:00.000Z",
+      "endDate": "2025-10-09T00:00:00.000Z",
+      "notes": "hdtyertwreRftyseztrzwfs",
+      "googleEventId": "2vm47oh0sha94b8auiajli0p2s",
+      "googleCalendarCreatedAt": "2025-10-07T19:55:44.154Z",
+      "createdAt": "2025-10-07T19:55:41.651Z",
+      "updatedAt": "2025-10-07T19:55:44.155Z",
+      "__v": 0
+    },
+    "doseLogs": [
+      {
+        "_id": "68e5704050bcdfa35490103f",
+        "userId": "68e127f7b57313e9a4a960b4",
+        "medicineId": "68e5703d50bcdfa35490103b",
+        "scheduledTime": "2025-10-07T20:27:00.000Z",
+        "actualTime": null,
+        "status": "missed",
+        "reminderSent": true,
+        "confirmedBy": null,
+        "dayOfWeek": 3,
+        "hour": 1,
+        "__v": 0,
+        "createdAt": "2025-10-07T19:55:44.720Z",
+        "updatedAt": "2025-10-07T21:00:00.722Z"
+      },
+      {
+        "_id": "68e5704050bcdfa354901040",
+        "userId": "68e127f7b57313e9a4a960b4",
+        "medicineId": "68e5703d50bcdfa35490103b",
+        "scheduledTime": "2025-10-08T20:27:00.000Z",
+        "actualTime": null,
+        "status": "missed",
+        "reminderSent": true,
+        "confirmedBy": null,
+        "dayOfWeek": 4,
+        "hour": 1,
+        "__v": 0,
+        "createdAt": "2025-10-07T19:55:44.720Z",
+        "updatedAt": "2025-10-08T21:30:01.241Z"
+      }
+    ]
+  },
+  {
+    "medicine": {
+      "_id": "68e5720f1ffe3e0532fd374f",
+      "userId": "68e127f7b57313e9a4a960b4",
+      "medicineName": "daaru desi",
+      "dosage": "111",
+      "frequency": "daily",
+      "times": [
+        "02:05"
+      ],
+      "startDate": "2025-10-08T00:00:00.000Z",
+      "endDate": "2025-10-09T00:00:00.000Z",
+      "notes": "sghhx",
+      "googleEventId": "7nbv09npb00m4p2embp7ladjm8",
+      "googleCalendarCreatedAt": "2025-10-07T20:03:30.095Z",
+      "createdAt": "2025-10-07T20:03:27.684Z",
+      "updatedAt": "2025-10-07T20:03:30.097Z",
+      "__v": 0
+    },
+    "doseLogs": [
+      {
+        "_id": "68e572121ffe3e0532fd3753",
+        "userId": "68e127f7b57313e9a4a960b4",
+        "medicineId": "68e5720f1ffe3e0532fd374f",
+        "scheduledTime": "2025-10-07T20:35:00.000Z",
+        "actualTime": null,
+        "status": "missed",
+        "reminderSent": true,
+        "confirmedBy": null,
+        "dayOfWeek": 3,
+        "hour": 2,
+        "__v": 0,
+        "createdAt": "2025-10-07T20:03:30.225Z",
+        "updatedAt": "2025-10-07T21:30:00.256Z"
+      },
+      {
+        "_id": "68e572121ffe3e0532fd3754",
+        "userId": "68e127f7b57313e9a4a960b4",
+        "medicineId": "68e5720f1ffe3e0532fd374f",
+        "scheduledTime": "2025-10-08T20:35:00.000Z",
+        "actualTime": null,
+        "status": "missed",
+        "reminderSent": true,
+        "confirmedBy": null,
+        "dayOfWeek": 4,
+        "hour": 2,
+        "__v": 0,
+        "createdAt": "2025-10-07T20:03:30.226Z",
+        "updatedAt": "2025-10-08T21:30:01.858Z"
+      }
+    ]
+  },
+  {
+    "medicine": {
+      "_id": "68e5848424c1abba051e9a16",
+      "userId": "68e0ff5f1dfdebc18c5053fe",
+      "medicineName": "paracetmaol",
+      "dosage": "500mg",
+      "frequency": "daily",
+      "times": [
+        "03:00"
+      ],
+      "startDate": "2025-10-08T00:00:00.000Z",
+      "endDate": "2025-10-10T00:00:00.000Z",
+      "notes": "testing phase1",
+      "googleEventId": "ahuutp2fp45brtfeklronhtn7k",
+      "googleCalendarCreatedAt": "2025-10-07T21:22:15.414Z",
+      "createdAt": "2025-10-07T21:22:12.680Z",
+      "updatedAt": "2025-10-07T21:22:15.417Z",
+      "__v": 0
+    },
+    "doseLogs": [
+      {
+        "_id": "68e5848724c1abba051e9a1a",
+        "userId": "68e0ff5f1dfdebc18c5053fe",
+        "medicineId": "68e5848424c1abba051e9a16",
+        "scheduledTime": "2025-10-07T21:30:00.000Z",
+        "actualTime": "2025-10-07T21:46:16.331Z",
+        "status": "taken",
+        "reminderSent": true,
+        "confirmedBy": "user",
+        "dayOfWeek": 3,
+        "hour": 3,
+        "__v": 0,
+        "createdAt": "2025-10-07T21:22:15.761Z",
+        "updatedAt": "2025-10-07T21:46:16.335Z"
+      },
+      {
+        "_id": "68e5848724c1abba051e9a1b",
+        "userId": "68e0ff5f1dfdebc18c5053fe",
+        "medicineId": "68e5848424c1abba051e9a16",
+        "scheduledTime": "2025-10-08T21:30:00.000Z",
+        "actualTime": "2025-10-08T18:35:08.162Z",
+        "status": "taken",
+        "reminderSent": false,
+        "confirmedBy": "user",
+        "dayOfWeek": 4,
+        "hour": 3,
+        "__v": 0,
+        "createdAt": "2025-10-07T21:22:15.762Z",
+        "updatedAt": "2025-10-08T18:35:08.165Z"
+      },
+      {
+        "_id": "68e5848724c1abba051e9a1c",
+        "userId": "68e0ff5f1dfdebc18c5053fe",
+        "medicineId": "68e5848424c1abba051e9a16",
+        "scheduledTime": "2025-10-09T21:30:00.000Z",
+        "actualTime": null,
+        "status": "pending",
+        "reminderSent": false,
+        "confirmedBy": null,
+        "dayOfWeek": 5,
+        "hour": 3,
+        "__v": 0,
+        "createdAt": "2025-10-07T21:22:15.762Z",
+        "updatedAt": "2025-10-07T21:22:15.762Z"
+      }
+    ]
+  },
+  {
+    "medicine": {
+      "_id": "68e597d2fbaf16f9dbb7f673",
+      "userId": "68e59725fbaf16f9dbb7f655",
+      "medicineName": "derifile",
+      "dosage": "99",
+      "frequency": "weekly",
+      "times": [
+        "10:10"
+      ],
+      "startDate": "2025-10-08T00:00:00.000Z",
+      "endDate": "2025-10-13T00:00:00.000Z",
+      "notes": "Le liha",
+      "googleEventId": null,
+      "googleCalendarCreatedAt": null,
+      "createdAt": "2025-10-07T22:44:34.930Z",
+      "updatedAt": "2025-10-07T22:44:34.930Z",
+      "__v": 0
+    },
+    "doseLogs": [
+      {
+        "_id": "68e597d3fbaf16f9dbb7f676",
+        "userId": "68e59725fbaf16f9dbb7f655",
+        "medicineId": "68e597d2fbaf16f9dbb7f673",
+        "scheduledTime": "2025-10-08T04:40:00.000Z",
+        "actualTime": "2025-10-07T22:46:36.484Z",
+        "status": "taken",
+        "reminderSent": false,
+        "confirmedBy": "user",
+        "dayOfWeek": 3,
+        "hour": 10,
+        "__v": 0,
+        "createdAt": "2025-10-07T22:44:35.257Z",
+        "updatedAt": "2025-10-07T22:46:36.485Z"
+      }
+    ]
+  },
+  {
+    "medicine": {
+      "_id": "68e59829fbaf16f9dbb7f684",
+      "userId": "68e59725fbaf16f9dbb7f655",
+      "medicineName": "paracetmaol",
+      "dosage": "550",
+      "frequency": "daily",
+      "times": [
+        "12:30"
+      ],
+      "startDate": "2025-10-04T00:00:00.000Z",
+      "endDate": "2025-10-06T00:00:00.000Z",
+      "notes": "Paar hogyi",
+      "googleEventId": null,
+      "googleCalendarCreatedAt": null,
+      "createdAt": "2025-10-07T22:46:01.550Z",
+      "updatedAt": "2025-10-07T22:46:01.550Z",
+      "__v": 0
+    },
+    "doseLogs": []
+  },
+  {
+    "medicine": {
+      "_id": "68e608412dcb8aed12f9037f",
+      "userId": "68e127f7b57313e9a4a960b4",
+      "medicineName": "dddd",
+      "dosage": "111",
+      "frequency": "daily",
+      "times": [
+        "15:13"
+      ],
+      "startDate": "2025-10-08T00:00:00.000Z",
+      "endDate": "2025-10-09T00:00:00.000Z",
+      "notes": "there is nothing",
+      "googleEventId": "[\"qbanj0gnhg0pk92jqo9n2pkm90\"]",
+      "googleCalendarCreatedAt": "2025-10-08T06:44:19.569Z",
+      "createdAt": "2025-10-08T06:44:17.240Z",
+      "updatedAt": "2025-10-08T06:44:19.571Z",
+      "__v": 0
+    },
+    "doseLogs": [
+      {
+        "_id": "68e608432dcb8aed12f90383",
+        "userId": "68e127f7b57313e9a4a960b4",
+        "medicineId": "68e608412dcb8aed12f9037f",
+        "scheduledTime": "2025-10-08T09:43:00.000Z",
+        "actualTime": null,
+        "status": "missed",
+        "reminderSent": false,
+        "confirmedBy": null,
+        "dayOfWeek": 3,
+        "hour": 15,
+        "__v": 0,
+        "createdAt": "2025-10-08T06:44:19.730Z",
+        "updatedAt": "2025-10-08T14:00:00.168Z"
+      },
+      {
+        "_id": "68e608432dcb8aed12f90384",
+        "userId": "68e127f7b57313e9a4a960b4",
+        "medicineId": "68e608412dcb8aed12f9037f",
+        "scheduledTime": "2025-10-09T09:43:00.000Z",
+        "actualTime": null,
+        "status": "missed",
+        "reminderSent": true,
+        "confirmedBy": null,
+        "dayOfWeek": 4,
+        "hour": 15,
+        "__v": 0,
+        "createdAt": "2025-10-08T06:44:19.731Z",
+        "updatedAt": "2025-10-09T10:25:03.212Z",
+        "notificationSent": true
+      }
+    ]
+  },
+  {
+    "medicine": {
+      "_id": "68e69d3f7d2145810a9b72a8",
+      "userId": "68e1f3b7ca93e681e04cc88c",
+      "medicineName": "Jamalghota",
+      "dosage": "300",
+      "frequency": "weekly",
+      "times": [
+        "23:10"
+      ],
+      "startDate": "2025-10-05T00:00:00.000Z",
+      "endDate": "2026-10-13T00:00:00.000Z",
+      "notes": "",
+      "googleEventId": null,
+      "googleCalendarCreatedAt": null,
+      "createdAt": "2025-10-08T17:19:59.874Z",
+      "updatedAt": "2025-10-08T17:19:59.874Z",
+      "__v": 0
+    },
+    "doseLogs": [
+      {
+        "_id": "68e69d407d2145810a9b72ac",
+        "userId": "68e1f3b7ca93e681e04cc88c",
+        "medicineId": "68e69d3f7d2145810a9b72a8",
+        "scheduledTime": "2025-10-12T17:40:00.000Z",
+        "actualTime": null,
+        "status": "pending",
+        "reminderSent": false,
+        "confirmedBy": null,
+        "dayOfWeek": 0,
+        "hour": 23,
+        "__v": 0,
+        "createdAt": "2025-10-08T17:20:00.175Z",
+        "updatedAt": "2025-10-08T17:20:00.175Z"
+      },
+      {
+        "_id": "68e69d407d2145810a9b72ad",
+        "userId": "68e1f3b7ca93e681e04cc88c",
+        "medicineId": "68e69d3f7d2145810a9b72a8",
+        "scheduledTime": "2025-10-19T17:40:00.000Z",
+        "actualTime": null,
+        "status": "pending",
+        "reminderSent": false,
+        "confirmedBy": null,
+        "dayOfWeek": 0,
+        "hour": 23,
+        "__v": 0,
+        "createdAt": "2025-10-08T17:20:00.176Z",
+        "updatedAt": "2025-10-08T17:20:00.176Z"
+      },
+      {
+        "_id": "68e69d407d2145810a9b72ae",
+        "userId": "68e1f3b7ca93e681e04cc88c",
+        "medicineId": "68e69d3f7d2145810a9b72a8",
+        "scheduledTime": "2025-10-26T17:40:00.000Z",
+        "actualTime": null,
+        "status": "pending",
+        "reminderSent": false,
+        "confirmedBy": null,
+        "dayOfWeek": 0,
+        "hour": 23,
+        "__v": 0,
+        "createdAt": "2025-10-08T17:20:00.176Z",
+        "updatedAt": "2025-10-08T17:20:00.176Z"
+      },
+      {
+        "_id": "68e69d407d2145810a9b72af",
+        "userId": "68e1f3b7ca93e681e04cc88c",
+        "medicineId": "68e69d3f7d2145810a9b72a8",
+        "scheduledTime": "2025-11-02T17:40:00.000Z",
+        "actualTime": null,
+        "status": "pending",
+        "reminderSent": false,
+        "confirmedBy": null,
+        "dayOfWeek": 0,
+        "hour": 23,
+        "__v": 0,
+        "createdAt": "2025-10-08T17:20:00.176Z",
+        "updatedAt": "2025-10-08T17:20:00.176Z"
+      },
+      {
+        "_id": "68e6ddfd47ecb391263d7ffe",
+        "userId": "68e1f3b7ca93e681e04cc88c",
+        "medicineId": "68e69d3f7d2145810a9b72a8",
+        "scheduledTime": "2025-10-08T21:56:13.079Z",
+        "actualTime": "2025-10-08T21:56:16.514Z",
+        "status": "taken",
+        "notes": "Marked from dashboard",
+        "reminderSent": false,
+        "confirmedBy": "user",
+        "dayOfWeek": 4,
+        "hour": 3,
+        "createdAt": "2025-10-08T21:56:13.276Z",
+        "updatedAt": "2025-10-08T21:56:16.515Z",
+        "__v": 0
+      }
+    ]
+  },
+  {
+    "medicine": {
+      "_id": "68e6cc5255ae970444d0cf11",
+      "userId": "68e0ff5f1dfdebc18c5053fe",
+      "medicineName": "harshuu",
+      "dosage": "120000",
+      "frequency": "daily",
+      "times": [
+        "05:15"
+      ],
+      "startDate": "2025-10-09T00:00:00.000Z",
+      "endDate": "2025-10-15T00:00:00.000Z",
+      "notes": "lamba chalega",
+      "googleEventId": "[\"qsgha4j1t5vris4pmtdoh14dok\"]",
+      "googleCalendarCreatedAt": "2025-10-08T20:40:52.566Z",
+      "createdAt": "2025-10-08T20:40:50.313Z",
+      "updatedAt": "2025-10-08T20:40:52.567Z",
+      "__v": 0
+    },
+    "doseLogs": [
+      {
+        "_id": "68e6cc5455ae970444d0cf15",
+        "userId": "68e0ff5f1dfdebc18c5053fe",
+        "medicineId": "68e6cc5255ae970444d0cf11",
+        "scheduledTime": "2025-10-08T23:45:00.000Z",
+        "actualTime": null,
+        "status": "missed",
+        "reminderSent": false,
+        "confirmedBy": null,
+        "dayOfWeek": 4,
+        "hour": 5,
+        "__v": 0,
+        "createdAt": "2025-10-08T20:40:52.877Z",
+        "updatedAt": "2025-10-09T05:00:00.521Z"
+      },
+      {
+        "_id": "68e6cc5455ae970444d0cf16",
+        "userId": "68e0ff5f1dfdebc18c5053fe",
+        "medicineId": "68e6cc5255ae970444d0cf11",
+        "scheduledTime": "2025-10-09T23:45:00.000Z",
+        "actualTime": null,
+        "status": "pending",
+        "reminderSent": false,
+        "confirmedBy": null,
+        "dayOfWeek": 5,
+        "hour": 5,
+        "__v": 0,
+        "createdAt": "2025-10-08T20:40:52.877Z",
+        "updatedAt": "2025-10-08T20:40:52.877Z"
+      },
+      {
+        "_id": "68e6cc5455ae970444d0cf17",
+        "userId": "68e0ff5f1dfdebc18c5053fe",
+        "medicineId": "68e6cc5255ae970444d0cf11",
+        "scheduledTime": "2025-10-10T23:45:00.000Z",
+        "actualTime": null,
+        "status": "pending",
+        "reminderSent": false,
+        "confirmedBy": null,
+        "dayOfWeek": 6,
+        "hour": 5,
+        "__v": 0,
+        "createdAt": "2025-10-08T20:40:52.877Z",
+        "updatedAt": "2025-10-08T20:40:52.877Z"
+      },
+      {
+        "_id": "68e6cc5455ae970444d0cf18",
+        "userId": "68e0ff5f1dfdebc18c5053fe",
+        "medicineId": "68e6cc5255ae970444d0cf11",
+        "scheduledTime": "2025-10-11T23:45:00.000Z",
+        "actualTime": null,
+        "status": "pending",
+        "reminderSent": false,
+        "confirmedBy": null,
+        "dayOfWeek": 0,
+        "hour": 5,
+        "__v": 0,
+        "createdAt": "2025-10-08T20:40:52.877Z",
+        "updatedAt": "2025-10-08T20:40:52.877Z"
+      },
+      {
+        "_id": "68e6cc5455ae970444d0cf19",
+        "userId": "68e0ff5f1dfdebc18c5053fe",
+        "medicineId": "68e6cc5255ae970444d0cf11",
+        "scheduledTime": "2025-10-12T23:45:00.000Z",
+        "actualTime": null,
+        "status": "pending",
+        "reminderSent": false,
+        "confirmedBy": null,
+        "dayOfWeek": 1,
+        "hour": 5,
+        "__v": 0,
+        "createdAt": "2025-10-08T20:40:52.877Z",
+        "updatedAt": "2025-10-08T20:40:52.877Z"
+      },
+      {
+        "_id": "68e6cc5455ae970444d0cf1a",
+        "userId": "68e0ff5f1dfdebc18c5053fe",
+        "medicineId": "68e6cc5255ae970444d0cf11",
+        "scheduledTime": "2025-10-13T23:45:00.000Z",
+        "actualTime": null,
+        "status": "pending",
+        "reminderSent": false,
+        "confirmedBy": null,
+        "dayOfWeek": 2,
+        "hour": 5,
+        "__v": 0,
+        "createdAt": "2025-10-08T20:40:52.877Z",
+        "updatedAt": "2025-10-08T20:40:52.877Z"
+      },
+      {
+        "_id": "68e6cc5455ae970444d0cf1b",
+        "userId": "68e0ff5f1dfdebc18c5053fe",
+        "medicineId": "68e6cc5255ae970444d0cf11",
+        "scheduledTime": "2025-10-14T23:45:00.000Z",
+        "actualTime": null,
+        "status": "pending",
+        "reminderSent": false,
+        "confirmedBy": null,
+        "dayOfWeek": 3,
+        "hour": 5,
+        "__v": 0,
+        "createdAt": "2025-10-08T20:40:52.878Z",
+        "updatedAt": "2025-10-08T20:40:52.878Z"
+      }
+    ]
+  },
+  {
+    "medicine": {
+      "_id": "68e74370550edff846df6002",
+      "userId": "68e1fd207a00d9817c4aeb0d",
+      "medicineName": "Jadibooti",
+      "dosage": "50",
+      "frequency": "daily",
+      "times": [
+        "10:55"
+      ],
+      "startDate": "2025-10-09T00:00:00.000Z",
+      "endDate": "2025-10-13T00:00:00.000Z",
+      "notes": "",
+      "googleEventId": "[\"rj4h74a0mjvd38jahl39b3mbh4\"]",
+      "googleCalendarCreatedAt": "2025-10-09T05:09:06.795Z",
+      "createdAt": "2025-10-09T05:09:04.496Z",
+      "updatedAt": "2025-10-09T05:09:06.799Z",
+      "__v": 0
+    },
+    "doseLogs": [
+      {
+        "_id": "68e74373550edff846df6006",
+        "userId": "68e1fd207a00d9817c4aeb0d",
+        "medicineId": "68e74370550edff846df6002",
+        "scheduledTime": "2025-10-09T05:25:00.000Z",
+        "actualTime": "2025-10-09T05:55:00.755Z",
+        "status": "taken",
+        "reminderSent": true,
+        "confirmedBy": "user",
+        "dayOfWeek": 4,
+        "hour": 10,
+        "__v": 0,
+        "createdAt": "2025-10-09T05:09:07.104Z",
+        "updatedAt": "2025-10-09T05:55:00.755Z"
+      },
+      {
+        "_id": "68e74373550edff846df6007",
+        "userId": "68e1fd207a00d9817c4aeb0d",
+        "medicineId": "68e74370550edff846df6002",
+        "scheduledTime": "2025-10-10T05:25:00.000Z",
+        "actualTime": null,
+        "status": "pending",
+        "reminderSent": false,
+        "confirmedBy": null,
+        "dayOfWeek": 5,
+        "hour": 10,
+        "__v": 0,
+        "createdAt": "2025-10-09T05:09:07.104Z",
+        "updatedAt": "2025-10-09T05:09:07.104Z"
+      },
+      {
+        "_id": "68e74373550edff846df6008",
+        "userId": "68e1fd207a00d9817c4aeb0d",
+        "medicineId": "68e74370550edff846df6002",
+        "scheduledTime": "2025-10-11T05:25:00.000Z",
+        "actualTime": null,
+        "status": "pending",
+        "reminderSent": false,
+        "confirmedBy": null,
+        "dayOfWeek": 6,
+        "hour": 10,
+        "__v": 0,
+        "createdAt": "2025-10-09T05:09:07.104Z",
+        "updatedAt": "2025-10-09T05:09:07.104Z"
+      },
+      {
+        "_id": "68e74373550edff846df6009",
+        "userId": "68e1fd207a00d9817c4aeb0d",
+        "medicineId": "68e74370550edff846df6002",
+        "scheduledTime": "2025-10-12T05:25:00.000Z",
+        "actualTime": null,
+        "status": "pending",
+        "reminderSent": false,
+        "confirmedBy": null,
+        "dayOfWeek": 0,
+        "hour": 10,
+        "__v": 0,
+        "createdAt": "2025-10-09T05:09:07.104Z",
+        "updatedAt": "2025-10-09T05:09:07.104Z"
+      },
+      {
+        "_id": "68e74373550edff846df600a",
+        "userId": "68e1fd207a00d9817c4aeb0d",
+        "medicineId": "68e74370550edff846df6002",
+        "scheduledTime": "2025-10-13T05:25:00.000Z",
+        "actualTime": null,
+        "status": "pending",
+        "reminderSent": false,
+        "confirmedBy": null,
+        "dayOfWeek": 1,
+        "hour": 10,
+        "__v": 0,
+        "createdAt": "2025-10-09T05:09:07.104Z",
+        "updatedAt": "2025-10-09T05:09:07.104Z"
+      }
+    ]
+  },
+  {
+    "medicine": {
+      "_id": "68e7576e550edff846df6297",
+      "userId": "68e1fd207a00d9817c4aeb0d",
+      "medicineName": "Ashwagandah",
+      "dosage": "100",
+      "frequency": "weekly",
+      "times": [
+        "12:20"
+      ],
+      "startDate": "2025-10-08T00:00:00.000Z",
+      "endDate": "2025-10-13T00:00:00.000Z",
+      "notes": "",
+      "googleEventId": "[\"mib3dkgm3qitf17erq6n2uvii4\"]",
+      "googleCalendarCreatedAt": "2025-10-09T06:34:24.800Z",
+      "createdAt": "2025-10-09T06:34:22.711Z",
+      "updatedAt": "2025-10-09T06:34:24.801Z",
+      "__v": 0
+    },
+    "doseLogs": [
+      {
+        "_id": "68e758e8550edff846df6376",
+        "userId": "68e1fd207a00d9817c4aeb0d",
+        "medicineId": "68e7576e550edff846df6297",
+        "scheduledTime": "2025-10-09T06:40:40.041Z",
+        "actualTime": "2025-10-09T06:40:40.224Z",
+        "status": "taken",
+        "notes": "Marked from dashboard",
+        "reminderSent": false,
+        "confirmedBy": "user",
+        "dayOfWeek": 4,
+        "hour": 12,
+        "createdAt": "2025-10-09T06:40:40.226Z",
+        "updatedAt": "2025-10-09T06:40:40.226Z",
+        "__v": 0
+      }
+    ]
+  },
+  {
+    "medicine": {
+      "_id": "68e757e9550edff846df62d9",
+      "userId": "68e1fd207a00d9817c4aeb0d",
+      "medicineName": "Shilajeet",
+      "dosage": "500",
+      "frequency": "daily",
+      "times": [
+        "12:25"
+      ],
+      "startDate": "2025-10-09T00:00:00.000Z",
+      "endDate": "2025-10-13T00:00:00.000Z",
+      "notes": "For Energy",
+      "googleEventId": "[\"d514331o5vgvcm2h62m8f30ss4\"]",
+      "googleCalendarCreatedAt": "2025-10-09T06:36:27.387Z",
+      "createdAt": "2025-10-09T06:36:25.816Z",
+      "updatedAt": "2025-10-09T06:36:27.388Z",
+      "__v": 0
+    },
+    "doseLogs": [
+      {
+        "_id": "68e757eb550edff846df62e2",
+        "userId": "68e1fd207a00d9817c4aeb0d",
+        "medicineId": "68e757e9550edff846df62d9",
+        "scheduledTime": "2025-10-09T06:55:00.000Z",
+        "actualTime": null,
+        "status": "missed",
+        "reminderSent": true,
+        "confirmedBy": null,
+        "dayOfWeek": 4,
+        "hour": 12,
+        "__v": 0,
+        "createdAt": "2025-10-09T06:36:27.449Z",
+        "updatedAt": "2025-10-09T07:30:00.450Z"
+      },
+      {
+        "_id": "68e757eb550edff846df62e3",
+        "userId": "68e1fd207a00d9817c4aeb0d",
+        "medicineId": "68e757e9550edff846df62d9",
+        "scheduledTime": "2025-10-10T06:55:00.000Z",
+        "actualTime": null,
+        "status": "pending",
+        "reminderSent": false,
+        "confirmedBy": null,
+        "dayOfWeek": 5,
+        "hour": 12,
+        "__v": 0,
+        "createdAt": "2025-10-09T06:36:27.449Z",
+        "updatedAt": "2025-10-09T06:36:27.449Z"
+      },
+      {
+        "_id": "68e757eb550edff846df62e4",
+        "userId": "68e1fd207a00d9817c4aeb0d",
+        "medicineId": "68e757e9550edff846df62d9",
+        "scheduledTime": "2025-10-11T06:55:00.000Z",
+        "actualTime": null,
+        "status": "pending",
+        "reminderSent": false,
+        "confirmedBy": null,
+        "dayOfWeek": 6,
+        "hour": 12,
+        "__v": 0,
+        "createdAt": "2025-10-09T06:36:27.449Z",
+        "updatedAt": "2025-10-09T06:36:27.449Z"
+      },
+      {
+        "_id": "68e757eb550edff846df62e5",
+        "userId": "68e1fd207a00d9817c4aeb0d",
+        "medicineId": "68e757e9550edff846df62d9",
+        "scheduledTime": "2025-10-12T06:55:00.000Z",
+        "actualTime": null,
+        "status": "pending",
+        "reminderSent": false,
+        "confirmedBy": null,
+        "dayOfWeek": 0,
+        "hour": 12,
+        "__v": 0,
+        "createdAt": "2025-10-09T06:36:27.449Z",
+        "updatedAt": "2025-10-09T06:36:27.449Z"
+      },
+      {
+        "_id": "68e757eb550edff846df62e6",
+        "userId": "68e1fd207a00d9817c4aeb0d",
+        "medicineId": "68e757e9550edff846df62d9",
+        "scheduledTime": "2025-10-13T06:55:00.000Z",
+        "actualTime": null,
+        "status": "pending",
+        "reminderSent": false,
+        "confirmedBy": null,
+        "dayOfWeek": 1,
+        "hour": 12,
+        "__v": 0,
+        "createdAt": "2025-10-09T06:36:27.449Z",
+        "updatedAt": "2025-10-09T06:36:27.449Z"
+      }
+    ]
+  },
+  {
+    "medicine": {
+      "_id": "68e7661f2805d8252bd4ab75",
+      "userId": "68e0ff5f1dfdebc18c5053fe",
+      "medicineName": "dolo",
+      "dosage": "250mg",
+      "frequency": "daily",
+      "times": [
+        "13:35"
+      ],
+      "startDate": "2025-10-09T00:00:00.000Z",
+      "endDate": "2025-10-11T00:00:00.000Z",
+      "notes": "testing",
+      "googleEventId": "[\"s9eataotfgg5rbc1mqimk3gbp4\"]",
+      "googleCalendarCreatedAt": "2025-10-09T07:37:05.263Z",
+      "createdAt": "2025-10-09T07:37:03.197Z",
+      "updatedAt": "2025-10-09T07:37:05.263Z",
+      "__v": 0
+    },
+    "doseLogs": [
+      {
+        "_id": "68e766212805d8252bd4ab79",
+        "userId": "68e0ff5f1dfdebc18c5053fe",
+        "medicineId": "68e7661f2805d8252bd4ab75",
+        "scheduledTime": "2025-10-09T08:05:00.000Z",
+        "actualTime": null,
+        "status": "missed",
+        "reminderSent": true,
+        "confirmedBy": null,
+        "dayOfWeek": 4,
+        "hour": 13,
+        "__v": 0,
+        "createdAt": "2025-10-09T07:37:05.523Z",
+        "updatedAt": "2025-10-09T08:33:30.298Z",
+        "notificationSent": true
+      },
+      {
+        "_id": "68e766212805d8252bd4ab7a",
+        "userId": "68e0ff5f1dfdebc18c5053fe",
+        "medicineId": "68e7661f2805d8252bd4ab75",
+        "scheduledTime": "2025-10-10T08:05:00.000Z",
+        "actualTime": null,
+        "status": "pending",
+        "reminderSent": false,
+        "confirmedBy": null,
+        "dayOfWeek": 5,
+        "hour": 13,
+        "__v": 0,
+        "createdAt": "2025-10-09T07:37:05.523Z",
+        "updatedAt": "2025-10-09T07:37:05.523Z"
+      },
+      {
+        "_id": "68e766212805d8252bd4ab7b",
+        "userId": "68e0ff5f1dfdebc18c5053fe",
+        "medicineId": "68e7661f2805d8252bd4ab75",
+        "scheduledTime": "2025-10-11T08:05:00.000Z",
+        "actualTime": null,
+        "status": "pending",
+        "reminderSent": false,
+        "confirmedBy": null,
+        "dayOfWeek": 6,
+        "hour": 13,
+        "__v": 0,
+        "createdAt": "2025-10-09T07:37:05.524Z",
+        "updatedAt": "2025-10-09T07:37:05.524Z"
+      }
+    ]
+  },
+  {
+    "medicine": {
+      "_id": "68e76ac132dedde39bf494ec",
+      "userId": "68e1f3b7ca93e681e04cc88c",
+      "medicineName": "harshuu",
+      "dosage": "12000",
+      "frequency": "daily",
+      "times": [
+        "14:27"
+      ],
+      "startDate": "2025-10-09T00:00:00.000Z",
+      "endDate": "2025-10-12T00:00:00.000Z",
+      "notes": "testing1",
+      "googleEventId": null,
+      "googleCalendarCreatedAt": null,
+      "createdAt": "2025-10-09T07:56:49.526Z",
+      "updatedAt": "2025-10-09T07:56:49.526Z",
+      "__v": 0
+    },
+    "doseLogs": [
+      {
+        "_id": "68e76ac132dedde39bf494ef",
+        "userId": "68e1f3b7ca93e681e04cc88c",
+        "medicineId": "68e76ac132dedde39bf494ec",
+        "scheduledTime": "2025-10-09T08:57:00.000Z",
+        "actualTime": null,
+        "status": "missed",
+        "reminderSent": true,
+        "confirmedBy": null,
+        "dayOfWeek": 4,
+        "hour": 14,
+        "__v": 0,
+        "createdAt": "2025-10-09T07:56:49.720Z",
+        "updatedAt": "2025-10-09T09:27:00.230Z",
+        "notificationSent": true
+      },
+      {
+        "_id": "68e76ac132dedde39bf494f0",
+        "userId": "68e1f3b7ca93e681e04cc88c",
+        "medicineId": "68e76ac132dedde39bf494ec",
+        "scheduledTime": "2025-10-10T08:57:00.000Z",
+        "actualTime": null,
+        "status": "pending",
+        "reminderSent": false,
+        "confirmedBy": null,
+        "dayOfWeek": 5,
+        "hour": 14,
+        "__v": 0,
+        "createdAt": "2025-10-09T07:56:49.720Z",
+        "updatedAt": "2025-10-09T07:56:49.720Z"
+      },
+      {
+        "_id": "68e76ac132dedde39bf494f1",
+        "userId": "68e1f3b7ca93e681e04cc88c",
+        "medicineId": "68e76ac132dedde39bf494ec",
+        "scheduledTime": "2025-10-11T08:57:00.000Z",
+        "actualTime": null,
+        "status": "pending",
+        "reminderSent": false,
+        "confirmedBy": null,
+        "dayOfWeek": 6,
+        "hour": 14,
+        "__v": 0,
+        "createdAt": "2025-10-09T07:56:49.721Z",
+        "updatedAt": "2025-10-09T07:56:49.721Z"
+      },
+      {
+        "_id": "68e76ac132dedde39bf494f2",
+        "userId": "68e1f3b7ca93e681e04cc88c",
+        "medicineId": "68e76ac132dedde39bf494ec",
+        "scheduledTime": "2025-10-12T08:57:00.000Z",
+        "actualTime": null,
+        "status": "pending",
+        "reminderSent": false,
+        "confirmedBy": null,
+        "dayOfWeek": 0,
+        "hour": 14,
+        "__v": 0,
+        "createdAt": "2025-10-09T07:56:49.721Z",
+        "updatedAt": "2025-10-09T07:56:49.721Z"
+      }
+    ]
+  },
+  {
+    "medicine": {
+      "_id": "68e7da7c16fa680697464129",
+      "userId": "68e127f7b57313e9a4a960b4",
+      "medicineName": "tulsi",
+      "dosage": "200",
+      "frequency": "daily",
+      "times": [
+        "21:56"
+      ],
+      "startDate": "2025-10-09T00:00:00.000Z",
+      "endDate": "2025-10-10T00:00:00.000Z",
+      "notes": "take this natural medicine",
+      "googleEventId": "[\"7619oqkon828om9o67663jdksk\"]",
+      "googleCalendarCreatedAt": "2025-10-09T15:53:34.579Z",
+      "createdAt": "2025-10-09T15:53:32.840Z",
+      "updatedAt": "2025-10-09T15:53:34.581Z",
+      "__v": 0
+    },
+    "doseLogs": [
+      {
+        "_id": "68e7da7e16fa68069746412d",
+        "userId": "68e127f7b57313e9a4a960b4",
+        "medicineId": "68e7da7c16fa680697464129",
+        "scheduledTime": "2025-10-09T16:26:00.000Z",
+        "actualTime": "2025-10-09T16:42:10.158Z",
+        "status": "taken",
+        "reminderSent": true,
+        "notificationSent": true,
+        "confirmedBy": "user",
+        "dayOfWeek": 4,
+        "hour": 21,
+        "__v": 0,
+        "createdAt": "2025-10-09T15:53:34.666Z",
+        "updatedAt": "2025-10-09T16:42:10.164Z"
+      },
+      {
+        "_id": "68e7da7e16fa68069746412e",
+        "userId": "68e127f7b57313e9a4a960b4",
+        "medicineId": "68e7da7c16fa680697464129",
+        "scheduledTime": "2025-10-10T16:26:00.000Z",
+        "actualTime": null,
+        "status": "pending",
+        "reminderSent": false,
+        "notificationSent": false,
+        "confirmedBy": null,
+        "dayOfWeek": 5,
+        "hour": 21,
+        "__v": 0,
+        "createdAt": "2025-10-09T15:53:34.667Z",
+        "updatedAt": "2025-10-09T15:53:34.667Z"
+      }
+    ]
+  },
+  {
+    "medicine": {
+      "_id": "68e7dcb4c6125f9073e5deab",
+      "userId": "68e127f7b57313e9a4a960b4",
+      "medicineName": "abcd",
+      "dosage": "112",
+      "frequency": "daily",
+      "times": [
+        "22:04"
+      ],
+      "startDate": "2025-10-09T00:00:00.000Z",
+      "endDate": "2025-10-10T00:00:00.000Z",
+      "notes": "nothing`",
+      "googleEventId": "[\"ukduv8gie3d535mtbsj6i1h7rk\"]",
+      "googleCalendarCreatedAt": "2025-10-09T16:03:02.783Z",
+      "createdAt": "2025-10-09T16:03:00.956Z",
+      "updatedAt": "2025-10-09T16:03:02.785Z",
+      "__v": 0
+    },
+    "doseLogs": [
+      {
+        "_id": "68e7dcb6c6125f9073e5deaf",
+        "userId": "68e127f7b57313e9a4a960b4",
+        "medicineId": "68e7dcb4c6125f9073e5deab",
+        "scheduledTime": "2025-10-09T16:34:00.000Z",
+        "actualTime": null,
+        "status": "pending",
+        "reminderSent": true,
+        "notificationSent": true,
+        "confirmedBy": null,
+        "dayOfWeek": 4,
+        "hour": 22,
+        "__v": 0,
+        "createdAt": "2025-10-09T16:03:02.882Z",
+        "updatedAt": "2025-10-09T16:04:02.628Z"
+      },
+      {
+        "_id": "68e7dcb6c6125f9073e5deb0",
+        "userId": "68e127f7b57313e9a4a960b4",
+        "medicineId": "68e7dcb4c6125f9073e5deab",
+        "scheduledTime": "2025-10-10T16:34:00.000Z",
+        "actualTime": null,
+        "status": "pending",
+        "reminderSent": false,
+        "notificationSent": false,
+        "confirmedBy": null,
+        "dayOfWeek": 5,
+        "hour": 22,
+        "__v": 0,
+        "createdAt": "2025-10-09T16:03:02.882Z",
+        "updatedAt": "2025-10-09T16:03:02.882Z"
+      }
+    ]
+  },
+  {
+    "medicine": {
+      "_id": "68e7dd982d84ecb478d0291d",
+      "userId": "68e127f7b57313e9a4a960b4",
+      "medicineName": "defg",
+      "dosage": "111",
+      "frequency": "daily",
+      "times": [
+        "22:08"
+      ],
+      "startDate": "2025-10-09T00:00:00.000Z",
+      "endDate": "2025-10-09T00:00:00.000Z",
+      "notes": "nttt yuu",
+      "googleEventId": "[\"7e0sp4abjd8ejhrde207av7hn8\"]",
+      "googleCalendarCreatedAt": "2025-10-09T16:06:50.960Z",
+      "createdAt": "2025-10-09T16:06:48.937Z",
+      "updatedAt": "2025-10-09T16:06:50.962Z",
+      "__v": 0
+    },
+    "doseLogs": [
+      {
+        "_id": "68e7dd9b2d84ecb478d02921",
+        "userId": "68e127f7b57313e9a4a960b4",
+        "medicineId": "68e7dd982d84ecb478d0291d",
+        "scheduledTime": "2025-10-09T16:38:00.000Z",
+        "actualTime": "2025-10-09T16:42:12.940Z",
+        "status": "taken",
+        "reminderSent": true,
+        "notificationSent": true,
+        "confirmedBy": "user",
+        "dayOfWeek": 4,
+        "hour": 22,
+        "__v": 0,
+        "createdAt": "2025-10-09T16:06:51.082Z",
+        "updatedAt": "2025-10-09T16:42:12.940Z"
+      }
+    ]
+  },
+  {
+    "medicine": {
+      "_id": "68e7ece98f5dd9a31fefd7b5",
+      "userId": "68e127f7b57313e9a4a960b4",
+      "medicineName": "risk h",
+      "dosage": "600",
+      "frequency": "daily",
+      "times": [
+        "23:13"
+      ],
+      "startDate": "2025-10-09T00:00:00.000Z",
+      "endDate": "2025-10-09T00:00:00.000Z",
+      "notes": "le le bhai utha le",
+      "googleEventId": "[\"rjvlltdkanvlhvhhlkiiuaffj4\"]",
+      "googleCalendarCreatedAt": "2025-10-09T17:12:11.929Z",
+      "createdAt": "2025-10-09T17:12:09.899Z",
+      "updatedAt": "2025-10-09T17:12:11.930Z",
+      "__v": 0
+    },
+    "doseLogs": [
+      {
+        "_id": "68e7ecec8f5dd9a31fefd7b9",
+        "userId": "68e127f7b57313e9a4a960b4",
+        "medicineId": "68e7ece98f5dd9a31fefd7b5",
+        "scheduledTime": "2025-10-09T17:43:00.000Z",
+        "actualTime": null,
+        "status": "pending",
+        "reminderSent": true,
+        "notificationSent": true,
+        "confirmedBy": null,
+        "dayOfWeek": 4,
+        "hour": 23,
+        "__v": 0,
+        "createdAt": "2025-10-09T17:12:12.038Z",
+        "updatedAt": "2025-10-09T17:13:04.838Z"
+      }
+    ]
+  },
+  {
+    "medicine": {
+      "_id": "68e7eec08f5dd9a31fefd861",
+      "userId": "68e127f7b57313e9a4a960b4",
+      "medicineName": "daaru se mere baap ka liver chala gya ye khaasi kya cheez h re",
+      "dosage": "999",
+      "frequency": "daily",
+      "times": [
+        "23:22"
+      ],
+      "startDate": "2025-10-09T00:00:00.000Z",
+      "endDate": "2025-10-09T00:00:00.000Z",
+      "notes": "don't fret over it",
+      "googleEventId": "[\"p0itsnsdjoflts83aq0hg1kva8\"]",
+      "googleCalendarCreatedAt": "2025-10-09T17:20:02.202Z",
+      "createdAt": "2025-10-09T17:20:00.260Z",
+      "updatedAt": "2025-10-09T17:20:02.203Z",
+      "__v": 0
+    },
+    "doseLogs": [
+      {
+        "_id": "68e7eec28f5dd9a31fefd865",
+        "userId": "68e127f7b57313e9a4a960b4",
+        "medicineId": "68e7eec08f5dd9a31fefd861",
+        "scheduledTime": "2025-10-09T17:52:00.000Z",
+        "actualTime": null,
+        "status": "pending",
+        "reminderSent": true,
+        "notificationSent": true,
+        "confirmedBy": null,
+        "dayOfWeek": 4,
+        "hour": 23,
+        "__v": 0,
+        "createdAt": "2025-10-09T17:20:02.425Z",
+        "updatedAt": "2025-10-09T17:21:05.512Z"
+      }
+    ]
+  },
+  {
+    "medicine": {
+      "_id": "68e7f83b5871c32ff3881526",
+      "userId": "68e127f7b57313e9a4a960b4",
+      "medicineName": "12 bje ki dawa",
+      "dosage": "444",
+      "frequency": "daily",
+      "times": [
+        "00:02"
+      ],
+      "startDate": "2025-10-10T00:00:00.000Z",
+      "endDate": "2025-10-10T00:00:00.000Z",
+      "notes": "",
+      "googleEventId": "[\"pin4k5km5c1jpsr4kgu8u7l8ss\"]",
+      "googleCalendarCreatedAt": "2025-10-09T18:00:30.095Z",
+      "createdAt": "2025-10-09T18:00:27.641Z",
+      "updatedAt": "2025-10-09T18:00:30.097Z",
+      "__v": 0
+    },
+    "doseLogs": [
+      {
+        "_id": "68e7f83e5871c32ff388152d",
+        "userId": "68e127f7b57313e9a4a960b4",
+        "medicineId": "68e7f83b5871c32ff3881526",
+        "scheduledTime": "2025-10-09T18:32:00.000Z",
+        "actualTime": null,
+        "status": "pending",
+        "reminderSent": true,
+        "notificationSent": true,
+        "confirmedBy": null,
+        "dayOfWeek": 5,
+        "hour": 0,
+        "__v": 0,
+        "createdAt": "2025-10-09T18:00:30.216Z",
+        "updatedAt": "2025-10-09T18:01:01.094Z"
+      }
+    ]
+  },
+  {
+    "medicine": {
+      "_id": "68e7faae93276a37d9fcf7f5",
+      "userId": "68e127f7b57313e9a4a960b4",
+      "medicineName": "dd",
+      "dosage": "411",
+      "frequency": "daily",
+      "times": [
+        "00:12"
+      ],
+      "startDate": "2025-10-10T00:00:00.000Z",
+      "endDate": "2025-10-10T00:00:00.000Z",
+      "notes": "dd ddd",
+      "googleEventId": "[\"51d30kpma9qn579lh60kneffeo\"]",
+      "googleCalendarCreatedAt": "2025-10-09T18:10:56.238Z",
+      "createdAt": "2025-10-09T18:10:54.169Z",
+      "updatedAt": "2025-10-09T18:10:56.239Z",
+      "__v": 0
+    },
+    "doseLogs": [
+      {
+        "_id": "68e7fab093276a37d9fcf7f9",
+        "userId": "68e127f7b57313e9a4a960b4",
+        "medicineId": "68e7faae93276a37d9fcf7f5",
+        "scheduledTime": "2025-10-09T18:42:00.000Z",
+        "actualTime": null,
+        "status": "pending",
+        "reminderSent": false,
+        "notificationSent": false,
+        "confirmedBy": null,
+        "dayOfWeek": 5,
+        "hour": 0,
+        "__v": 0,
+        "createdAt": "2025-10-09T18:10:56.389Z",
+        "updatedAt": "2025-10-09T18:10:56.389Z"
+      }
+    ]
+  },
+  {
+    "medicine": {
+      "_id": "68e7fb3293276a37d9fcf89d",
+      "userId": "68e127f7b57313e9a4a960b4",
+      "medicineName": "santosh",
+      "dosage": "444",
+      "frequency": "daily",
+      "times": [
+        "00:14"
+      ],
+      "startDate": "2025-10-10T00:00:00.000Z",
+      "endDate": "2025-10-10T00:00:00.000Z",
+      "notes": "kumar patra",
+      "googleEventId": "[\"of5351kki6edm1gn473b22lq14\"]",
+      "googleCalendarCreatedAt": "2025-10-09T18:13:08.642Z",
+      "createdAt": "2025-10-09T18:13:06.935Z",
+      "updatedAt": "2025-10-09T18:13:08.643Z",
+      "__v": 0
+    },
+    "doseLogs": [
+      {
+        "_id": "68e7fb3493276a37d9fcf8a1",
+        "userId": "68e127f7b57313e9a4a960b4",
+        "medicineId": "68e7fb3293276a37d9fcf89d",
+        "scheduledTime": "2025-10-09T18:44:00.000Z",
+        "actualTime": null,
+        "status": "pending",
+        "reminderSent": false,
+        "notificationSent": false,
+        "confirmedBy": null,
+        "dayOfWeek": 5,
+        "hour": 0,
+        "__v": 0,
+        "createdAt": "2025-10-09T18:13:08.775Z",
+        "updatedAt": "2025-10-09T18:13:08.775Z"
+      }
+    ]
+  }
+]

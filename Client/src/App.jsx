@@ -147,7 +147,7 @@ function App() {
             )
           }
         />
-        {/* Fallback: render home inside MainLayout for any unmatched /app paths */}}}
+        {/* Fallback: render home inside MainLayout for any unmatched /app paths */}
         <Route
           path="/app/*"
           element={

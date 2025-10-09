@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react"
 import { useNavigate } from "react-router-dom"
 import { toast } from "react-toastify"
-import { userSignup, googleAuth, verifyOTP as apiVerifyOTP } from "../api"
+import { googleAuth, sendOTP, verifyOTP, resendOTP } from "../api"
 import {useDispatch} from "react-redux"
 import {login as authLogin} from "../store/authSlice"
 import toastHot from "react-hot-toast"
@@ -18,6 +18,37 @@ const Signup = () => {
     password: "",
   })
 
+  const [otpStep, setOtpStep] = useState(false)
+  const [otp, setOtp] = useState("")
+  const [passwordError, setPasswordError] = useState("")
+  const [otpTimer, setOtpTimer] = useState(0) // seconds remaining
+  const [resendDisabled, setResendDisabled] = useState(false)
+
+  // Password strength validator
+  const validatePassword = (pwd) => {
+    const errors = []
+    if (!pwd || pwd.length < 8) errors.push('At least 8 characters')
+    if (!/[A-Z]/.test(pwd)) errors.push('At least one uppercase letter')
+    if (!/[0-9]/.test(pwd)) errors.push('At least one number')
+    if (!/[!@#$%^&*(),.?":{}|<>]/.test(pwd)) errors.push('At least one special character')
+    return errors
+  }
+
+  useEffect(() => {
+    let interval
+    if (otpStep && otpTimer > 0) {
+      interval = setInterval(() => setOtpTimer((s) => s - 1), 1000)
+    }
+    return () => clearInterval(interval)
+  }, [otpStep, otpTimer])
+
+  const startOtpCountdown = (seconds = 600) => {
+    setOtpTimer(seconds)
+    // disable resend for initial 60 seconds
+    setResendDisabled(true)
+    setTimeout(() => setResendDisabled(false), 30000)
+  }
+
   // handle form field changes
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value })
@@ -27,19 +58,14 @@ const Signup = () => {
   const handleSubmit = async (e) => {
     e.preventDefault()
     try {
-      
-      const response = await userSignup(formData)
-
-      console.log("Signup ->",response);
-    //   console.log("Signup success data:", response.data)
-        // Automatically log in the user
-      dispatch(authLogin(response.user));
-
-      toast.success("Registration successful!")
-      navigate("/circus") // redirect to circus page
+      // Step 1: send OTP to provided email and wait for verification before creating account
+      const resp = await sendOTP(formData.email)
+      console.debug('sendOTP response:', resp)
+      toastHot.success('OTP sent. Please enter the code below to verify your email and create your account.')
+      setOtpStep(true)
     } catch (error) {
-      console.error("Signup error:", error.message)
-      toast.error(error.message || "Signup failed")
+      console.error("sendOTP error:", error)
+      toast.error(error.message || "Failed to send OTP")
     }
   }
 
@@ -67,33 +93,17 @@ const Signup = () => {
     async (authResult) => {
       try {
         if (authResult?.code) {
+      const [resendTimer, setResendTimer] = useState(0)
           console.debug('Google auth result (code):', authResult.code)
-          const sendOtpResp = await googleAuth(authResult.code, true);
-          console.debug('googleAuth sendOtpResp:', sendOtpResp)
-          toastHot.success(
-            "OTP sent to your Google email (check preview URL in response if using Ethereal)"
-          );
+          // Call server without requesting OTP. Server will return user and tokens for a normal Google login flow.
+          const resp = await googleAuth(authResult.code);
+          console.debug('googleAuth response:', resp)
 
-          if (sendOtpResp?.previewUrl) {
-            // eslint-disable-next-line no-alert
-            alert(`Preview URL for OTP email:\n${sendOtpResp.previewUrl}`);
-          }
-
-          // eslint-disable-next-line no-alert
-          const userOtp = window.prompt("Enter the OTP sent to your email:");
-          if (!userOtp) {
-            toastHot.error("OTP entry cancelled");
-            return;
-          }
-
-          const verifyResp = await apiVerifyOTP(sendOtpResp.email, userOtp);
-          console.debug('verifyOTP response:', verifyResp)
-
-          // Defensive: ensure we have a user object
-          const userObj = verifyResp?.user || verifyResp?.data?.user;
+          // Extract user object from possible shapes
+          const userObj = resp?.user || resp?.data?.user || resp?.data || resp;
           if (!userObj) {
-            console.error('No user returned from verifyOTP:', verifyResp)
-            toastHot.error('Failed to verify OTP (no user data)')
+            console.error('No user returned from googleAuth:', resp)
+            toastHot.error('Google authentication failed (no user data)')
             return
           }
 
@@ -103,6 +113,21 @@ const Signup = () => {
           toastHot.success(
             `Welcome, ${userObj.fullname || userObj.email || userObj.username || ''}!`
           );
+      // Manage resend timer separately
+      useEffect(() => {
+        let rint
+        if (resendDisabled) {
+          setResendTimer(30)
+          rint = setInterval(() => setResendTimer((s) => {
+            if (s <= 1) {
+              clearInterval(rint)
+              return 0
+            }
+            return s - 1
+          }), 1000)
+        }
+        return () => clearInterval(rint)
+      }, [resendDisabled])
 
           // Attempt to notify opener (if flow opened in a separate window)
           try {
@@ -114,7 +139,7 @@ const Signup = () => {
             console.warn('Failed to postMessage to opener:', err)
           }
 
-          // Close modal if present and always navigate to home
+          // Close modal if present and navigate to home
           modal?.close();
           navigate('/', { replace: true });
         }
@@ -227,15 +252,87 @@ const Signup = () => {
             )}
           </button>
         </div>
+        {passwordError && (
+          <div className="text-sm text-yellow-300 mb-4">{passwordError}</div>
+        )}
 
-        {/* Submit Button with Glow */}
-        <button
-          type="submit"
-          className="relative w-full bg-gradient-to-r from-pink-500 via-fuchsia-500 to-purple-500 py-3 rounded-lg font-bold text-lg shadow-lg overflow-hidden transition duration-300 hover:scale-105 hover:shadow-[0_0_25px_5px_rgba(236,72,153,0.7)]"
-        >
-          ✨ Sign Up
-          <span className="absolute inset-0 bg-gradient-to-r from-pink-400 via-fuchsia-400 to-purple-400 opacity-0 hover:opacity-20 transition duration-500 blur-xl"></span>
-        </button>
+        {/* Submit Button with Glow (sends OTP) */}
+        {!otpStep ? (
+          <button
+            type="submit"
+            className="relative w-full bg-gradient-to-r from-pink-500 via-fuchsia-500 to-purple-500 py-3 rounded-lg font-bold text-lg shadow-lg overflow-hidden transition duration-300 hover:scale-105 hover:shadow-[0_0_25px_5px_rgba(236,72,153,0.7)]"
+          >
+            ✨ Send OTP
+            <span className="absolute inset-0 bg-gradient-to-r from-pink-400 via-fuchsia-400 to-purple-400 opacity-0 hover:opacity-20 transition duration-500 blur-xl"></span>
+          </button>
+        ) : (
+          <div className="space-y-4">
+            <input
+              type="text"
+              name="otp"
+              placeholder="Enter OTP"
+              value={otp}
+              onChange={(e) => setOtp(e.target.value)}
+              className="w-full bg-purple-700 border border-fuchsia-400 rounded-lg px-4 py-3 text-white placeholder-fuchsia-200 focus:outline-none focus:ring-2 focus:ring-fuchsia-400"
+            />
+
+              <div className="flex items-center justify-between text-sm text-fuchsia-200">
+                <div>
+                  {otpTimer > 0 ? (
+                    <span>Expires in: {Math.floor(otpTimer / 60)}:{String(otpTimer % 60).padStart(2, '0')}</span>
+                  ) : (
+                    <span className="text-yellow-300">OTP expired</span>
+                  )}
+                </div>
+                <div>
+                  <button
+                    type="button"
+                    disabled={resendDisabled}
+                    onClick={async () => {
+                      try {
+                        setResendDisabled(true)
+                        await resendOTP(formData.email)
+                        toastHot.success('OTP resent')
+                        startOtpCountdown(600)
+                      } catch (err) {
+                        console.error('resendOTP error', err)
+                        toast.error('Failed to resend OTP')
+                        setResendDisabled(false)
+                      }
+                    }}
+                    className="underline text-fuchsia-200 disabled:opacity-50"
+                  >
+                    Resend
+                  </button>
+                </div>
+              </div>
+
+              <button
+              type="button"
+              onClick={async () => {
+                try {
+                  const verifyResp = await verifyOTP(formData.email, otp, { createWithPassword: true, username: formData.username, password: formData.password });
+                  console.debug('verifyOTP response:', verifyResp)
+                  const userObj = verifyResp?.user || verifyResp?.data?.user || verifyResp?.data || verifyResp;
+                  if (!userObj) {
+                    toastHot.error('Failed to create account after OTP verification')
+                    return
+                  }
+                  dispatch(authLogin(userObj));
+                  localStorage.setItem('User', JSON.stringify(userObj));
+                  toastHot.success('Account created and logged in!')
+                  navigate('/circus')
+                } catch (err) {
+                  console.error('verifyOTP/create account error:', err)
+                  toast.error(err.message || 'Failed to verify OTP')
+                }
+              }}
+              className="w-full bg-green-600 py-3 rounded-lg font-bold"
+            >
+              ✅ Verify OTP & Create Account
+            </button>
+          </div>
+        )}
 
         <div className="relative flex items-center justify-center my-4">
           <span className="absolute bg-purple-800 px-3 text-fuchsia-200 text-sm">or</span>

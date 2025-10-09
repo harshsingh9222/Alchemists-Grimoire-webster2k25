@@ -6,9 +6,11 @@ import {
   CheckCircle,
   XCircle,
   AlertCircle,
+  Sparkles,
 } from "lucide-react";
 import PropTypes from "prop-types";
 import DoseSummaryCard from "./DoseSummaryCard.jsx";
+import { isNowWithinWindow } from "../../Utils/time.helper";
 
 const ProgressSection = ({
   progressDate,
@@ -106,13 +108,11 @@ const ProgressSection = ({
                 const isMissed = dose.status === "missed";
                 const isPending = dose.status === "pending";
                 // Allow taking only from 15 minutes before scheduled time
-                const canTake = (() => {
-                  if (isMissed) return false;
-                  const scheduled = dose.scheduledTime ? new Date(dose.scheduledTime) : null;
-                  if (!scheduled || Number.isNaN(scheduled.getTime())) return true; // allow when no scheduled time
-                  const windowStart = new Date(scheduled.getTime() - 15 * 60 * 1000);
-                  const now = new Date();
-                  return now >= windowStart;
+                  const canTake = (() => {
+                    if (isMissed) return false;
+                    const scheduled = dose.scheduledTime ? dose.scheduledTime : null;
+                    if (!scheduled) return true; // allow when no scheduled time
+                    return isNowWithinWindow(scheduled, 15);
                 })();
                 return (
                   <div

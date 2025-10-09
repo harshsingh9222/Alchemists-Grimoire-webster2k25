@@ -1,0 +1,18 @@
+[
+  {
+    "_id": "68e7dcb6c6125f9073e5deb0",
+    "userId": "68e127f7b57313e9a4a960b4",
+    "medicineId": "68e7dcb4c6125f9073e5deab",
+    "scheduledTime": "2025-10-10T16:34:00.000Z",
+    "actualTime": null,
+    "status": "pending",
+    "reminderSent": false,
+    "notificationSent": false,
+    "confirmedBy": null,
+    "dayOfWeek": 5,
+    "hour": 22,
+    "__v": 0,
+    "createdAt": "2025-10-09T16:03:02.882Z",
+    "updatedAt": "2025-10-09T16:03:02.882Z"
+  }
+]

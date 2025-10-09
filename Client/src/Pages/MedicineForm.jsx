@@ -14,7 +14,11 @@ const MedicineForm = () => {
     startDate: "",
     endDate: "",
     notes: "",
+    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC",
   });
+
+  const [timezones, setTimezones] = useState([]);
+  const [customTz, setCustomTz] = useState("");
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -22,6 +26,18 @@ const MedicineForm = () => {
   useEffect(() => {
     if (!userData?._id) {
       navigate("/login"); // redirect if not logged in
+    }
+    // Populate timezone options where supported
+    try {
+      if (Intl && typeof Intl.supportedValuesOf === 'function') {
+        const tzs = Intl.supportedValuesOf('timeZone');
+        setTimezones(tzs);
+      } else {
+        // fallback curated list
+        setTimezones(["UTC","America/New_York","America/Los_Angeles","Europe/London","Asia/Kolkata","Asia/Tokyo"]);
+      }
+    } catch (err) {
+      setTimezones(["UTC","America/New_York","Europe/London","Asia/Kolkata"]);
     }
   }, [userData, navigate]);
 
@@ -44,7 +60,10 @@ const MedicineForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await addMedicines(formData); // save to backend
+      // Attach user's timezone so server can compute scheduled instants correctly
+      const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      const payload = { ...formData, timezone: tz };
+      await addMedicines(payload); // save to backend
       await dispatch(fetchMedicinesThunk()); // refresh Redux store
       navigate("/myMedicines"); // redirect
     } catch (error) {
@@ -120,6 +139,34 @@ const MedicineForm = () => {
           required
           className="w-full mb-3 p-3 rounded-lg bg-gray-700 border border-gray-600 text-white"
         />
+
+        <label className="block mb-2 text-gray-300">Timezone (optional):</label>
+        <select
+          name="timezone"
+          value={formData.timezone || ''}
+          onChange={(e) => {
+            handleChange(e);
+            setCustomTz('');
+          }}
+          className="w-full mb-3 p-3 rounded-lg bg-gray-700 border border-gray-600 text-white"
+        >
+          {timezones.map((tz) => (
+            <option key={tz} value={tz}>{tz}</option>
+          ))}
+          <option value="">Other...</option>
+        </select>
+
+  <p className="text-xs text-gray-400 mb-2">By default we detect your timezone. Change only if you want this schedule to follow a different timezone.</p>
+
+  {formData.timezone === '' && (
+          <input
+            type="text"
+            placeholder="Enter IANA timezone (e.g., America/New_York)"
+            value={customTz}
+            onChange={(e) => { setCustomTz(e.target.value); setFormData({ ...formData, timezone: e.target.value }); }}
+            className="w-full mb-3 p-3 rounded-lg bg-gray-700 border border-gray-600 text-white"
+          />
+        )}
 
         <label className="block mb-2 text-gray-300">End Date (optional):</label>
         <input

@@ -19,6 +19,8 @@ const options = {
 const secret = "jn4k5n6n5nnn6oi4n"
 
 // OTP storage (in-memory for now - use Redis in production)
+// Stored shape per email:
+// { otp, expiresAt, attempts, sentAt, failures, lockUntil }
 const otpStorage = new Map()
 
 // Generate 6-digit OTP
@@ -73,50 +75,29 @@ const googleLogin = async (req, res) => {
 
     console.log("Google user info:", { email, name })
 
-    // If the frontend requested OTP verification only, send OTP to the Google email
-    // and return early (the verifyOTP endpoint will finish login).
-    if (req.query?.requireOtp === 'true') {
-      console.log('googleLogin: requireOtp=true, sending OTP to', email)
-      // Ensure user exists and persist Google refresh token so Calendar calls can work later
-      let user = await User.findOne({ email })
-      if (!user) {
-        console.log("Creating new user (OTP flow) from Google OAuth")
-       user = await User.create({
-         username: name,
-         email,
-         provider: 'google',
-         profilePic: picture,
-         onboarded: false
-       })
-      }
-
-      // Persist refresh token if provided
-      if (tokens?.refresh_token) {
-        user.google = user.google || {}
-        user.google.refreshToken = tokens.refresh_token
-        if (userRes.data?.id) user.google.id = userRes.data.id
-        await user.save()
-        console.log('Persisted google refresh token for user (OTP flow)')
-      }
-
-      // Reuse sendOTP implementation by calling it with a fake req object
-      await sendOTP({ body: { email } }, res)
-      return
-    }
+    // Proceed with normal Google login: find/create user and issue tokens
 
     // Otherwise proceed with normal Google login: find/create user and issue tokens
     let user = await User.findOne({ email })
     if (!user) {
       console.log("Creating new user from Google OAuth")
+       // Mark Google-created accounts as onboarded/confirmed since OAuth provides verified email
        user = await User.create({
          username: name,
          email,
          provider: 'google',
          profilePic: picture,
-         onboarded: false
+         onboarded: true,
+         emailConfirmed: true
        })
     } else {
       console.log("Existing user found:", user.username)
+      // If the existing user was created earlier without onboarding, ensure provider and onboarded are updated
+      if (user.provider !== 'google' || !user.onboarded || !user.emailConfirmed) {
+        user.provider = 'google'
+        user.onboarded = true
+        user.emailConfirmed = true
+      }
     }
 
     // Ensure user provider and username are set
@@ -133,6 +114,7 @@ const googleLogin = async (req, res) => {
       // also persist the googleId if available
       if (userRes.data?.id) user.google.id = userRes.data.id
     }
+    // Persist any provider/onboarded updates
     await user.save()
 
     // Generate access and refresh tokens consistent with other flows
@@ -188,15 +170,31 @@ const sendOTP = async (req, res) => {
       console.log(`sendOTP: no existing user for ${email} - proceeding to send OTP`)
     }
 
+    // Respect resend cooldown (30 seconds) and any existing lockouts
+    const now = Date.now()
+    const existing = otpStorage.get(email) || {}
+    if (existing.lockUntil && now < existing.lockUntil) {
+      const wait = Math.ceil((existing.lockUntil - now) / 1000)
+      return res.status(429).json({ message: 'Too many failed attempts. Try again later.', waitTime: wait })
+    }
+
+    if (existing.sentAt && (now - existing.sentAt) < 30 * 1000) {
+      const wait = Math.ceil((30 - (now - existing.sentAt) / 1000))
+      return res.status(429).json({ message: 'Please wait before requesting a new OTP', waitTime: wait })
+    }
+
     // Generate OTP
     const otp = generateOTP()
-    const expiresAt = Date.now() + 10 * 60 * 1000 // 10 minutes
+    const expiresAt = now + 10 * 60 * 1000 // 10 minutes
 
-    // Store OTP with expiration
+    // Store OTP with expiration and preserve failure count
     otpStorage.set(email, {
       otp,
       expiresAt,
       attempts: 0,
+      sentAt: now,
+      failures: existing.failures || 0,
+      lockUntil: existing.lockUntil || null,
     })
 
     // Create email transporter; if no real credentials are configured, create an Ethereal test account
@@ -265,7 +263,7 @@ const sendOTP = async (req, res) => {
 // Verify OTP
 const verifyOTP = async (req, res) => {
   try {
-    const { email, otp } = req.body
+    const { email, otp, createWithPassword, username: bodyUsername, password: bodyPassword } = req.body
 
     if (!email || !otp) {
       return res.status(400).json({ message: "Email and OTP are required" })
@@ -293,10 +291,22 @@ const verifyOTP = async (req, res) => {
     // Verify OTP
     if (storedOTPData.otp !== otp.toString()) {
       storedOTPData.attempts += 1
+      // Increase failures only when a verification attempt fails (not resend)
+      storedOTPData.failures = (storedOTPData.failures || 0) + 1
+
+      // If failures exceed 3, apply exponential lockout
+      if (storedOTPData.failures >= 3) {
+        const exponent = storedOTPData.failures - 3 // 0 for first lock, increases
+        const lockSeconds = Math.min(60 * Math.pow(2, exponent), 60 * 60 * 24) // cap 24h
+        storedOTPData.lockUntil = Date.now() + lockSeconds * 1000
+      }
+
       otpStorage.set(email, storedOTPData)
+
       return res.status(400).json({
         message: "Invalid OTP",
-        attemptsLeft: 3 - storedOTPData.attempts,
+        attemptsLeft: Math.max(0, 3 - storedOTPData.attempts),
+        lockedUntil: storedOTPData.lockUntil || null,
       })
     }
 
@@ -307,9 +317,18 @@ const verifyOTP = async (req, res) => {
     let user = await User.findOne({ email })
     if (!user) {
       console.log(`verifyOTP: creating new user for ${email}`)
-      const username = email.split('@')[0]
-      const randomPassword = crypto.randomBytes(16).toString('hex')
-       user = await User.create({ username, email, password: randomPassword, provider: 'local', onboarded: false })
+      const username = createWithPassword && bodyUsername ? bodyUsername : email.split('@')[0]
+      // If caller asked to create with provided password, use it; otherwise generate a random one
+      const passwordToUse = createWithPassword && bodyPassword ? bodyPassword : crypto.randomBytes(16).toString('hex')
+      // Create a local user via OTP: mark emailConfirmed true so email verification is recorded
+      user = await User.create({ username, email, password: passwordToUse, provider: 'local', onboarded: false, emailConfirmed: true })
+    } else {
+      // If user exists and caller requested createWithPassword, do not overwrite existing password.
+      // Ensure existing users are marked emailConfirmed after successful OTP verification
+      if (!user.emailConfirmed) {
+        user.emailConfirmed = true
+        await user.save()
+      }
     }
 
     // Generate access and refresh tokens consistent with other auth flows
@@ -343,20 +362,7 @@ const resendOTP = async (req, res) => {
       return res.status(400).json({ message: "Email is required" })
     }
 
-    // Check if there's an existing OTP request
-    const existingOTP = otpStorage.get(email)
-    if (existingOTP && Date.now() < existingOTP.expiresAt) {
-      // Check if it's been at least 1 minute since last OTP
-      const timeSinceLastOTP = Date.now() - (existingOTP.expiresAt - 10 * 60 * 1000)
-      if (timeSinceLastOTP < 60 * 1000) {
-        return res.status(429).json({
-          message: "Please wait before requesting a new OTP",
-          waitTime: Math.ceil((60 * 1000 - timeSinceLastOTP) / 1000),
-        })
-      }
-    }
-
-    // Use the same sendOTP logic
+    // Use the same sendOTP logic (sendOTP will enforce resend cooldown and lockouts)
     await sendOTP(req, res)
   } catch (error) {
     console.error("Error resending OTP:", error)

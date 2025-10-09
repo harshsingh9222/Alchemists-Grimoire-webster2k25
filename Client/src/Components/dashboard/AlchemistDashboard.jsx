@@ -40,6 +40,7 @@ import {
 import useGetDashboardData from '../../Hooks/useGetDashboardData.js';
 import { dashboardService } from '../../Services/dashboardServices.js';
 import { useToast } from '../../Components/Toast/ToastProvider.jsx';
+import { isNowWithinWindow } from '../../Utils/time.helper';
 
 // Loading Skeleton for cards
 const LoadingSkeleton = ({ className = "" }) => (
@@ -380,6 +381,7 @@ const AlchemistDashboard = () => {
   // Safe Redux selection to avoid undefined errors
   const dispatch = useDispatch();
   const dashboardState = useSelector((s) => s.dashboard) || {};
+  console.log("DashboardState:",dashboardState)
 
   // Enhanced data fetching with error handling
   const { isInitialLoad, refetch, refreshAdherence, refreshWellness, refreshUpcoming, refreshInsights } = useGetDashboardData({ 
@@ -764,12 +766,8 @@ const AlchemistDashboard = () => {
                 const DoseIcon = dose.icon || Sun;
                 const color = dose.color || 'yellow';
                 // determine scheduled Date if available
-                const scheduled = dose.scheduledTime ? new Date(dose.scheduledTime) : null;
-                const canTake = (() => {
-                  if (!scheduled || Number.isNaN(scheduled.getTime())) return false;
-                  const windowStart = new Date(scheduled.getTime() - 15 * 60 * 1000);
-                  return new Date() >= windowStart;
-                })();
+                const scheduled = dose.scheduledTime ? dose.scheduledTime : null;
+                const canTake = scheduled ? isNowWithinWindow(scheduled, 15) : false;
                 return (
                   <div
                     key={dose.id}

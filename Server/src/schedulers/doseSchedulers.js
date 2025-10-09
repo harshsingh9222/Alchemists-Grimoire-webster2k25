@@ -8,6 +8,7 @@ import WellnessScore from '../Models/wellnessScoreModel.js';
 import Notification from '../Models/notificationModel.js';
 import User from '../Models/user.models.js';
 import nodemailer from 'nodemailer';
+import { localTimeToUTCDate } from '../Utils/timezone.helper.js';
 
 class DoseScheduler {
   constructor() {
@@ -76,19 +77,30 @@ class DoseScheduler {
             (medicine.frequency === 'weekly' && this.isScheduledToday(medicine))) {
           
           for (const timeStr of medicine.times) {
-            const [hours, minutes] = timeStr.split(':').map(Number);
-            const scheduledTime = new Date();
-            scheduledTime.setHours(hours, minutes, 0, 0);
+            let scheduledTime;
+            if (medicine.timezone) {
+              // compute scheduled instant for today's date in medicine.timezone
+              scheduledTime = localTimeToUTCDate(new Date(), timeStr, medicine.timezone);
+            } else {
+              const [hours, minutes] = timeStr.split(':').map(Number);
+              scheduledTime = new Date();
+              scheduledTime.setHours(hours, minutes, 0, 0);
+            }
             
             // Only create logs for upcoming doses in the next hour
             if (scheduledTime > now && scheduledTime <= nextHour) {
               // Check if log already exists
+              const sStart = new Date(scheduledTime);
+              sStart.setSeconds(0, 0);
+              const sEnd = new Date(scheduledTime);
+              sEnd.setSeconds(59, 999);
+
               const existingLog = await DoseLog.findOne({
                 userId: medicine.userId,
                 medicineId: medicine._id,
                 scheduledTime: {
-                  $gte: new Date(scheduledTime).setSeconds(0, 0),
-                  $lt: new Date(scheduledTime).setSeconds(59, 999)
+                  $gte: sStart,
+                  $lt: sEnd
                 }
               });
               

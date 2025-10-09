@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
-import { userLogin } from "../api";
+import { userLogin, googleAuth } from "../api";
 import { login as authLogin } from "../store/authSlice.js";
 import { useDispatch } from "react-redux";
+import { useGoogleLogin } from "@react-oauth/google";
+import toastHot from "react-hot-toast";
 // ...existing code...
 
 const Login = () => {
@@ -33,6 +35,40 @@ const Login = () => {
     setLoading(false);
   };
   const [showPassword, setShowPassword] = useState(false);
+
+  // Google OAuth handling (reuse approach from Signup.jsx)
+  const responseGoogle = async (authResult) => {
+    try {
+      if (authResult?.code) {
+        const resp = await googleAuth(authResult.code);
+        const userObj = resp?.user || resp?.data?.user || resp?.data || resp;
+        if (!userObj) {
+          toastHot.error('Google authentication failed (no user data)')
+          return
+        }
+        dispatch(authLogin(userObj));
+        localStorage.setItem("User", JSON.stringify(userObj));
+        toastHot.success(`Welcome, ${userObj.fullname || userObj.email || userObj.username || ''}!`);
+        navigate('/', { replace: true });
+      }
+    } catch (err) {
+      console.error('Google login error:', err)
+      toastHot.error('Google login failed')
+    }
+  }
+
+  const googleLogin = useGoogleLogin({
+    onSuccess: responseGoogle,
+    onError: responseGoogle,
+    flow: "auth-code",
+    ux_mode: "popup",
+    scope: 'openid profile email https://www.googleapis.com/auth/calendar.events',
+    authorizationParams: {
+      access_type: 'offline',
+      prompt: 'consent',
+      include_granted_scopes: 'true'
+    }
+  });
 
 
   return (
@@ -147,6 +183,18 @@ const Login = () => {
             </span>
             <div className="w-full border-t border-fuchsia-400"></div>
           </div>
+          <button
+            type="button"
+            onClick={() => googleLogin()}
+            className="flex items-center justify-center w-full bg-white text-purple-800 py-3 rounded-lg font-semibold shadow-lg hover:scale-105 transform transition"
+          >
+            <img
+              src="https://cdn1.iconfinder.com/data/icons/google-s-logo/150/Google_Icons-09-1024.png"
+              alt="Google"
+              className="w-5 h-5 mr-2"
+            />
+            Sign in with Google
+          </button>
         </form>
       </div>
     </div>

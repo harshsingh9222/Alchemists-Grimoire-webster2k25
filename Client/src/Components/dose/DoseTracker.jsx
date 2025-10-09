@@ -98,11 +98,28 @@ const DoseTracker = () => {
   // shared action (take/skip). After update, refresh both today's doses AND progress doses
   const handleDoseAction = async (doseId, action, medicineId, scheduledTime) => {
     try {
+      // Normalize scheduledTime to ISO string when sending from client
+      let scheduledIso = null;
+      if (scheduledTime) {
+        if (scheduledTime instanceof Date) scheduledIso = scheduledTime.toISOString();
+        else if (typeof scheduledTime === 'number') scheduledIso = new Date(scheduledTime).toISOString();
+        else if (typeof scheduledTime === 'string') {
+          // crude ISO check (has T and Z or timezone offset)
+          if (scheduledTime.includes('T') && (scheduledTime.endsWith('Z') || scheduledTime.includes('+') || scheduledTime.includes('-'))) {
+            scheduledIso = scheduledTime;
+          } else {
+            // attempt to parse and re-serialize
+            const d = new Date(scheduledTime);
+            scheduledIso = Number.isFinite(d.getTime()) ? d.toISOString() : scheduledTime;
+          }
+        }
+      }
+
       const payload = doseId
         ? { doseId, status: action === "take" ? "taken" : "skipped" }
         : {
             medicineId,
-            scheduledTime,
+            scheduledTime: scheduledIso,
             status: action === "take" ? "taken" : "skipped",
           };
 

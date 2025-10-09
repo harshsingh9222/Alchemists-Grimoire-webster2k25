@@ -1,0 +1,32 @@
+[
+  {
+    "_id": "68e766212805d8252bd4ab7b",
+    "userId": "68e0ff5f1dfdebc18c5053fe",
+    "medicineId": "68e7661f2805d8252bd4ab75",
+    "scheduledTime": "2025-10-11T08:05:00.000Z",
+    "actualTime": null,
+    "status": "pending",
+    "reminderSent": false,
+    "confirmedBy": null,
+    "dayOfWeek": 6,
+    "hour": 13,
+    "__v": 0,
+    "createdAt": "2025-10-09T07:37:05.524Z",
+    "updatedAt": "2025-10-09T07:37:05.524Z"
+  },
+  {
+    "_id": "68e766212805d8252bd4ab7a",
+    "userId": "68e0ff5f1dfdebc18c5053fe",
+    "medicineId": "68e7661f2805d8252bd4ab75",
+    "scheduledTime": "2025-10-10T08:05:00.000Z",
+    "actualTime": null,
+    "status": "pending",
+    "reminderSent": false,
+    "confirmedBy": null,
+    "dayOfWeek": 5,
+    "hour": 13,
+    "__v": 0,
+    "createdAt": "2025-10-09T07:37:05.523Z",
+    "updatedAt": "2025-10-09T07:37:05.523Z"
+  }
+]

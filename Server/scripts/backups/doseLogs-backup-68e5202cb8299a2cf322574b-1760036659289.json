@@ -1,0 +1,62 @@
+[
+  {
+    "_id": "68e5202fb8299a2cf3225755",
+    "userId": "68e1fd207a00d9817c4aeb0d",
+    "medicineId": "68e5202cb8299a2cf322574b",
+    "scheduledTime": "2025-10-13T14:50:00.000Z",
+    "actualTime": null,
+    "status": "pending",
+    "reminderSent": false,
+    "confirmedBy": null,
+    "dayOfWeek": 1,
+    "hour": 20,
+    "__v": 0,
+    "createdAt": "2025-10-07T14:14:07.955Z",
+    "updatedAt": "2025-10-07T14:14:07.955Z"
+  },
+  {
+    "_id": "68e5202fb8299a2cf3225754",
+    "userId": "68e1fd207a00d9817c4aeb0d",
+    "medicineId": "68e5202cb8299a2cf322574b",
+    "scheduledTime": "2025-10-12T14:50:00.000Z",
+    "actualTime": null,
+    "status": "pending",
+    "reminderSent": false,
+    "confirmedBy": null,
+    "dayOfWeek": 0,
+    "hour": 20,
+    "__v": 0,
+    "createdAt": "2025-10-07T14:14:07.955Z",
+    "updatedAt": "2025-10-07T14:14:07.955Z"
+  },
+  {
+    "_id": "68e5202fb8299a2cf3225753",
+    "userId": "68e1fd207a00d9817c4aeb0d",
+    "medicineId": "68e5202cb8299a2cf322574b",
+    "scheduledTime": "2025-10-11T14:50:00.000Z",
+    "actualTime": null,
+    "status": "pending",
+    "reminderSent": false,
+    "confirmedBy": null,
+    "dayOfWeek": 6,
+    "hour": 20,
+    "__v": 0,
+    "createdAt": "2025-10-07T14:14:07.954Z",
+    "updatedAt": "2025-10-07T14:14:07.954Z"
+  },
+  {
+    "_id": "68e5202fb8299a2cf3225752",
+    "userId": "68e1fd207a00d9817c4aeb0d",
+    "medicineId": "68e5202cb8299a2cf322574b",
+    "scheduledTime": "2025-10-10T14:50:00.000Z",
+    "actualTime": null,
+    "status": "pending",
+    "reminderSent": false,
+    "confirmedBy": null,
+    "dayOfWeek": 5,
+    "hour": 20,
+    "__v": 0,
+    "createdAt": "2025-10-07T14:14:07.954Z",
+    "updatedAt": "2025-10-07T14:14:07.954Z"
+  }
+]

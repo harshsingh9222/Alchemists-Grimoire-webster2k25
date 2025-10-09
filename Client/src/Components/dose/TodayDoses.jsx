@@ -7,6 +7,7 @@ import {
   AlertCircle,
   Sparkles,
 } from "lucide-react";
+import { isNowWithinWindow } from "../../Utils/time.helper";
 import { useNavigate } from "react-router-dom";
 
 const TodayDoses = ({
@@ -78,11 +79,9 @@ const TodayDoses = ({
             // If scheduledTime is missing, allow taking (backend will validate if needed).
             const canTake = (() => {
               if (isMissed) return false;
-              const scheduled = dose.scheduledTime ? new Date(dose.scheduledTime) : null;
-              if (!scheduled || Number.isNaN(scheduled.getTime())) return true; // allow when no scheduled time
-              const windowStart = new Date(scheduled.getTime() - 15 * 60 * 1000);
-              const now = new Date();
-              return now >= windowStart;
+              const scheduled = dose.scheduledTime ? dose.scheduledTime : null;
+              if (!scheduled) return true; // allow when no scheduled time
+              return isNowWithinWindow(scheduled, 15);
             })();
 
             return (
