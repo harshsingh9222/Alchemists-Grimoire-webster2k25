@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { 
-  setDashboardData, 
   setDashboardLoading, 
   setDashboardError,
   updateAdherenceData,
   updateWellnessData,
   updateUpcomingDoses,
-  updateInsights
+  updateInsights,
+  updateEffectiveness
 } from '../Store/dashboardSlice';
 import { dashboardService } from '../Services/dashboardServices';
 
@@ -30,12 +30,15 @@ const useGetDashboardData = (options = {}) => {
       }
 
       // Fetch all dashboard data concurrently
-      const [adherence, wellness, upcoming, insights] = await Promise.allSettled([
+      const results = await Promise.allSettled([
         dashboardService.getAdherenceData(timeRange),
         dashboardService.getWellnessScore(),
         dashboardService.getUpcomingDoses(),
-        dashboardService.getInsights()
+        dashboardService.getInsights(),
+        dashboardService.getPotionEffectiveness(timeRange)
       ]);
+
+      const [adherence, wellness, upcoming, insights, effectiveness] = results;
 
       // Process adherence data
       if (adherence.status === 'fulfilled') {
@@ -75,6 +78,13 @@ const useGetDashboardData = (options = {}) => {
           section: 'insights', 
           error: insights.reason?.message || 'Failed to fetch insights' 
         }));
+      }
+
+      // Process potion effectiveness
+      if (effectiveness && effectiveness.status === 'fulfilled') {
+        dispatch(updateEffectiveness(effectiveness.value));
+      } else if (effectiveness && effectiveness.status === 'rejected') {
+        dispatch(setDashboardError({ section: 'effectiveness', error: effectiveness.reason?.message || 'Failed to fetch effectiveness' }));
       }
 
       setIsInitialLoad(false);
@@ -161,6 +171,15 @@ const useGetDashboardData = (options = {}) => {
           section: 'insights', 
           error: error.message || 'Failed to refresh insights' 
         }));
+      }
+    },
+    refreshEffectiveness: async () => {
+      try {
+        dispatch(setDashboardLoading({ section: 'effectiveness', loading: true }));
+        const data = await dashboardService.getPotionEffectiveness(timeRange);
+        dispatch(updateEffectiveness(data));
+      } catch (error) {
+        dispatch(setDashboardError({ section: 'effectiveness', error: error.message || 'Failed to refresh effectiveness' }));
       }
     },
     isInitialLoad

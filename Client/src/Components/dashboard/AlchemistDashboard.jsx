@@ -384,7 +384,7 @@ const AlchemistDashboard = () => {
   console.log("DashboardState:",dashboardState)
 
   // Enhanced data fetching with error handling
-  const { isInitialLoad, refetch, refreshAdherence, refreshWellness, refreshUpcoming, refreshInsights } = useGetDashboardData({ 
+  const { isInitialLoad, refetch, refreshAdherence, refreshWellness, refreshUpcoming, refreshInsights, refreshEffectiveness } = useGetDashboardData({ 
     timeRange: selectedTimeRange,
     refreshInterval: 5 * 60 * 1000 // 5 minutes auto-refresh
   });
@@ -461,7 +461,8 @@ const AlchemistDashboard = () => {
   const wellnessData = dashboardState?.wellness?.data || fallbackData.wellness;
   const upcomingData = dashboardState?.upcoming?.data || fallbackData.upcoming;
   const insightsData = dashboardState?.insights?.data || fallbackData.insights;
-  const potionEffectivenessData = fallbackData.effectiveness;
+  // Use backend effectiveness when available
+  const potionEffectivenessData = dashboardState?.effectiveness?.data?.potions || fallbackData.effectiveness;
 
   // Loading states
   const adherenceLoading = dashboardState?.adherence?.loading || false;
