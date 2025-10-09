@@ -98,7 +98,6 @@ const createDoseLogsForDate = async (userId, date) => {
   });
 
   for (const medicine of medicines) {
-    // Check if this medicine should be taken on this date
     if (shouldTakeMedicine(medicine, date)) {
       for (const timeStr of medicine.times || []) {
         const [hours, minutes] = timeStr.split(':').map(Number);
@@ -125,21 +124,13 @@ const createDoseLogsForDate = async (userId, date) => {
         });
 
         if (!existingLog) {
-          await DoseLog.create({
-            userId: medicine.userId,
-            medicineId: medicine._id,
-            scheduledTime,
-            status: 'pending',
-            dayOfWeek: scheduledTime.getDay(),
-            hour: scheduledTime.getHours()
-          });
+          await DoseLog.create({ userId: medicine.userId, medicineId: medicine._id, scheduledTime, status: 'pending', dayOfWeek: scheduledTime.getDay(), hour: scheduledTime.getHours() });
         }
       }
     }
   }
 };
 
-// Helper to check if medicine should be taken on a date
 const shouldTakeMedicine = (medicine, date) => {
   if (!medicine) return false;
   if (medicine.frequency === 'daily') return true;
@@ -213,7 +204,6 @@ export const updateDoseStatus = asyncHandler(async (req, res) => {
       { new: true }
     );
   } else if (medicineId && scheduledTime) {
-    // Create or update dose log
     const scheduled = new Date(scheduledTime);
 
     // Build a +/- 30 minute search window using Date objects
@@ -278,14 +268,11 @@ export const getDoseHistory = asyncHandler(async (req, res) => {
   );
 });
 
-// Check pending doses older than 30 minutes and mark them as missed + notify user
-export const checkPendingDoses = asyncHandler(async (req, res) => {
-  const userId = req.user._id;
-
-  // cutoff: scheduledTime <= now - 30 minutes
-  const cutoff = new Date(Date.now() - 30 * 60 * 1000);
-
-  const pendingDoses = await DoseLog.find({ userId, status: 'pending', scheduledTime: { $lte: cutoff } }).populate('medicineId');
+// Core processing function for a given user (can be called by scheduler or endpoint)
+export async function processPendingDosesForUser(userId) {
+  try {
+    const cutoff = new Date(Date.now() - 30 * 60 * 1000);
+    const pendingDoses = await DoseLog.find({ userId, status: 'pending', scheduledTime: { $lte: cutoff } }).populate('medicineId');
 
   // Also check for doses that are exactly ~30 minutes in the future to send a reminder
   const now = new Date();
@@ -294,130 +281,63 @@ export const checkPendingDoses = asyncHandler(async (req, res) => {
   const reminderWindowStart = new Date(now.getTime() + thirtyMinMs - toleranceMs);
   const reminderWindowEnd = new Date(now.getTime() + thirtyMinMs + toleranceMs);
 
-  const upcomingReminders = await DoseLog.find({
-    userId,
-    status: 'pending',
-    scheduledTime: { $gte: reminderWindowStart, $lte: reminderWindowEnd }
-  }).populate('medicineId');
+    const upcomingReminders = await DoseLog.find({ userId, status: 'pending', scheduledTime: { $gte: reminderWindowStart, $lte: reminderWindowEnd } }).populate('medicineId');
 
-  // Prepare email transporter once for reminders and missed emails
-  let transporter = null;
-  if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
-    transporter = nodemailer.createTransport({
-      service: 'gmail',
-      auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS }
-    });
-  }
+    let transporter = null;
+    if (process.env.EMAIL_USER && process.env.EMAIL_PASS) transporter = nodemailer.createTransport({ service: 'gmail', auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS } });
 
-  // Send reminders for upcoming doses (scheduled ~30 minutes from now)
-  const reminderResults = [];
-  if (upcomingReminders && upcomingReminders.length > 0) {
-    const reminderUser = await User.findById(userId);
-    for (const dose of upcomingReminders) {
-      try {
-        const title = `Reminder: Upcoming dose in 30 minutes - ${dose.medicineId?.medicineName || 'Medicine'}`;
-        const message = `You have a scheduled dose for ${dose.medicineId?.medicineName || 'your medicine'} at ${dose.scheduledTime.toLocaleString()}. This is a reminder 30 minutes before.`;
-
-        await Notification.create({
-          userId,
-          medicineId: dose.medicineId?._id || null,
-          type: 'dose_reminder',
-          title,
-          message,
-          priority: 'medium',
-          read: false,
-          actionRequired: false,
-          actionType: null,
-          relatedDoseLogId: dose._id,
-          scheduledFor: dose.scheduledTime,
-          sentAt: new Date()
-        });
-
-        if (transporter && reminderUser?.email) {
-          try {
-            await transporter.sendMail({
-              from: process.env.EMAIL_USER,
-              to: reminderUser.email,
-              subject: title,
-              html: `<p>${message}</p>`
-            });
-          } catch (mailErr) {
-            console.warn('Failed to send 30-min reminder email:', mailErr?.message || mailErr);
-          }
-        }
-
-        reminderResults.push({ doseId: dose._id, status: 'reminder_sent' });
-      } catch (err) {
-        console.error('Error sending reminder for dose', dose._id, err);
-        reminderResults.push({ doseId: dose._id, status: 'error', error: String(err) });
-      }
-    }
-  }
-
-  // If there were no overdue pending doses but we did send reminders, return that info
-  if ((!pendingDoses || pendingDoses.length === 0) && reminderResults.length > 0) {
-    return res.status(200).json({ message: 'Processed reminders', reminderCount: reminderResults.length, reminders: reminderResults });
-  }
-
-  if (!pendingDoses || pendingDoses.length === 0) {
-    return res.status(200).json({ message: 'No pending doses to process', count: 0 });
-  }
-
-  const user = await User.findById(userId);
-  const results = [];
-
-  for (const dose of pendingDoses) {
-    try {
-      // update doseLog as missed
-      dose.status = 'missed';
-      dose.actualTime = null;
-      dose.confirmedBy = 'auto';
-      await dose.save();
-
-      // create notification
-      const title = `Missed dose: ${dose.medicineId?.medicineName || 'Medicine'}`;
-      const message = `You missed a scheduled dose for ${dose.medicineId?.medicineName || 'your medicine'} scheduled at ${dose.scheduledTime.toLocaleString()}`;
-
-      await Notification.create({
-        userId,
-        medicineId: dose.medicineId?._id || null,
-        type: 'missed_dose',
-        title,
-        message,
-        priority: 'high',
-        read: false,
-        actionRequired: false,
-        actionType: null,
-        relatedDoseLogId: dose._id,
-        scheduledFor: dose.scheduledTime,
-        sentAt: new Date()
-      });
-
-      // send email if transporter available
-      if (transporter && user?.email) {
+    const reminderResults = [];
+    if (upcomingReminders && upcomingReminders.length > 0) {
+      const reminderUser = await User.findById(userId);
+      for (const dose of upcomingReminders) {
         try {
-          await transporter.sendMail({
-            from: process.env.EMAIL_USER,
-            to: user.email,
-            subject: title,
-            html: `<p>${message}</p>`
-          });
-        } catch (mailErr) {
-          console.warn('Failed to send missed-dose email:', mailErr?.message || mailErr);
-        }
+          const title = `Reminder: Upcoming dose in 30 minutes - ${dose.medicineId?.medicineName || 'Medicine'}`;
+          const message = `You have a scheduled dose for ${dose.medicineId?.medicineName || 'your medicine'} at ${dose.scheduledTime.toLocaleString()}. This is a reminder 30 minutes before.`;
+          const existing = await Notification.findOne({ relatedDoseLogId: dose._id, type: 'dose_reminder' });
+          if (!existing) {
+            await Notification.create({ userId, medicineId: dose.medicineId?._id || null, type: 'dose_reminder', title, message, priority: 'medium', read: false, actionRequired: false, actionType: null, relatedDoseLogId: dose._id, scheduledFor: dose.scheduledTime, sentAt: new Date() });
+            if (transporter && reminderUser?.email) {
+              try { await transporter.sendMail({ from: process.env.EMAIL_USER, to: reminderUser.email, subject: title, html: `<p>${message}</p>` }); } catch (mailErr) { console.warn('Failed to send 30-min reminder email:', mailErr?.message || mailErr); }
+            }
+            reminderResults.push({ doseId: dose._id, status: 'reminder_sent' });
+          }
+        } catch (err) { console.error('Error sending reminder for dose', dose._id, err); reminderResults.push({ doseId: dose._id, status: 'error', error: String(err) }); }
       }
-
-      results.push({ doseId: dose._id, status: 'missed' });
-    } catch (err) {
-      console.error('Error processing pending dose', dose._id, err);
-      results.push({ doseId: dose._id, status: 'error', error: String(err) });
     }
+
+    if ((!pendingDoses || pendingDoses.length === 0) && reminderResults.length > 0) return { status: 200, body: { message: 'Processed reminders', reminderCount: reminderResults.length, reminders: reminderResults } };
+    if (!pendingDoses || pendingDoses.length === 0) return { status: 200, body: { message: 'No pending doses to process', count: 0 } };
+
+    const user = await User.findById(userId);
+    const results = [];
+    for (const dose of pendingDoses) {
+      try {
+        dose.status = 'missed';
+        dose.actualTime = null;
+        dose.confirmedBy = 'auto';
+        await dose.save();
+        const title = `Missed dose: ${dose.medicineId?.medicineName || 'Medicine'}`;
+        const message = `You missed a scheduled dose for ${dose.medicineId?.medicineName || 'your medicine'} scheduled at ${dose.scheduledTime.toLocaleString()}`;
+        const existingMissed = await Notification.findOne({ relatedDoseLogId: dose._id, type: 'missed_dose' });
+        if (!existingMissed) await Notification.create({ userId, medicineId: dose.medicineId?._id || null, type: 'missed_dose', title, message, priority: 'high', read: false, actionRequired: false, actionType: null, relatedDoseLogId: dose._id, scheduledFor: dose.scheduledTime, sentAt: new Date() });
+        if (transporter && user?.email) { try { await transporter.sendMail({ from: process.env.EMAIL_USER, to: user.email, subject: title, html: `<p>${message}</p>` }); } catch (mailErr) { console.warn('Failed to send missed-dose email:', mailErr?.message || mailErr); } }
+        results.push({ doseId: dose._id, status: 'missed' });
+      } catch (err) { console.error('Error processing pending dose', dose._id, err); results.push({ doseId: dose._id, status: 'error', error: String(err) }); }
+    }
+
+    await updateDailyAdherence(userId);
+    return { status: 200, body: { message: 'Processed pending doses', count: results.length, details: results } };
+  } catch (err) {
+    console.error('processPendingDosesForUser error:', err);
+    return { status: 500, body: { message: 'Error processing pending doses', error: String(err) } };
   }
+}
 
-  // update adherence metrics after changes
-  await updateDailyAdherence(userId);
-
-  return res.status(200).json({ message: 'Processed pending doses', count: results.length, details: results });
+// Check pending doses endpoint (calls core function)
+export const checkPendingDoses = asyncHandler(async (req, res) => {
+  const userId = req.user._id;
+  const result = await processPendingDosesForUser(userId);
+  return res.status(result.status || 200).json(result.body);
 });
 
 // Helper to update daily adherence

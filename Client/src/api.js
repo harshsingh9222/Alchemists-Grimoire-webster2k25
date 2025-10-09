@@ -56,6 +56,12 @@ export const getUser = async ()=> {
   return request('/auth/current-user', 'GET');
 };
 
+// Fetch Google Calendar events for a user for a given month
+export const getCalendarEvents = async (year, month) => {
+  // backend route expects query params year and month (1-based month)
+  return request(`/auth/calendar?year=${year}&month=${month}`, 'GET');
+};
+
 export const fetchDoseSummary = async (date) => {
   const dateStr = date.toISOString().split('T')[0];
   return request(`/doses/summary?date=${dateStr}`, 'GET');
@@ -73,4 +79,7 @@ export const sendChatMessage = async (message, chatId = null) =>
   request("/chat", "POST", { message, chatId });
 export const clearAllChats = async () => request("/chat", "DELETE");
 
+export const updateUserCharacter = async (characterId) => {
+  return request('/auth/character', 'PUT', { characterId });
+};
 

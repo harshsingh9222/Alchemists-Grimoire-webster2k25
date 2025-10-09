@@ -6,6 +6,8 @@ import Medicine from '../Models/medicineModel.js';
 import DoseLog from '../Models/doseLogModel.js';
 import WellnessScore from '../Models/wellnessScoreModel.js';
 import Notification from '../Models/notificationModel.js';
+import User from '../Models/user.models.js';
+import nodemailer from 'nodemailer';
 
 class DoseScheduler {
   constructor() {
@@ -21,8 +23,11 @@ class DoseScheduler {
       this.createUpcomingDoseLogs();
     });
     
-    // Check for missed doses every 30 minutes
-    cron.schedule('*/30 * * * *', () => {
+    // Run a lightweight missed-dose scan every 30 seconds to
+    // detect doses that passed their 30-minute grace period promptly.
+    // Using a short, idempotent job is safe because the handler only acts on
+    // DoseLogs still marked 'pending' and older than 30 minutes.
+    cron.schedule('*/30 * * * * *', () => {
       this.checkMissedDoses();
     });
     
@@ -31,11 +36,23 @@ class DoseScheduler {
       this.updateDailyWellnessScores();
     });
     
-    // Send reminder notifications
-    cron.schedule('*/5 * * * *', () => {
+    // Send reminder notifications (every 1 minute)
+    cron.schedule('* * * * *', () => {
       this.sendDoseReminders();
     });
-    
+    // Run a one-time backfill for missed doses before today (non-blocking)
+    (async () => {
+      try {
+        const today = new Date();
+        today.setHours(0,0,0,0);
+        console.log('🔁 Running one-time backfill for missed doses before', today.toISOString());
+        await this.backfillMissedDosesBefore(today);
+        console.log('✅ Backfill completed');
+      } catch (err) {
+        console.error('Backfill error:', err);
+      }
+    })();
+
     console.log('✨ Dose Scheduler initialized successfully!');
   }
 
@@ -100,36 +117,138 @@ class DoseScheduler {
   async checkMissedDoses() {
     try {
       const now = new Date();
-      const thirtyMinutesAgo = new Date(now.getTime() - 30 * 60 * 1000);
-      
-      // Find pending doses that are past their scheduled time
+      // Use a 30 minute buffer with a small tolerance to avoid exact matches
+      const bufferMs = 30 * 60 * 1000;
+
+      // Calculate cutoff (now - bufferMs) and fetch only doses that are at least bufferMs late
+      const cutoff = new Date(now.getTime() - bufferMs);
       const missedDoses = await DoseLog.find({
         status: 'pending',
-        scheduledTime: { $lt: thirtyMinutesAgo }
+        scheduledTime: { $lte: cutoff }
       }).populate('medicineId userId');
+
+      // Create transporter if email creds provided
+      let transporter = null;
+      if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+        transporter = nodemailer.createTransport({ service: 'gmail', auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS } });
+      }
       
       for (const dose of missedDoses) {
+        // avoid double-processing
+        if (dose.notificationSent) continue;
+
         dose.status = 'missed';
+        dose.notificationSent = true;
         await dose.save();
-        
-        // Create a notification for missed dose
-        await Notification.create({
-          userId: dose.userId._id,
-          medicineId: dose.medicineId._id,
-          type: 'missed_dose',
-          title: 'Missed Dose Alert',
-          message: `You missed your ${dose.medicineId.medicineName} dose scheduled for ${dose.scheduledTime.toLocaleTimeString()}`,
-          priority: 'high',
-          actionRequired: true,
-          actionType: 'confirm_taken',
-          relatedDoseLogId: dose._id,
-          scheduledFor: now
-        });
-        
-        console.log(`⚠️ Marked dose as missed: ${dose.medicineId.medicineName}`);
+
+        // Only create a missed notification if none exists
+        const exists = await Notification.findOne({ relatedDoseLogId: dose._id, type: 'missed_dose' });
+        if (!exists) {
+          const note = await Notification.create({
+            userId: dose.userId._id,
+            medicineId: dose.medicineId._id,
+            type: 'missed_dose',
+            title: 'Missed Dose Alert',
+            message: `You missed your ${dose.medicineId.medicineName} dose scheduled for ${dose.scheduledTime.toLocaleTimeString()}`,
+            priority: 'high',
+            actionRequired: true,
+            actionType: 'confirm_taken',
+            relatedDoseLogId: dose._id,
+            scheduledFor: dose.scheduledTime,
+            sentAt: new Date()
+          });
+
+          // send email if possible
+          try {
+            const toEmail = dose.userId?.email || (await User.findById(dose.userId))?.email;
+            if (transporter && toEmail) {
+              await transporter.sendMail({
+                from: process.env.EMAIL_USER,
+                to: toEmail,
+                subject: note.title,
+                html: `<p>${note.message}</p>`
+              });
+            }
+          } catch (mailErr) {
+            console.warn('Failed to send missed-dose email:', mailErr?.message || mailErr);
+          }
+        }
+
+        console.log(`⚠️ Marked dose as missed and notified: ${dose.medicineId.medicineName}`);
       }
     } catch (error) {
       console.error('Error checking missed doses:', error);
+    }
+  }
+
+  // Backfill missed doses scheduled before a given date (process in batches)
+  async backfillMissedDosesBefore(date, batchSize = 200) {
+    try {
+      const cutoff = new Date(date);
+      // We'll process in batches to avoid large memory/IO spikes
+      let page = 0;
+      while (true) {
+        const meds = await DoseLog.find({ status: 'pending', scheduledTime: { $lt: cutoff } })
+          .sort({ scheduledTime: 1 })
+          .skip(page * batchSize)
+          .limit(batchSize)
+          .populate('medicineId userId');
+
+        if (!meds || meds.length === 0) break;
+
+        // prepare transporter once per batch
+        let transporter = null;
+        if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+          transporter = nodemailer.createTransport({ service: 'gmail', auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS } });
+        }
+
+        for (const dose of meds) {
+          try {
+            if (dose.notificationSent) continue;
+
+            // create notification if missing
+            const exists = await Notification.findOne({ relatedDoseLogId: dose._id, type: 'missed_dose' });
+            if (!exists) {
+              const note = await Notification.create({
+                userId: dose.userId._id,
+                medicineId: dose.medicineId._id,
+                type: 'missed_dose',
+                title: 'Missed Dose (Backfill)',
+                message: `You missed your ${dose.medicineId.medicineName} dose scheduled for ${dose.scheduledTime.toLocaleString()}`,
+                priority: 'high',
+                actionRequired: true,
+                actionType: 'confirm_taken',
+                relatedDoseLogId: dose._id,
+                scheduledFor: dose.scheduledTime,
+                sentAt: new Date()
+              });
+
+              // send email
+              try {
+                const toEmail = dose.userId?.email || (await User.findById(dose.userId))?.email;
+                if (transporter && toEmail) {
+                  await transporter.sendMail({ from: process.env.EMAIL_USER, to: toEmail, subject: note.title, html: `<p>${note.message}</p>` });
+                }
+              } catch (mailErr) {
+                console.warn('Backfill email send failed for dose', dose._id, mailErr?.message || mailErr);
+              }
+            }
+
+            // mark as missed and notificationSent
+            dose.status = 'missed';
+            dose.notificationSent = true;
+            await dose.save();
+          } catch (innerErr) {
+            console.error('Error processing backfill dose', dose._id, innerErr);
+          }
+        }
+
+        // next page
+        page += 1;
+      }
+    } catch (err) {
+      console.error('backfillMissedDosesBefore error:', err);
+      throw err;
     }
   }
 
@@ -137,38 +256,62 @@ class DoseScheduler {
   async sendDoseReminders() {
     try {
       const now = new Date();
-      const in15Minutes = new Date(now.getTime() + 15 * 60 * 1000);
-      
-      // Find upcoming doses in the next 15 minutes
+      // We'll consider upcoming doses within ~30 minutes (with tolerance)
+      const windowMs = 30 * 60 * 1000;
+      const toleranceMs = 2 * 60 * 1000; // 2 min tolerance
+      const windowStart = new Date(now.getTime() - toleranceMs);
+      const windowEnd = new Date(now.getTime() + windowMs + toleranceMs);
+
+      // Find upcoming doses in the window that haven't had notifications
       const upcomingDoses = await DoseLog.find({
         status: 'pending',
-        reminderSent: false,
-        scheduledTime: {
-          $gte: now,
-          $lte: in15Minutes
-        }
+        notificationSent: false,
+        scheduledTime: { $gte: windowStart, $lte: windowEnd }
       }).populate('medicineId userId');
-      
+
       for (const dose of upcomingDoses) {
-        // Create reminder notification
-        await Notification.create({
+        // Avoid duplicates (also check Notification collection)
+        const exists = await Notification.findOne({ relatedDoseLogId: dose._id, type: 'dose_reminder' });
+        if (exists) {
+          dose.reminderSent = true;
+          dose.notificationSent = true;
+          await dose.save();
+          continue;
+        }
+        const note = await Notification.create({
           userId: dose.userId._id,
           medicineId: dose.medicineId._id,
           type: 'dose_reminder',
-          title: '⏰ Time for your potion!',
-          message: `It's time to take ${dose.medicineId.medicineName} (${dose.medicineId.dosage})`,
-          priority: 'high',
-          actionRequired: true,
+          title: '⏰ Upcoming dose reminder',
+          message: `Reminder: Upcoming dose of ${dose.medicineId.medicineName} scheduled at ${dose.scheduledTime.toLocaleTimeString()}`,
+          priority: 'medium',
+          actionRequired: false,
           actionType: 'take_dose',
           relatedDoseLogId: dose._id,
-          scheduledFor: dose.scheduledTime
+          scheduledFor: dose.scheduledTime,
+          sentAt: new Date()
         });
-        
-        // Mark reminder as sent
+
+        // send email if transporter available
+        try {
+          const toEmail = dose.userId?.email || (await User.findById(dose.userId))?.email;
+          if (transporter && toEmail) {
+            await transporter.sendMail({
+              from: process.env.EMAIL_USER,
+              to: toEmail,
+              subject: note.title,
+              html: `<p>${note.message}</p>`
+            });
+          }
+        } catch (mailErr) {
+          console.warn('Failed to send reminder email:', mailErr?.message || mailErr);
+        }
+
         dose.reminderSent = true;
+        dose.notificationSent = true;
         await dose.save();
-        
-        console.log(`🔔 Sent reminder for ${dose.medicineId.medicineName}`);
+
+        console.log(`🔔 Sent upcoming reminder for ${dose.medicineId.medicineName}`);
       }
     } catch (error) {
       console.error('Error sending dose reminders:', error);

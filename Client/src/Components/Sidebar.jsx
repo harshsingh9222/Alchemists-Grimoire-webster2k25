@@ -1,5 +1,6 @@
 "use client"
 import { Link, useLocation } from "react-router-dom"
+import { useSelector } from 'react-redux'
 import { Home, User, Calendar, Mail, X } from 'lucide-react'
 // ...existing code...
 import PropTypes from "prop-types";
@@ -8,6 +9,7 @@ import { MessageSquare } from "lucide-react";
 
 const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
   const location = useLocation()
+  const user = useSelector((state) => state.auth.userData)
 
   const sidebarItems = [
     { name: "Dashboard", path: "/dashboard", icon: Home },
@@ -80,8 +82,8 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                   <User className="w-4 h-4 text-white" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-900 truncate">John Doe</p>
-                  <p className="text-xs text-gray-500 truncate">john@example.com</p>
+                  <p className="text-sm font-medium text-gray-900 truncate">{user?.fullname || user?.username || 'John Doe'}</p>
+                  <p className="text-xs text-gray-500 truncate">{user?.email || 'john@example.com'}</p>
                 </div>
               </div>
             </div>

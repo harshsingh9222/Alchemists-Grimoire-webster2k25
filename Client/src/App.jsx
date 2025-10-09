@@ -6,6 +6,7 @@ import Home from './Pages/Home';
 import Signup from './Pages/Signup';
 import Login from './Pages/Login';
 import MedicineForm from './Pages/MedicineForm';
+import Calendar from './Pages/Calendar';
 import CircusLandingPage from './Components/landing/CircusLandingPage.jsx';
 import Curtain from './Components/Curtain';
 import MyMedicines from './Pages/MyMedicines.jsx';
@@ -126,6 +127,14 @@ function App() {
                 <Dashboard />
               </MainLayout>
             )
+          }
+        />
+        <Route
+          path="/calendar"
+          element={
+            <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen}>
+              <Calendar />
+            </MainLayout>
           }
         />
         <Route

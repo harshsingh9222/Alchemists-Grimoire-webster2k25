@@ -1,50 +1,91 @@
-import { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence, useMotionValue, useTransform } from 'framer-motion';
-import { Howl } from 'howler';
-import { useNavigate } from 'react-router-dom';
-import drumrollUrl from '../../assets/Sounds/drumroll.wav';
-import TimeLineSteps from "./TimeLineSteps"
+import { useState, useEffect, useRef } from "react";
+import {
+  motion,
+  AnimatePresence,
+  useMotionValue,
+  useTransform,
+} from "framer-motion";
+import { Howl } from "howler";
+import { useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import drumrollUrl from "../../assets/Sounds/drumroll.wav";
+import TimeLineSteps from "./TimeLineSteps";
+import { updateUserCharacter } from "../../api";
+import { updateCharacter } from "../../store/authSlice";
 
 const CircusLandingPage = () => {
-    const navigate = useNavigate();
+  const navigate = useNavigate();
+  const authStatus = useSelector((state) => state.auth.status);
+  const dispatch = useDispatch();
+  const userData = useSelector((state) => state.auth.userData);
+  // muted state (persisted) - fix ReferenceError by defining it
+  const [muted, setMuted] = useState(() => {
+    try {
+      return localStorage.getItem("circus_muted") === "true";
+    } catch (e) {
+      return false;
+    }
+  });
 
-    // muted state (persisted) - fix ReferenceError by defining it
-    const [muted, setMuted] = useState(() => {
+  if(authStatus){
+    console.log("User on landing page:",userData);
+  }
+  // this is for the character 
+  useEffect(() => {
+    if (userData?.circusCharacter) {
+      const foundChar = characters.find(
+        (c) => c.id === userData.circusCharacter
+      );
+      if (foundChar) {
+        setSelectedCharacter(foundChar);
+      }
+    }
+  }, [userData]);
+
+  // Use a ref to hold Howl instances so they aren't recreated every render
+  const soundsRef = useRef(null);
+
+  // Initialize sounds once and play depending on `muted`
+  useEffect(() => {
+    soundsRef.current = {
+      drumroll: new Howl({ src: [drumrollUrl], volume: 0.25 }),
+    };
+
+    if (!muted) {
       try {
-        return localStorage.getItem('circus_muted') === 'true'
+        soundsRef.current.drumroll.play();
       } catch (e) {
-        return false
+        console.debug("play failed", e);
       }
-    })
+    }
 
-    // Use a ref to hold Howl instances so they aren't recreated every render
-    const soundsRef = useRef(null)
-
-    // Initialize sounds once and play depending on `muted`
-    useEffect(() => {
-      soundsRef.current = {
-        drumroll: new Howl({ src: [drumrollUrl], volume: 0.25 }),
+    return () => {
+      try {
+        soundsRef.current?.drumroll.stop();
+      } catch (e) {
+        /* ignore */
       }
-
-      if (!muted) {
-        try { soundsRef.current.drumroll.play() } catch (e) { console.debug('play failed', e) }
-      }
-
-      return () => {
-        try { soundsRef.current?.drumroll.stop() } catch (e) { /* ignore */ }
-      }
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [])
+  }, []);
 
-    // Keep playback in sync when muted toggles
-    useEffect(() => {
-      if (!soundsRef.current) return
-      if (muted) {
-        try { soundsRef.current.drumroll.stop() } catch (e) { console.debug('stop failed', e) }
-      } else {
-        try { soundsRef.current.drumroll.play() } catch (e) { console.debug('play failed', e) }
+  // Keep playback in sync when muted toggles
+  useEffect(() => {
+    if (!soundsRef.current) return;
+    if (muted) {
+      try {
+        soundsRef.current.drumroll.stop();
+      } catch (e) {
+        console.debug("stop failed", e);
       }
-    }, [muted])
+    } else {
+      try {
+        soundsRef.current.drumroll.play();
+      } catch (e) {
+        console.debug("play failed", e);
+      }
+    }
+  }, [muted]);
   const [isLoading, setIsLoading] = useState(true);
   const [showContent, setShowContent] = useState(false);
   const [selectedCharacter, setSelectedCharacter] = useState(null);
@@ -53,12 +94,31 @@ const CircusLandingPage = () => {
 
   // Circus Characters
   const characters = [
-    { id: 'ringmaster', emoji: '🎩', title: 'The Ringmaster', power: 'Never miss a dose with commanding reminders' },
-    { id: 'acrobat', emoji: '🤸', title: 'The Acrobat', power: 'Flexible scheduling for your dynamic lifestyle' },
-    { id: 'magician', emoji: '🎭', title: 'The Magician', power: 'Transform your health with mystical insights' },
-    { id: 'juggler', emoji: '🤹', title: 'The Juggler', power: 'Juggle multiple med schedules without dropping a beat' },
+    {
+      id: "ringmaster",
+      emoji: "🎩",
+      title: "The Ringmaster",
+      power: "Never miss a dose with commanding reminders",
+    },
+    {
+      id: "acrobat",
+      emoji: "🤸",
+      title: "The Acrobat",
+      power: "Flexible scheduling for your dynamic lifestyle",
+    },
+    {
+      id: "magician",
+      emoji: "🎭",
+      title: "The Magician",
+      power: "Transform your health with mystical insights",
+    },
+    {
+      id: "juggler",
+      emoji: "🤹",
+      title: "The Juggler",
+      power: "Juggle multiple med schedules without dropping a beat",
+    },
   ];
-
 
   useEffect(() => {
     // Initial loading animation
@@ -77,43 +137,28 @@ const CircusLandingPage = () => {
       });
     };
 
-    window.addEventListener('mousemove', handleMouseMove, { passive: true });
+    window.addEventListener("mousemove", handleMouseMove, { passive: true });
 
     return () => {
       clearTimeout(timer);
-      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener("mousemove", handleMouseMove);
       cancelAnimationFrame(rafId);
     };
   }, [mouseX, mouseY]);
 
-  // Visit tracking: use a timestamp so we can expire the "visited" state
-  const VISIT_KEY = 'circus_visited_at'
-  const VISIT_EXPIRY_DAYS = 7 // after this many days the landing page will show again
-
-  const isVisitFresh = () => {
-    try {
-      const ts = localStorage.getItem(VISIT_KEY)
-      if (!ts) return false
-      const t = parseInt(ts, 10)
-      if (Number.isNaN(t)) return false
-      const age = Date.now() - t
-      return age <= VISIT_EXPIRY_DAYS * 24 * 60 * 60 * 1000
-    } catch (e) {
-      return false
-    }
-  }
+  // Redirect: only send authenticated, onboarded users to /home
+  // const userData = useSelector((state) => state.auth.userData);
 
   useEffect(() => {
-    if (isVisitFresh()) {
-      const id = setTimeout(() => navigate('/home'), 350)
-      return () => clearTimeout(id)
+    if (authStatus && userData?.onboarded) {
+      navigate("/home");
     }
-  }, [navigate])
+  }, [navigate, authStatus, userData]);
 
   const CurtainLoader = () => {
     // Stripe width in pixels (adjust for denser/wider pleats)
     const stripe = 24;
-  
+
     // Textured pleat effect: a soft gradient + alternating dark/light stripes
     const leftCurtainBG = `
       linear-gradient(to right, rgba(0,0,0,0.35), rgba(0,0,0,0.15)),
@@ -125,7 +170,7 @@ const CircusLandingPage = () => {
         #991b1b ${stripe * 2}px
       )
     `;
-  
+
     const rightCurtainBG = `
       linear-gradient(to left, rgba(0,0,0,0.35), rgba(0,0,0,0.15)),
       repeating-linear-gradient(
@@ -136,7 +181,7 @@ const CircusLandingPage = () => {
         #991b1b ${stripe * 2}px
       )
     `;
-  
+
     return (
       <motion.div className="fixed inset-0 z-50 flex items-center justify-center overflow-hidden bg-slate-900">
         {/* Left curtain with stripes */}
@@ -152,7 +197,7 @@ const CircusLandingPage = () => {
           animate={{ x: "-100%", skewY: -2 }}
           transition={{ duration: 1.5, ease: "easeInOut", delay: 0.5 }}
         />
-  
+
         {/* Right curtain with stripes */}
         <motion.div
           className="absolute right-0 top-0 h-full w-1/2 shadow-2xl"
@@ -166,7 +211,7 @@ const CircusLandingPage = () => {
           animate={{ x: "100%", skewY: 2 }}
           transition={{ duration: 1.5, ease: "easeInOut", delay: 0.5 }}
         />
-  
+
         {/* Center text */}
         <motion.div
           className="relative z-10 text-center"
@@ -174,15 +219,16 @@ const CircusLandingPage = () => {
           animate={{ opacity: 0, scale: 1.5 }}
           transition={{ duration: 1, delay: 1 }}
         >
-          <h1 className="text-5xl md:text-6xl font-bold text-yellow-400 drop-shadow-lg" style={{ fontFamily: "'Bungee', cursive" }}>
+          <h1
+            className="text-5xl md:text-6xl font-bold text-yellow-400 drop-shadow-lg"
+            style={{ fontFamily: "'Bungee', cursive" }}
+          >
             🎪 Step Right Up! 🎪
           </h1>
         </motion.div>
       </motion.div>
     );
   };
-  
-  
 
   return (
     <div
@@ -365,15 +411,24 @@ const CircusLandingPage = () => {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.1 * index }}
                     whileHover={{ y: -10, transition: { duration: 0.2 } }}
-                    onClick={() => setSelectedCharacter(char)}
-                    className={`
-                      relative cursor-pointer rounded-xl p-6 transition-all duration-300
-                      ${
-                        selectedCharacter?.id === char.id
-                          ? "bg-gradient-to-br from-yellow-400 to-amber-500 shadow-2xl scale-105"
-                          : "bg-gradient-to-br from-purple-600 to-indigo-700 hover:shadow-xl"
+                    onClick={async () => {
+                      setSelectedCharacter(char);
+                      try {
+                        await updateUserCharacter(char.id); // ✅ API call
+                        // dispatch(updateCharacter(char.id)); 
+                        dispatch(updateCharacter(char.id));
+                      } catch (e) {
+                        console.error("Failed to update character:", e);
                       }
-                    `}
+                    }}
+                    className={`
+        relative cursor-pointer rounded-xl p-6 transition-all duration-300
+        ${
+          selectedCharacter?.id === char.id
+            ? "bg-gradient-to-br from-yellow-400 to-amber-500 shadow-2xl scale-105"
+            : "bg-gradient-to-br from-purple-600 to-indigo-700 hover:shadow-xl"
+        }
+      `}
                   >
                     {selectedCharacter?.id === char.id && (
                       <div className="absolute -top-2 -right-2 bg-yellow-300 text-gray-900 px-2 py-1 rounded-full text-xs font-bold animate-bounce">
@@ -449,17 +504,20 @@ const CircusLandingPage = () => {
                     whileTap={{ scale: 0.95 }}
                     className="border-2 border-gray-100 text-gray-100 px-6 py-3 rounded-full font-semibold hover:bg-gray-100 hover:text-red-700 transition-all duration-200"
                     onClick={() => {
-                      // Enter the show (mark visited with timestamp)
-                      try {
-                        localStorage.setItem(VISIT_KEY, Date.now().toString());
-                      } catch (e) {
-                        console.debug("localStorage set failed", e);
-                      }
                       try {
                         soundsRef.current?.drumroll.stop();
                       } catch (e) {
                         console.debug("stop failed", e);
                       }
+
+                      // ✅ Character selection check
+                      if (!selectedCharacter) {
+                        alert(
+                          "Please select a character before entering the show!"
+                        );
+                        return;
+                      }
+
                       navigate("/home");
                     }}
                   >
@@ -496,22 +554,7 @@ const CircusLandingPage = () => {
                   </motion.button>
                 </div>
 
-                <div className="text-center mt-4">
-                  <button
-                    className="text-sm text-gray-300 underline hover:text-white"
-                    onClick={() => {
-                      // Allow user to see the landing again immediately
-                      try {
-                        localStorage.removeItem(VISIT_KEY);
-                      } catch (e) {
-                        console.debug("remove failed", e);
-                      }
-                      navigate("/circus");
-                    }}
-                  >
-                    See Landing Again
-                  </button>
-                </div>
+                {/* 'See Landing Again' removed — landing visibility controlled by auth/onboarded state */}
 
                 {/* 'Watch the Magic' demo button removed to keep landing page focused */}
               </div>

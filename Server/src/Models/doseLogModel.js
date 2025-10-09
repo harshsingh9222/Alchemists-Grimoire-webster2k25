@@ -39,6 +39,11 @@ const doseLogSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    // Track if any notification was sent for this dose (reminder or missed)
+    notificationSent: {
+      type: Boolean,
+      default: false,
+    },
     // Track method of confirmation
     confirmedBy: {
       type: String,

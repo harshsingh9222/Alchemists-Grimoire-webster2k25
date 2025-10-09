@@ -15,10 +15,16 @@ const authSlice = createSlice({
         logout: (state) => {
             state.status = false; // ap logged out ho gye
             state.userData = null
-        }
+        },
+        updateCharacter: (state, action) => {
+            if (state.userData) {
+                state.userData.circusCharacter = action.payload;
+            }
+        },
+
     }
 });
 
-export const {login, logout} = authSlice.actions; 
+export const {login, logout,updateCharacter} = authSlice.actions; 
 
 export default authSlice.reducer; 

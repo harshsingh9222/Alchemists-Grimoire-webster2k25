@@ -1,9 +1,11 @@
-import { useState } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useNavigate } from "react-router-dom"
 import { toast } from "react-toastify"
-import { userSignup } from "../api"
+import { userSignup, googleAuth, verifyOTP as apiVerifyOTP } from "../api"
 import {useDispatch} from "react-redux"
 import {login as authLogin} from "../store/authSlice"
+import toastHot from "react-hot-toast"
+import { useGoogleLogin } from "@react-oauth/google"
 // ...existing code...
 
 const Signup = () => {
@@ -34,7 +36,7 @@ const Signup = () => {
       dispatch(authLogin(response.user));
 
       toast.success("Registration successful!")
-      navigate("/") // redirect to home page
+      navigate("/circus") // redirect to circus page
     } catch (error) {
       console.error("Signup error:", error.message)
       toast.error(error.message || "Signup failed")
@@ -42,6 +44,100 @@ const Signup = () => {
   }
 
   const [showPassword, setShowPassword] = useState(false);
+
+  // Google login modal handling (copied from Login.jsx)
+  const modal = document.getElementById("my_modal_3");
+
+  useEffect(() => {
+    const handleMessage = (event) => {
+      if (event.data === "googleLoginSuccess") {
+        modal?.close();
+        navigate("/");
+      }
+    };
+
+    window.addEventListener("message", handleMessage);
+    return () => {
+      window.removeEventListener("message", handleMessage);
+      modal?.close();
+    };
+  }, [navigate, modal]);
+
+  const responseGoogle = useCallback(
+    async (authResult) => {
+      try {
+        if (authResult?.code) {
+          console.debug('Google auth result (code):', authResult.code)
+          const sendOtpResp = await googleAuth(authResult.code, true);
+          console.debug('googleAuth sendOtpResp:', sendOtpResp)
+          toastHot.success(
+            "OTP sent to your Google email (check preview URL in response if using Ethereal)"
+          );
+
+          if (sendOtpResp?.previewUrl) {
+            // eslint-disable-next-line no-alert
+            alert(`Preview URL for OTP email:\n${sendOtpResp.previewUrl}`);
+          }
+
+          // eslint-disable-next-line no-alert
+          const userOtp = window.prompt("Enter the OTP sent to your email:");
+          if (!userOtp) {
+            toastHot.error("OTP entry cancelled");
+            return;
+          }
+
+          const verifyResp = await apiVerifyOTP(sendOtpResp.email, userOtp);
+          console.debug('verifyOTP response:', verifyResp)
+
+          // Defensive: ensure we have a user object
+          const userObj = verifyResp?.user || verifyResp?.data?.user;
+          if (!userObj) {
+            console.error('No user returned from verifyOTP:', verifyResp)
+            toastHot.error('Failed to verify OTP (no user data)')
+            return
+          }
+
+          // Update redux store & localStorage
+          dispatch(authLogin(userObj));
+          localStorage.setItem("User", JSON.stringify(userObj));
+          toastHot.success(
+            `Welcome, ${userObj.fullname || userObj.email || userObj.username || ''}!`
+          );
+
+          // Attempt to notify opener (if flow opened in a separate window)
+          try {
+            if (window.opener) {
+              window.opener.postMessage("googleLoginSuccess", "*");
+              window.close();
+            }
+          } catch (err) {
+            console.warn('Failed to postMessage to opener:', err)
+          }
+
+          // Close modal if present and always navigate to home
+          modal?.close();
+          navigate('/', { replace: true });
+        }
+      } catch (error) {
+        console.error("Google auth failed:", error);
+        toastHot.error("Google authentication failed!");
+      }
+    },
+    [navigate, modal, dispatch]
+  );
+
+  const googleLogin = useGoogleLogin({
+    onSuccess: responseGoogle,
+    onError: responseGoogle,
+    flow: "auth-code",
+    ux_mode: "popup",
+    scope: 'openid profile email https://www.googleapis.com/auth/calendar.events',
+    authorizationParams: {
+      access_type: 'offline',
+      prompt: 'consent',
+      include_granted_scopes: 'true'
+    }
+  });
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-purple-900 via-indigo-900 to-fuchsia-800">
@@ -139,6 +235,24 @@ const Signup = () => {
         >
           ✨ Sign Up
           <span className="absolute inset-0 bg-gradient-to-r from-pink-400 via-fuchsia-400 to-purple-400 opacity-0 hover:opacity-20 transition duration-500 blur-xl"></span>
+        </button>
+
+        <div className="relative flex items-center justify-center my-4">
+          <span className="absolute bg-purple-800 px-3 text-fuchsia-200 text-sm">or</span>
+          <div className="w-full border-t border-fuchsia-400"></div>
+        </div>
+
+        <button
+          type="button"
+          onClick={googleLogin}
+          className="flex items-center justify-center w-full bg-white text-purple-800 py-3 rounded-lg font-semibold shadow-lg hover:scale-105 transform transition"
+        >
+          <img
+            src="https://cdn1.iconfinder.com/data/icons/google-s-logo/150/Google_Icons-09-1024.png"
+            alt="Google"
+            className="w-5 h-5 mr-2"
+          />
+          Sign up with Google
         </button>
       </form>
     </div>

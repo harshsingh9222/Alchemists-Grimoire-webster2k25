@@ -81,12 +81,13 @@ const googleLogin = async (req, res) => {
       let user = await User.findOne({ email })
       if (!user) {
         console.log("Creating new user (OTP flow) from Google OAuth")
-        user = await User.create({
-          username: name,
-          email,
-          provider: 'google',
-          profilePic: picture
-        })
+       user = await User.create({
+         username: name,
+         email,
+         provider: 'google',
+         profilePic: picture,
+         onboarded: false
+       })
       }
 
       // Persist refresh token if provided
@@ -107,12 +108,13 @@ const googleLogin = async (req, res) => {
     let user = await User.findOne({ email })
     if (!user) {
       console.log("Creating new user from Google OAuth")
-      user = await User.create({
-        username: name,
-        email,
-        provider: 'google',
-        profilePic: picture
-      })
+       user = await User.create({
+         username: name,
+         email,
+         provider: 'google',
+         profilePic: picture,
+         onboarded: false
+       })
     } else {
       console.log("Existing user found:", user.username)
     }
@@ -307,7 +309,7 @@ const verifyOTP = async (req, res) => {
       console.log(`verifyOTP: creating new user for ${email}`)
       const username = email.split('@')[0]
       const randomPassword = crypto.randomBytes(16).toString('hex')
-      user = await User.create({ username, email, password: randomPassword, provider: 'local' })
+       user = await User.create({ username, email, password: randomPassword, provider: 'local', onboarded: false })
     }
 
     // Generate access and refresh tokens consistent with other auth flows
@@ -380,13 +382,14 @@ const registerUser = asyncHandler(async (req, res) => {
             return res.status(400).json({ message: 'User already exists.' });
         }
 
-        // Create new user
-        const user = await User.create({
-            username: username.toLowerCase(),
-            email,
-            password,
-            provider: 'local'
-        });
+    // Create new user
+    const user = await User.create({
+      username: username.toLowerCase(),
+      email,
+      password,
+      provider: 'local',
+      onboarded: false
+    });
 
         // Generate JWT token
         const { accessToken, refreshToken } = await generateAccessAndRefreshToken(user._id);
@@ -572,5 +575,64 @@ const getGoogleClientInfo = async (req, res) => {
     return res.status(500).json({ error: 'Failed to read client info' })
   }
 }
+
+// Fetch events from the user's primary Google Calendar for a given month
+const getCalendarEventsForMonth = async (req, res) => {
+  try {
+    const user = req.user;
+    if (!user) return res.status(401).json({ message: 'Unauthorized' });
+
+    const { year, month } = req.query;
+    if (!year || !month) return res.status(400).json({ message: 'year and month query params required (e.g. ?year=2025&month=10)' });
+
+    const start = new Date(Number(year), Number(month) - 1, 1);
+    const end = new Date(Number(year), Number(month), 1);
+
+    // Use googleapis directly here with a fresh client like createCalendarEventForUser
+    const { google } = await import('googleapis');
+    const OAuth2 = google.auth.OAuth2;
+    const client = new OAuth2(process.env.GOOGLE_CLIENT_ID, process.env.GOOGLE_CLIENT_SECRET, process.env.GOOGLE_REDIRECT_URI);
+
+    const refreshToken = user?.google?.refreshToken;
+    if (!refreshToken) return res.status(400).json({ message: 'No Google refresh token for this user' });
+
+    client.setCredentials({ refresh_token: refreshToken });
+    const calendar = google.calendar({ version: 'v3', auth: client });
+
+    const resp = await calendar.events.list({
+      calendarId: 'primary',
+      timeMin: start.toISOString(),
+      timeMax: end.toISOString(),
+      singleEvents: true,
+      orderBy: 'startTime',
+      maxResults: 2500,
+    });
+
+    return res.status(200).json({ events: resp.data.items || [] });
+  } catch (err) {
+    console.error('getCalendarEventsForMonth error:', err?.response?.data || err?.message || err);
+    return res.status(500).json({ message: 'Failed to fetch calendar events', error: String(err) });
+  }
+}
+
+export { getCalendarEventsForMonth };
+
+// PUT /api/users/character
+export const updateCharacter = async (req, res) => {
+  try {
+    const { characterId } = req.body;
+    const userId = req.user.id; // assuming you use JWT middleware
+    // console.log("Character ID to update:", characterId);
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { character: characterId },
+      { new: true }
+    );
+    // console.log("Updated user after selecting the character:", updatedUser);
+    res.json(updatedUser);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to update character" });
+  }
+};
 
 
