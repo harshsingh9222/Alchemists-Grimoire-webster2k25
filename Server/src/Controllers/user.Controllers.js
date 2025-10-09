@@ -573,4 +573,45 @@ const getGoogleClientInfo = async (req, res) => {
   }
 }
 
+// Fetch events from the user's primary Google Calendar for a given month
+const getCalendarEventsForMonth = async (req, res) => {
+  try {
+    const user = req.user;
+    if (!user) return res.status(401).json({ message: 'Unauthorized' });
+
+    const { year, month } = req.query;
+    if (!year || !month) return res.status(400).json({ message: 'year and month query params required (e.g. ?year=2025&month=10)' });
+
+    const start = new Date(Number(year), Number(month) - 1, 1);
+    const end = new Date(Number(year), Number(month), 1);
+
+    // Use googleapis directly here with a fresh client like createCalendarEventForUser
+    const { google } = await import('googleapis');
+    const OAuth2 = google.auth.OAuth2;
+    const client = new OAuth2(process.env.GOOGLE_CLIENT_ID, process.env.GOOGLE_CLIENT_SECRET, process.env.GOOGLE_REDIRECT_URI);
+
+    const refreshToken = user?.google?.refreshToken;
+    if (!refreshToken) return res.status(400).json({ message: 'No Google refresh token for this user' });
+
+    client.setCredentials({ refresh_token: refreshToken });
+    const calendar = google.calendar({ version: 'v3', auth: client });
+
+    const resp = await calendar.events.list({
+      calendarId: 'primary',
+      timeMin: start.toISOString(),
+      timeMax: end.toISOString(),
+      singleEvents: true,
+      orderBy: 'startTime',
+      maxResults: 2500,
+    });
+
+    return res.status(200).json({ events: resp.data.items || [] });
+  } catch (err) {
+    console.error('getCalendarEventsForMonth error:', err?.response?.data || err?.message || err);
+    return res.status(500).json({ message: 'Failed to fetch calendar events', error: String(err) });
+  }
+}
+
+export { getCalendarEventsForMonth };
+
 

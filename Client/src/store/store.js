@@ -1,7 +1,7 @@
 import { configureStore } from '@reduxjs/toolkit';
 import authReducer from './authSlice';
 import medicineReducer from './medicineSlice';
-import dashboardReducer from './dashboardSlice';
+import dashboardReducer from './dashboardSlice.js';
 
 
 export const store = configureStore({
