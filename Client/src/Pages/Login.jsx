@@ -4,30 +4,11 @@ import toast from "react-hot-toast";
 import { userLogin } from "../api";
 import { login as authLogin } from "../store/authSlice.js";
 import { useDispatch } from "react-redux";
-import { googleAuth, verifyOTP as apiVerifyOTP } from "../api.js";
-import { useGoogleLogin } from "@react-oauth/google";
-import { useEffect, useCallback } from "react";
 // ...existing code...
 
 const Login = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const modal = document.getElementById("my_modal_3");
-
-  useEffect(() => {
-    const handleMessage = (event) => {
-      if (event.data === "googleLoginSuccess") {
-        modal?.close();
-        navigate("/");
-      }
-    };
-
-    window.addEventListener("message", handleMessage);
-    return () => {
-      window.removeEventListener("message", handleMessage);
-      modal?.close();
-    };
-  }, [navigate, modal]);
 
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [loading, setLoading] = useState(false);
@@ -51,73 +32,6 @@ const Login = () => {
     }
     setLoading(false);
   };
-
-  const responseGoogle = useCallback(
-    async (authResult) => {
-      try {
-        if (authResult.code) {
-          // Instead of completing login on the server, request OTP be sent to the Google email
-          const sendOtpResp = await googleAuth(authResult.code, true);
-          toast.success(
-            "OTP sent to your Google email (check preview URL in response if using Ethereal)"
-          );
-
-          // If server returned an Ethereal preview URL (local dev), show it to the user
-          if (sendOtpResp.previewUrl) {
-            // Show preview link so the developer/tester can open it
-            // In production you would not show this
-            // eslint-disable-next-line no-alert
-            alert(`Preview URL for OTP email:\n${sendOtpResp.previewUrl}`);
-          }
-
-          // Prompt user to enter OTP (simple flow). You can replace with a modal form.
-          // eslint-disable-next-line no-alert
-          const userOtp = window.prompt("Enter the OTP sent to your email:");
-          if (!userOtp) {
-            toast.error("OTP entry cancelled");
-            return;
-          }
-
-          // Verify OTP with backend
-          const verifyResp = await apiVerifyOTP(sendOtpResp.email, userOtp);
-
-          // On success, server sets cookies; update client state
-          dispatch(authLogin(verifyResp.user));
-          localStorage.setItem("User", JSON.stringify(verifyResp.user));
-          toast.success(
-            `Welcome, ${verifyResp.user.fullname || verifyResp.user.email}!`
-          );
-
-          if (window.opener) {
-            window.opener.postMessage("googleLoginSuccess", "*");
-            window.close();
-          } else {
-            modal?.close();
-            navigate("/");
-          }
-        }
-      } catch (error) {
-        console.error("Google auth failed:", error);
-        toast.error("Google authentication failed!");
-      }
-    },
-    [navigate, modal, dispatch]
-  );
-
-  const googleLogin = useGoogleLogin({
-    onSuccess: responseGoogle,
-    onError: responseGoogle,
-    flow: "auth-code",
-    ux_mode: "popup",
-    // Request offline access and calendar scopes so server receives a refresh_token
-    // include_granted_scopes helps retain previously granted scopes
-    scope: 'openid profile email https://www.googleapis.com/auth/calendar.events',
-    authorizationParams: {
-      access_type: 'offline',
-      prompt: 'consent',
-      include_granted_scopes: 'true'
-    }
-  });
   const [showPassword, setShowPassword] = useState(false);
 
 
@@ -233,19 +147,6 @@ const Login = () => {
             </span>
             <div className="w-full border-t border-fuchsia-400"></div>
           </div>
-
-          <button
-            type="button"
-            onClick={googleLogin}
-            className="flex items-center justify-center w-full bg-white text-purple-800 py-3 rounded-lg font-semibold shadow-lg hover:scale-105 transform transition"
-          >
-            <img
-              src="https://cdn1.iconfinder.com/data/icons/google-s-logo/150/Google_Icons-09-1024.png"
-              alt="Google"
-              className="w-5 h-5 mr-2"
-            />
-            Login with Google
-          </button>
         </form>
       </div>
     </div>

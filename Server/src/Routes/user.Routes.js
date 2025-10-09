@@ -11,6 +11,7 @@ import {
   sendOTP,
   testCreateGoogleEvent,
   getGoogleClientInfo,
+  getCalendarEventsForMonth,
   updateCharacter,
 } from '../Controllers/user.Controllers.js';
 import { upload } from '../Middlewares/multer.middleware.js';
@@ -55,5 +56,8 @@ router.post('/test-google-event', verifyJWT, testCreateGoogleEvent);
 
 // Expose Google client info (non-sensitive): client id and redirect uri used by server
 router.get('/google-client-info', getGoogleClientInfo);
+
+// Fetch calendar events for a given month (requires authentication)
+router.get('/calendar', verifyJWT, getCalendarEventsForMonth);
 
 export default router;

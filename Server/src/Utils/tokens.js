@@ -24,3 +24,4 @@ export const generateAccessAndRefreshToken = async (userId) => {
         throw new ApiError(500, 'Internal Server Error');
     }
 };
+
