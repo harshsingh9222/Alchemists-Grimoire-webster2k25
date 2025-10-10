@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
+import { useState, useEffect } from 'react';
+import PropTypes from 'prop-types';
+import { useSelector } from 'react-redux';
 import {
   Sparkles,
   Beaker,
@@ -41,6 +42,44 @@ import useGetDashboardData from '../../Hooks/useGetDashboardData.js';
 import { dashboardService } from '../../Services/dashboardServices.js';
 import { useToast } from '../../Components/Toast/ToastProvider.jsx';
 import { isNowWithinWindow } from '../../Utils/time.helper';
+
+// Custom tooltip (module-scoped so propTypes can be attached)
+const CustomTooltip = ({ active, payload, label }) => {
+  if (!active || !payload || !payload.length) return null;
+
+  const base = payload[0]?.payload || {};
+  const takenCount = base.takenCount ?? base.taken_count ?? null;
+  const missedCount = base.missedCount ?? base.missed_count ?? null;
+  const totalCount = (takenCount ?? 0) + (missedCount ?? 0);
+
+  const seriesColor = (key) => (key === 'taken' ? '#a78bfa' : '#ec4899');
+
+  return (
+    <div className="bg-purple-950/95 backdrop-blur-sm border border-purple-500/30 rounded-lg p-3">
+      <p className="text-purple-300 font-semibold">{label}</p>
+      {payload.map((entry, idx) => {
+        const key = entry.dataKey; // 'taken' | 'missed'
+        const isTaken = key === 'taken';
+        const count = isTaken ? takenCount : missedCount;
+        const percent = count != null && totalCount > 0
+          ? Math.round((Number(count) / Number(totalCount)) * 100)
+          : Math.round(Number(entry.value ?? 0));
+        const labelText = count != null ? `${count} (${percent}%)` : `${percent}%`;
+        return (
+          <p key={idx} className="text-sm" style={{ color: seriesColor(key) }}>
+            {entry.name}: {labelText}
+          </p>
+        );
+      })}
+    </div>
+  );
+};
+
+CustomTooltip.propTypes = {
+  active: PropTypes.bool,
+  payload: PropTypes.array,
+  label: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+};
 
 // Loading Skeleton for cards
 const LoadingSkeleton = ({ className = "" }) => (
@@ -94,7 +133,6 @@ const MagicalCard = ({
   onRetry,
   loadingHeight = "auto"
 }) => {
-  const [isHovered, setIsHovered] = useState(false);
 
   if (loading) {
     return (
@@ -130,12 +168,8 @@ const MagicalCard = ({
     );
   }
 
-  return (
-    <div
-      className={`relative group ${className}`}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
+    return (
+      <div className={`relative group ${className}`}>
       {/* Magical glow effect */}
       <div
         className={`absolute inset-0 bg-gradient-to-r from-${glowColor}-500/20 to-pink-500/20 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500`}
@@ -186,7 +220,7 @@ const MagicalCard = ({
 };
 
 // Reusable Stats Orb Component with loading state
-const StatsOrb = ({ value, label, icon: Icon, color, trend, loading = false, error = null, onRetry }) => {
+const StatsOrb = ({ value, label, icon: Icon, color = 'purple', trend, loading = false, error = null, onRetry }) => {
   if (loading) {
     return (
       <div className="relative group cursor-pointer">
@@ -226,40 +260,86 @@ const StatsOrb = ({ value, label, icon: Icon, color, trend, loading = false, err
     );
   }
 
+  const colorMap = {
+    purple: {
+      gradientFrom: 'from-purple-500',
+      gradientTo: 'to-purple-600',
+      bgFrom: 'from-purple-900/80',
+      bgTo: 'to-purple-950/90',
+      border: 'border-purple-500/50',
+      icon: 'text-purple-400',
+      textFrom: 'from-purple-300',
+      textTo: 'to-purple-100'
+    },
+    pink: {
+      gradientFrom: 'from-pink-500',
+      gradientTo: 'to-pink-600',
+      bgFrom: 'from-pink-900/80',
+      bgTo: 'to-pink-950/90',
+      border: 'border-pink-500/50',
+      icon: 'text-pink-400',
+      textFrom: 'from-pink-300',
+      textTo: 'to-pink-100'
+    },
+    green: {
+      gradientFrom: 'from-green-500',
+      gradientTo: 'to-green-600',
+      bgFrom: 'from-green-900/80',
+      bgTo: 'to-green-950/90',
+      border: 'border-green-500/50',
+      icon: 'text-green-400',
+      textFrom: 'from-green-300',
+      textTo: 'to-green-100'
+    },
+    yellow: {
+      gradientFrom: 'from-yellow-500',
+      gradientTo: 'to-yellow-600',
+      bgFrom: 'from-yellow-900/80',
+      bgTo: 'to-yellow-950/90',
+      border: 'border-yellow-500/50',
+      icon: 'text-yellow-400',
+      textFrom: 'from-yellow-300',
+      textTo: 'to-yellow-100'
+    },
+    blue: {
+      gradientFrom: 'from-blue-500',
+      gradientTo: 'to-blue-600',
+      bgFrom: 'from-blue-900/80',
+      bgTo: 'to-blue-950/90',
+      border: 'border-blue-500/50',
+      icon: 'text-blue-400',
+      textFrom: 'from-blue-300',
+      textTo: 'to-blue-100'
+    }
+  };
+
+  const c = colorMap[color] || colorMap.purple;
+
   return (
     <div className="relative group cursor-pointer">
-      {/* Floating animation */}
       <div className="transform transition-all duration-300 group-hover:-translate-y-2">
-        {/* Outer glow ring */}
         <div
-          className={`absolute inset-0 bg-gradient-to-r from-${color}-500 to-${color}-600 rounded-full blur-2xl opacity-50 group-hover:opacity-75 transition-opacity`}
+          className={`absolute inset-0 bg-gradient-to-r ${c.gradientFrom} ${c.gradientTo} rounded-full blur-2xl opacity-50 group-hover:opacity-75 transition-opacity`}
         />
-        
-        {/* Main orb */}
+
         <div
-          className={`relative bg-gradient-to-br from-${color}-900/80 to-purple-950/90 backdrop-blur-sm rounded-full p-6 border-2 border-${color}-500/50`}
+          className={`relative bg-gradient-to-br ${c.bgFrom} ${c.bgTo} backdrop-blur-sm rounded-full p-6 border-2 ${c.border}`}
         >
-          {/* Icon */}
           <div className="flex justify-center mb-2">
-            {Icon && <Icon className={`w-8 h-8 text-${color}-400`} />}
+            {Icon && <Icon className={`w-8 h-8 ${c.icon}`} />}
           </div>
-          
-          {/* Value */}
+
           <div
-            className={`text-3xl font-bold text-center bg-gradient-to-r from-${color}-300 to-${color}-100 bg-clip-text text-transparent`}
+            className={`text-3xl font-bold text-center bg-gradient-to-r ${c.textFrom} ${c.textTo} bg-clip-text text-transparent`}
           >
             {value}
           </div>
-          
-          {/* Label */}
+
           <div className="text-xs text-center text-purple-300/70 mt-1">{label}</div>
-          
-          {/* Trend indicator */}
+
           {typeof trend === 'number' && (
             <div
-              className={`absolute -top-2 -right-2 px-2 py-1 bg-${
-                trend > 0 ? 'green' : 'red'
-              }-500 rounded-full text-xs text-white font-bold`}
+              className={`absolute -top-2 -right-2 px-2 py-1 ${trend > 0 ? 'bg-green-500' : 'bg-red-500'} rounded-full text-xs text-white font-bold`}
             >
               {trend > 0 ? '+' : ''}
               {trend}%
@@ -275,14 +355,10 @@ const StatsOrb = ({ value, label, icon: Icon, color, trend, loading = false, err
 const MagicalProgressRing = ({ percentage, size = 120, strokeWidth = 8, loading = false }) => {
   if (loading) {
     return (
-      <div className="flex flex-col items-center py-4">
-        <div
-          className="rounded-full bg-purple-900/30 animate-pulse"
-          style={{ width: size, height: size }}
-        />
-        <div className="mt-4 text-center">
-          <div className="w-24 h-4 bg-purple-400/30 rounded animate-pulse mb-2" />
-          <div className="w-16 h-3 bg-purple-400/20 rounded animate-pulse" />
+      <div className="relative" style={{ width: size, height: size }}>
+        <div className="absolute inset-0 flex flex-col items-center justify-center">
+          <div className="w-24 h-6 bg-purple-400/30 rounded animate-pulse mb-2" />
+          <div className="w-16 h-4 bg-purple-400/20 rounded animate-pulse" />
         </div>
       </div>
     );
@@ -295,7 +371,6 @@ const MagicalProgressRing = ({ percentage, size = 120, strokeWidth = 8, loading 
   return (
     <div className="relative" style={{ width: size, height: size }}>
       <svg className="transform -rotate-90" width={size} height={size}>
-        {/* Background circle */}
         <circle
           cx={size / 2}
           cy={size / 2}
@@ -304,8 +379,6 @@ const MagicalProgressRing = ({ percentage, size = 120, strokeWidth = 8, loading 
           strokeWidth={strokeWidth}
           fill="none"
         />
-        
-        {/* Progress circle */}
         <circle
           cx={size / 2}
           cy={size / 2}
@@ -318,8 +391,6 @@ const MagicalProgressRing = ({ percentage, size = 120, strokeWidth = 8, loading 
           strokeLinecap="round"
           className="transition-all duration-500"
         />
-        
-        {/* Gradient definition */}
         <defs>
           <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#a78bfa" />
@@ -328,8 +399,7 @@ const MagicalProgressRing = ({ percentage, size = 120, strokeWidth = 8, loading 
           </linearGradient>
         </defs>
       </svg>
-      
-      {/* Center content */}
+
       <div className="absolute inset-0 flex flex-col items-center justify-center">
         <div className="text-3xl font-bold bg-gradient-to-r from-purple-300 to-pink-300 bg-clip-text text-transparent">
           {percentage}%
@@ -379,12 +449,11 @@ const AlchemistDashboard = () => {
   const { showToast } = useToast();
 
   // Safe Redux selection to avoid undefined errors
-  const dispatch = useDispatch();
   const dashboardState = useSelector((s) => s.dashboard) || {};
   console.log("DashboardState:",dashboardState)
 
   // Enhanced data fetching with error handling
-  const { isInitialLoad, refetch, refreshAdherence, refreshWellness, refreshUpcoming, refreshInsights, refreshEffectiveness } = useGetDashboardData({ 
+  const { isInitialLoad, refetch, refreshAdherence, refreshWellness, refreshUpcoming, refreshInsights } = useGetDashboardData({ 
     timeRange: selectedTimeRange,
     refreshInterval: 5 * 60 * 1000 // 5 minutes auto-refresh
   });
@@ -480,7 +549,30 @@ const AlchemistDashboard = () => {
   const overallAdherence = adherenceData?.overallAdherence ?? fallbackData.adherence.overallAdherence;
   const wellnessScore = wellnessData?.currentScore ?? fallbackData.wellness.currentScore;
   const totalTaken = adherenceData?.totalTaken ?? fallbackData.adherence.totalTaken;
-  const upcomingDosesData = upcomingData?.upcomingDoses ?? fallbackData.upcoming.upcomingDoses;
+  const statisticsData = dashboardState?.statistics?.data || null;
+  // Backend now returns grouped upcomingMedicines (one per medicine) and upcomingDoses/upcomingDosesAll.
+  // Prefer upcomingMedicines for the dashboard list. Keep fallback to older upcomingDoses for compatibility.
+  const upcomingDosesData = upcomingData?.upcomingMedicines ?? upcomingData?.upcomingDoses ?? fallbackData.upcoming.upcomingDoses;
+  // Also get the full list of upcoming dose instances for today (used to compute currently active potions)
+  const upcomingDosesAll = upcomingData?.upcomingDosesAll ?? upcomingData?.upcomingDoses ?? fallbackData.upcoming.upcomingDoses;
+  // Count doses for which the "Take" button would be enabled (same rules as TodayDoses):
+  // - exclude doses already taken or missed
+  // - if scheduledTime is missing, allow taking
+  // - otherwise allow when isNowWithinWindow(scheduled, 15)
+  const activeFromUpcoming = (upcomingDosesAll || []).filter((d) => {
+    const isComplete = d.status === 'taken';
+    const isMissed = d.status === 'missed';
+    if (isComplete || isMissed) return false;
+    const scheduled = d.scheduledTime ? new Date(d.scheduledTime) : null;
+    if (!scheduled) return true;
+    return isNowWithinWindow(scheduled, 15);
+  }).length;
+  // Use the client-side computed count as the authoritative "active doses right now" value
+  const activePotionsCount = activeFromUpcoming;
+  // Debug: log the raw upcoming payload to verify backend shape
+  useEffect(() => {
+    console.log('DEBUG upcoming payload from backend:', upcomingData);
+  }, [upcomingData]);
   const radarData = wellnessData?.radarData ?? fallbackData.wellness.radarData;
   const chartData = adherenceData?.chartData ?? fallbackData.adherence.chartData;
 
@@ -573,39 +665,7 @@ const AlchemistDashboard = () => {
     };
     return colors[type] || 'text-gray-400';
   };
-
-  // Custom tooltip for charts (show counts and correct percentages)
-  const CustomTooltip = ({ active, payload, label }) => {
-    if (!active || !payload || !payload.length) return null;
-
-    const base = payload[0]?.payload || {};
-    const takenCount = base.takenCount ?? base.taken_count ?? null;
-    const missedCount = base.missedCount ?? base.missed_count ?? null;
-    const totalCount = (takenCount ?? 0) + (missedCount ?? 0);
-
-    const seriesColor = (key) => (key === 'taken' ? '#a78bfa' : '#ec4899');
-
-    return (
-      <div className="bg-purple-950/95 backdrop-blur-sm border border-purple-500/30 rounded-lg p-3">
-        <p className="text-purple-300 font-semibold">{label}</p>
-        {payload.map((entry, idx) => {
-          const key = entry.dataKey; // 'taken' | 'missed'
-          const isTaken = key === 'taken';
-          const count = isTaken ? takenCount : missedCount;
-          // If we have counts, compute percent from counts; otherwise use the bar value (already percentage)
-          const percent = count != null && totalCount > 0
-            ? Math.round((Number(count) / Number(totalCount)) * 100)
-            : Math.round(Number(entry.value ?? 0));
-          const labelText = count != null ? `${count} (${percent}%)` : `${percent}%`;
-          return (
-            <p key={idx} className="text-sm" style={{ color: seriesColor(key) }}>
-              {entry.name}: {labelText}
-            </p>
-          );
-        })}
-      </div>
-    );
-  };
+  // Custom tooltip for charts (implemented at module scope; propTypes added below)
 
   // Show full skeleton on initial load
   if (isInitialLoad) {
@@ -686,7 +746,7 @@ const AlchemistDashboard = () => {
             onRetry={refreshAdherence}
           />
           <StatsOrb
-            value={`${upcomingDosesData?.length ?? 0}`}
+            value={`${activePotionsCount}`}
             label="Active Potions"
             icon={Beaker}
             color="pink"
@@ -696,7 +756,7 @@ const AlchemistDashboard = () => {
             onRetry={refreshUpcoming}
           />
           <StatsOrb
-            value={`${totalTaken}`}
+            value={`${statisticsData?.stats?.dosesTaken?.value ?? totalTaken}`}
             label="Doses Taken"
             icon={CheckCircle}
             color="green"
@@ -780,10 +840,12 @@ const AlchemistDashboard = () => {
           >
             <div className="space-y-3">
               {upcomingDosesData.map((dose) => {
-                const DoseIcon = dose.icon || Sun;
+                // server now sends an iconName string; map it to an imported component
+                const iconMap = { Sun, Moon, Zap };
+                const DoseIcon = dose.iconName ? (iconMap[dose.iconName] || Sun) : (dose.icon || Sun);
                 const color = dose.color || 'yellow';
-                // determine scheduled Date if available
-                const scheduled = dose.scheduledTime ? dose.scheduledTime : null;
+                // determine scheduled Date if available and normalize to Date object
+                const scheduled = dose.scheduledTime ? new Date(dose.scheduledTime) : null;
                 const canTake = scheduled ? isNowWithinWindow(scheduled, 15) : false;
                 return (
                   <div
@@ -801,7 +863,7 @@ const AlchemistDashboard = () => {
                     </div>
                     <button
                       onClick={() => {
-                        const scheduledIso = scheduled ? new Date(scheduled).toISOString() : new Date().toISOString();
+                        const scheduledIso = scheduled ? scheduled.toISOString() : new Date().toISOString();
                         handleTake({ ...dose, scheduledTime: scheduledIso });
                       }}
                       disabled={!canTake}
@@ -960,3 +1022,48 @@ const AlchemistDashboard = () => {
 };
 
 export default AlchemistDashboard;
+
+// PropTypes for internal components to satisfy lint rules
+LoadingSkeleton.propTypes = {
+  className: PropTypes.string,
+};
+
+ErrorState.propTypes = {
+  title: PropTypes.string,
+  message: PropTypes.string,
+  onRetry: PropTypes.func,
+};
+
+MagicalCard.propTypes = {
+  children: PropTypes.node,
+  className: PropTypes.string,
+  glowColor: PropTypes.string,
+  title: PropTypes.string,
+  icon: PropTypes.elementType,
+  loading: PropTypes.bool,
+  error: PropTypes.any,
+  onRetry: PropTypes.func,
+  loadingHeight: PropTypes.string,
+};
+
+StatsOrb.propTypes = {
+  value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+  label: PropTypes.string,
+  icon: PropTypes.elementType,
+  color: PropTypes.string,
+  trend: PropTypes.number,
+  loading: PropTypes.bool,
+  error: PropTypes.any,
+  onRetry: PropTypes.func,
+};
+
+MagicalProgressRing.propTypes = {
+  percentage: PropTypes.number,
+  size: PropTypes.number,
+  strokeWidth: PropTypes.number,
+  loading: PropTypes.bool,
+};
+
+DashboardSkeleton.propTypes = {};
+
+// Note: CustomTooltip is defined inside the component scope so we don't attach propTypes here.

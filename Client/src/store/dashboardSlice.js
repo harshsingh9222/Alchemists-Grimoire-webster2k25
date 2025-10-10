@@ -5,6 +5,7 @@
     adherence: { data: null, loading: false, error: null },
     wellness: { data: null, loading: false, error: null },
     upcoming: { data: null, loading: false, error: null },
+    statistics: { data: null, loading: false, error: null },
     effectiveness: { data: null, loading: false, error: null },
     insights: { data: null, loading: false, error: null },
     lastFetched: null,
@@ -93,6 +94,12 @@
         state.effectiveness.error = null;
       },
 
+      updateStatistics(state, action) {
+        state.statistics.data = action.payload;
+        state.statistics.loading = false;
+        state.statistics.error = null;
+      },
+
       updateInsights(state, action) {
         state.insights.data = action.payload;
         state.insights.loading = false;
@@ -110,6 +117,7 @@
     updateWellnessData,
     updateUpcomingDoses,
     updateEffectiveness,
+    updateStatistics,
     updateInsights,
   } = dashboardSlice.actions;
 
@@ -122,6 +130,7 @@
   export const selectUpcomingDoses = (state) => state.dashboard.upcoming;
   export const selectEffectiveness = (state) => state.dashboard.effectiveness;
   export const selectInsights = (state) => state.dashboard.insights;
+  export const selectStatistics = (state) => state.dashboard.statistics;
   export const selectDashboardLoading = (state) =>
     Object.values(state.dashboard).some((section) => typeof section === 'object' && section?.loading === true);
   export const selectLastFetched = (state) => state.dashboard.lastFetched;

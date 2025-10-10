@@ -11,37 +11,51 @@ import { msFromISO } from "../Utils/time.helper.js";
 import { localTimeToUTCDate } from "../Utils/timezone.helper.js";
 import { ApiResponse } from "../Utils/ApiResponse.js";
 
-// Helper function to get UTC-bounded date range
+// Helper function to get local-date-bounded range (midnight..end-of-day)
 const getDateRange = (timeRange) => {
-  // Sanitize timeRange
   const allowed = new Set(["day", "week", "month", "year"]);
   const range = allowed.has(timeRange) ? timeRange : "week";
 
   const endDate = new Date();
-  // Use UTC end-of-day
-  endDate.setUTCHours(23, 59, 59, 999);
+  // Use local end-of-day
+  endDate.setHours(23, 59, 59, 999);
 
   const startDate = new Date(endDate);
   switch (range) {
     case "day":
-      // Show only today
-      // No day subtraction so start=end (we'll set start-of-day below)
+      // today only
       break;
     case "week":
-      // Last 7 days including today (today and previous 6 days)
-      startDate.setUTCDate(startDate.getUTCDate() - 6);
+      // last 7 days including today
+      startDate.setDate(startDate.getDate() - 6);
       break;
     case "month":
-      startDate.setUTCMonth(startDate.getUTCMonth() - 1);
+      startDate.setMonth(startDate.getMonth() - 1);
       break;
     case "year":
-      startDate.setUTCFullYear(startDate.getUTCFullYear() - 1);
+      startDate.setFullYear(startDate.getFullYear() - 1);
       break;
   }
-  // Use UTC start-of-day
-  startDate.setUTCHours(0, 0, 0, 0);
+  // Use local start-of-day
+  startDate.setHours(0, 0, 0, 0);
 
   return { startDate, endDate };
+};
+
+// Decide whether a medicine applies on a particular local date (mirrors dose controller)
+const medicineAppliesOnDate = (medicine, date) => {
+  if (!medicine) return false;
+  if (medicine.startDate && new Date(medicine.startDate) > date) return false;
+  if (medicine.frequency === 'daily') return true;
+  if (medicine.frequency === 'weekly') {
+    if (Array.isArray(medicine.days) && medicine.days.length > 0) {
+      return medicine.days.includes(date.getDay());
+    }
+    const startDay = medicine.startDate ? new Date(medicine.startDate).getDay() : null;
+    return startDay === date.getDay();
+  }
+  if (medicine.frequency === 'as-needed') return false;
+  return true;
 };
 
 // Get adherence data for charts
@@ -62,21 +76,30 @@ export const getAdherenceData = asyncHandler(async (req, res) => {
   const dailyData = {};
   const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
   
-  // Initialize all days in range
-  for (let d = new Date(startDate); d <= endDate; d.setUTCDate(d.getUTCDate() + 1)) {
-    const dateKey = d.toISOString().split('T')[0]; // UTC date
+  // Helper to format local YYYY-MM-DD
+  const formatLocalDateKey = (dt) => {
+    const y = dt.getFullYear();
+    const m = String(dt.getMonth() + 1).padStart(2, '0');
+    const d = String(dt.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  };
+
+  // Initialize all days in range (local dates)
+  for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+    const dateKey = formatLocalDateKey(d);
     dailyData[dateKey] = {
       date: dateKey,
-      day: dayNames[d.getUTCDay()],
+      day: dayNames[d.getDay()],
       taken: 0,
       missed: 0,
       total: 0,
     };
   }
   
-  // Count doses per day
+  // Count doses per day using local date keys
   doseLogs.forEach(log => {
-    const dateKey = log.scheduledTime.toISOString().split('T')[0];
+    const s = new Date(log.scheduledTime);
+    const dateKey = formatLocalDateKey(s);
     if (dailyData[dateKey]) {
       dailyData[dateKey][log.status]++;
       dailyData[dateKey].total++;
@@ -103,7 +126,7 @@ export const getAdherenceData = asyncHandler(async (req, res) => {
       day: day.day,
       date: day.date,
       taken: 0,
-      missed: 100,
+      missed: 0,
       takenCount: 0,
       missedCount: 0,
       total: 0,
@@ -112,9 +135,11 @@ export const getAdherenceData = asyncHandler(async (req, res) => {
   
   // Calculate overall adherence rate
   const totalTaken = doseLogs.filter(log => log.status === "taken").length;
+  // If there are no dose logs in the requested range, return 0% adherence rather than 100%
+  // which is misleading (100% would imply perfect adherence even though there were no doses).
   const overallAdherence = doseLogs.length > 0 
     ? Math.round((totalTaken / doseLogs.length) * 100)
-    : 100;
+    : 0;
   
   return res.status(200).json(
     new ApiResponse(200, {
@@ -130,63 +155,78 @@ export const getAdherenceData = asyncHandler(async (req, res) => {
 // Get wellness score and metrics
 export const getWellnessScore = asyncHandler(async (req, res) => {
   const userId = req.user._id;
-  
-  // Get latest wellness score
-  const latestScore = await WellnessScore.findOne({ userId })
-    .sort({ date: -1 })
-    .limit(1);
-  
-  // If no score exists, create a default one based on adherence
-  if (!latestScore) {
-    const adherenceRate = await DoseLog.calculateAdherence(
-      userId,
-      new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
-      new Date()
-    );
-    
-    const newScore = await WellnessScore.create({
-      userId,
-      date: new Date(),
-      metrics: {
-        energy: 70 + (adherenceRate * 0.2),
-        focus: 65 + (adherenceRate * 0.25),
-        mood: 60 + (adherenceRate * 0.3),
-        sleep: 70 + (adherenceRate * 0.15),
-        vitality: 75 + (adherenceRate * 0.2),
-        balance: 70 + (adherenceRate * 0.2)
-      },
-      adherenceRate,
-      factors: adherenceRate > 80 ? ["all_doses_taken"] : ["missed_doses"]
-    });
-    
-    return res.status(200).json(
-      new ApiResponse(200, {
-        currentScore: newScore.overallScore,
-        metrics: newScore.metrics,
-        trend: 0,
-        improvement: "new"
-      }, "Wellness score initialized")
-    );
+  const { timeRange = 'week' } = req.query;
+
+  // Build date range using existing helper (local start/end)
+  const { startDate, endDate } = getDateRange(timeRange);
+
+  // Iterate days in range and collect wellness scores (use stored if present else synthesize)
+  const days = [];
+  for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+    const dayStart = new Date(d);
+    dayStart.setHours(0, 0, 0, 0);
+    const dayEnd = new Date(dayStart);
+    dayEnd.setHours(23, 59, 59, 999);
+
+    // Try to find an existing WellnessScore for this exact day (stored at midnight)
+    const ws = await WellnessScore.findOne({ userId, date: dayStart });
+    if (ws) {
+      days.push({ date: new Date(dayStart), metrics: ws.metrics, overallScore: ws.overallScore, hasData: true });
+      continue;
+    }
+
+    // No stored wellness score: check if there are any DoseLog entries that day.
+    const logsCount = await DoseLog.countDocuments({ userId, scheduledTime: { $gte: dayStart, $lte: dayEnd } });
+    if (logsCount === 0) {
+      // No data for this day; mark as empty so it can be excluded from aggregation if desired
+      days.push({ date: new Date(dayStart), metrics: null, overallScore: 0, hasData: false });
+      continue;
+    }
+
+    // Synthesize from adherence for that day
+    const adherenceRate = await DoseLog.calculateAdherence(userId, dayStart, dayEnd);
+
+    const metrics = {
+      energy: Math.min(100, Math.max(0, 70 + (adherenceRate * 0.2))),
+      focus: Math.min(100, Math.max(0, 65 + (adherenceRate * 0.25))),
+      mood: Math.min(100, Math.max(0, 60 + (adherenceRate * 0.3))),
+      sleep: Math.min(100, Math.max(0, 70 + (adherenceRate * 0.15))),
+      vitality: Math.min(100, Math.max(0, 75 + (adherenceRate * 0.2))),
+      balance: Math.min(100, Math.max(0, 70 + (adherenceRate * 0.2)))
+    };
+
+    const overallScore = Math.round(Object.values(metrics).reduce((a, b) => a + b, 0) / Object.keys(metrics).length);
+    days.push({ date: new Date(dayStart), metrics, overallScore, adherenceRate, hasData: true });
   }
-  
-  // Get wellness trend
-  const trend = await WellnessScore.getWellnessTrend(userId, 7);
-  
-  // Get radar chart data
-  const radarData = Object.entries(latestScore.metrics).map(([aspect, score]) => ({
-    aspect: aspect.charAt(0).toUpperCase() + aspect.slice(1),
-    score,
-    fullMark: 100
-  }));
-  
+
+  // Aggregate across days: include empty/no-data days in the averaging pool and count missing metrics as zeros.
+  // This makes the radar and overall score reflect missed/empty days as weaker performance.
+  const pool = days; // always include every day in the range
+
+  const totalPool = pool.length || 1;
+  const avgOverall = Math.round(pool.reduce((s, d) => s + (d.overallScore || 0), 0) / totalPool);
+
+  const metricKeys = ['energy', 'focus', 'mood', 'sleep', 'vitality', 'balance'];
+  const radarData = metricKeys.map((key) => {
+    const avg = Math.round(pool.reduce((s, d) => s + (d.metrics?.[key] || 0), 0) / totalPool);
+    return { aspect: key.charAt(0).toUpperCase() + key.slice(1), score: avg, fullMark: 100 };
+  });
+
+  // Trend: difference between the first and last day in the full range (empty days count as zeros)
+  const firstData = pool[0] || { overallScore: 0 };
+  const lastData = pool[pool.length - 1] || firstData;
+  const trendValue = (lastData?.overallScore || 0) - (firstData?.overallScore || 0);
+  const improvement = trendValue > 0 ? 'improving' : (trendValue < 0 ? 'declining' : 'stable');
+
   return res.status(200).json(
     new ApiResponse(200, {
-      currentScore: latestScore.overallScore,
-      metrics: latestScore.metrics,
+      currentScore: avgOverall,
+      metrics: pool.length === 1 ? pool[0].metrics : undefined,
       radarData,
-      trend: trend.trend,
-      improvement: trend.improvement,
-      lastUpdated: latestScore.date
+      trend: trendValue,
+      improvement,
+      days,
+      lastUpdated: (lastData?.date) || new Date()
     }, "Wellness score retrieved successfully")
   );
 });
@@ -198,72 +238,41 @@ export const getUpcomingDoses = asyncHandler(async (req, res) => {
   const endOfDay = new Date();
   endOfDay.setHours(23, 59, 59, 999);
   
-  // Get all active medicines
-  const medicines = await Medicine.find({
+  // Fetch pending DoseLog entries for the remainder of today (created by doseLogCreater)
+  // These logs have already had scheduledTime computed with timezone helpers, so prefer them.
+  const upcomingLogs = await DoseLog.find({
     userId,
-    $or: [
-      { endDate: null },
-      { endDate: { $gte: now } }
-    ]
-  });
-  
-  // Get today's dose logs
-  const todayStart = new Date();
-  todayStart.setHours(0, 0, 0, 0);
-  
-  const todayLogs = await DoseLog.find({
-    userId,
-    scheduledTime: { $gte: todayStart, $lte: endOfDay }
-  });
-  
-  // Create upcoming doses list
-  const upcomingDoses = [];
+    status: 'pending',
+    scheduledTime: { $gte: now, $lte: endOfDay }
+  }).populate('medicineId').sort({ scheduledTime: 1 });
+
   const timeIcons = {
     morning: "Sun",
     noon: "Sun",
     evening: "Moon",
     night: "Moon"
   };
-  
-  medicines.forEach(medicine => {
-    medicine.times.forEach(time => {
-      let doseTime;
-      const [hours, minutes] = time.split(':');
-      if (medicine.timezone) {
-        doseTime = localTimeToUTCDate(new Date(), time, medicine.timezone);
-      } else {
-        doseTime = new Date();
-        doseTime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
-      }
 
-      // Check if this dose is already logged (compare within the same minute)
-      const isLogged = todayLogs.some(log => {
-        if (log.medicineId.toString() !== medicine._id.toString()) return false;
-        const diffMs = Math.abs(log.scheduledTime.getTime() - doseTime.getTime());
-        return diffMs <= 60 * 1000; // same minute
-      });
+  const upcomingDoses = upcomingLogs.map((dose) => {
+    const med = dose.medicineId || {};
+    const s = new Date(dose.scheduledTime);
+    const hour = s.getHours();
+    let timeOfDay = 'morning';
+    if (hour >= 20) timeOfDay = 'night';
+    else if (hour >= 17) timeOfDay = 'evening';
+    else if (hour >= 12) timeOfDay = 'noon';
 
-      // Only include if it's upcoming and not logged
-      if (doseTime > now && !isLogged) {
-        let timeOfDay = "morning";
-        const hour = parseInt(hours);
-        if (hour >= 17) timeOfDay = "evening";
-        else if (hour >= 12) timeOfDay = "noon";
-        else if (hour >= 20) timeOfDay = "night";
-        
-        upcomingDoses.push({
-          id: `${medicine._id}-${time}`,
-          medicineId: medicine._id,
-          name: medicine.medicineName,
-          dosage: medicine.dosage,
-          time: time,
-          scheduledTime: doseTime,
-          timeOfDay,
-          icon: timeIcons[timeOfDay],
-          color: timeOfDay === "morning" ? "yellow" : "indigo"
-        });
-      }
-    });
+    return {
+      id: String(dose._id),
+      medicineId: med._id || null,
+      name: med.medicineName || med.name || 'Medicine',
+      dosage: med.dosage || dose.dosage || null,
+      time: s.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }),
+      scheduledTime: s,
+      timeOfDay,
+      iconName: timeIcons[timeOfDay],
+      color: timeOfDay === 'morning' ? 'yellow' : 'indigo'
+    };
   });
   
   // Sort by time
@@ -271,10 +280,42 @@ export const getUpcomingDoses = asyncHandler(async (req, res) => {
   
   // Get next 5 doses
   const nextDoses = upcomingDoses.slice(0, 5);
-  
+  // Group upcoming doses by medicine to produce a medicines array where each entry
+  // contains the next scheduled dose for that medicine. This is useful for UIs
+  // that want to show one card per medicine rather than each scheduled dose.
+  const medsMap = new Map();
+  for (const dose of upcomingDoses) {
+    const mid = dose.medicineId.toString();
+    if (!medsMap.has(mid)) {
+      medsMap.set(mid, dose);
+    } else {
+      // keep the earliest scheduledTime for that medicine
+      const existing = medsMap.get(mid);
+      if (dose.scheduledTime < existing.scheduledTime) {
+        medsMap.set(mid, dose);
+      }
+    }
+  }
+
+  const upcomingMedicines = Array.from(medsMap.values()).map(d => ({
+    medicineId: d.medicineId,
+    name: d.name,
+    dosage: d.dosage,
+    scheduledTime: d.scheduledTime,
+    time: d.time,
+    timeOfDay: d.timeOfDay,
+    iconName: d.iconName,
+    color: d.color
+  }));
+
   return res.status(200).json(
     new ApiResponse(200, {
+      // compact next few doses (for quick glance)
       upcomingDoses: nextDoses,
+      // full list of upcoming dose instances for the day
+      upcomingDosesAll: upcomingDoses,
+      // grouped list (one per medicine) with the next scheduled dose
+      upcomingMedicines,
       totalToday: upcomingDoses.length
     }, "Upcoming doses retrieved successfully")
   );
