@@ -574,21 +574,37 @@ const AlchemistDashboard = () => {
     return colors[type] || 'text-gray-400';
   };
 
-  // Custom tooltip for charts
+  // Custom tooltip for charts (show counts and correct percentages)
   const CustomTooltip = ({ active, payload, label }) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="bg-purple-950/95 backdrop-blur-sm border border-purple-500/30 rounded-lg p-3">
-          <p className="text-purple-300 font-semibold">{label}</p>
-          {payload.map((entry, index) => (
-            <p key={index} className="text-sm" style={{ color: entry.color }}>
-              {entry.name}: {entry.value}%
+    if (!active || !payload || !payload.length) return null;
+
+    const base = payload[0]?.payload || {};
+    const takenCount = base.takenCount ?? base.taken_count ?? null;
+    const missedCount = base.missedCount ?? base.missed_count ?? null;
+    const totalCount = (takenCount ?? 0) + (missedCount ?? 0);
+
+    const seriesColor = (key) => (key === 'taken' ? '#a78bfa' : '#ec4899');
+
+    return (
+      <div className="bg-purple-950/95 backdrop-blur-sm border border-purple-500/30 rounded-lg p-3">
+        <p className="text-purple-300 font-semibold">{label}</p>
+        {payload.map((entry, idx) => {
+          const key = entry.dataKey; // 'taken' | 'missed'
+          const isTaken = key === 'taken';
+          const count = isTaken ? takenCount : missedCount;
+          // If we have counts, compute percent from counts; otherwise use the bar value (already percentage)
+          const percent = count != null && totalCount > 0
+            ? Math.round((Number(count) / Number(totalCount)) * 100)
+            : Math.round(Number(entry.value ?? 0));
+          const labelText = count != null ? `${count} (${percent}%)` : `${percent}%`;
+          return (
+            <p key={idx} className="text-sm" style={{ color: seriesColor(key) }}>
+              {entry.name}: {labelText}
             </p>
-          ))}
-        </div>
-      );
-    }
-    return null;
+          );
+        })}
+      </div>
+    );
   };
 
   // Show full skeleton on initial load
@@ -716,11 +732,11 @@ const AlchemistDashboard = () => {
               <BarChart data={chartData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(139, 92, 246, 0.1)" />
                 <XAxis dataKey="day" stroke="#a78bfa" />
-                <YAxis stroke="#a78bfa" />
+                <YAxis stroke="#a78bfa" domain={[0, 100]} tickFormatter={(v) => `${v}%`} />
                 <Tooltip content={<CustomTooltip />} />
                 <Legend />
-                <Bar dataKey="taken" fill="url(#takenGradient)" radius={[8, 8, 0, 0]} />
-                <Bar dataKey="missed" fill="url(#missedGradient)" radius={[8, 8, 0, 0]} />
+                <Bar dataKey="taken" name="Taken" fill="url(#takenGradient)" radius={[8, 8, 0, 0]} />
+                <Bar dataKey="missed" name="Missed" fill="url(#missedGradient)" radius={[8, 8, 0, 0]} />
                 <defs>
                   <linearGradient id="takenGradient" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stopColor="#a78bfa" />
@@ -784,7 +800,10 @@ const AlchemistDashboard = () => {
                       </div>
                     </div>
                     <button
-                      onClick={() => handleTake({ ...dose, scheduledTime: scheduled ? scheduled.toISOString() : new Date().toISOString() })}
+                      onClick={() => {
+                        const scheduledIso = scheduled ? new Date(scheduled).toISOString() : new Date().toISOString();
+                        handleTake({ ...dose, scheduledTime: scheduledIso });
+                      }}
                       disabled={!canTake}
                       title={!canTake ? 'You can take this dose starting 15 minutes before its scheduled time' : 'Take'}
                       className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors ${

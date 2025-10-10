@@ -14,7 +14,7 @@ import {
   getCalendarEventsForMonth,
   updateCharacter,
 } from '../Controllers/user.Controllers.js';
-import { upload } from '../Middlewares/multer.middleware.js';
+import { upload } from '../Middlewares/multer.Middleware.js';
 import {upload_cloud} from "../Middlewares/cloudinary_multer.middleware.js"
 import { verifyJWT } from '../Middlewares/auth.middleware.js';
 
