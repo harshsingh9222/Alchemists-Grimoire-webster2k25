@@ -14,8 +14,25 @@ dotenv.config();
 const app = express();
 
 // Middleware
+const allowedOrigins = [
+  'http://localhost:5173', // local development
+  process.env.CORS_ORIGIN  // production frontend from .env
+].filter(Boolean); // remove undefined values
+
+console.log("CORS_ORIGIN from .env:", process.env.CORS_ORIGIN);
+console.log("Allowed Origins:", allowedOrigins);
+
 app.use(cors({
-  origin: process.env.CORS_ORIGIN,
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like curl or Postman)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    } else {
+      console.warn(`Blocked CORS request from origin: ${origin}`);
+      return callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
 }));
 
