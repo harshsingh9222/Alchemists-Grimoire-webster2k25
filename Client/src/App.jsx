@@ -146,17 +146,7 @@ function App() {
             </MainLayout>
           }
         />
-        <Route
-          path="/calendar"
-          element={
-            <MainLayout
-              sidebarOpen={sidebarOpen}
-              setSidebarOpen={setSidebarOpen}
-            >
-              <Calendar />
-            </MainLayout>
-          }
-        />
+        
 
         <Route
           path="/profile"

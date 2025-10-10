@@ -10,7 +10,7 @@ const EditMedicine = () => {
   const dispatch = useDispatch();
   const [formData, setFormData] = useState(null);
 
-  // ✅ Load the medicine data for editing
+  // Load the medicine data
   useEffect(() => {
     const load = async () => {
       const all = await fetchMedicines();
@@ -65,12 +65,14 @@ const EditMedicine = () => {
     );
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center py-10">
-      <h1 className="text-3xl font-bold mb-6 text-teal-400">✏️ Edit Medicine</h1>
+    <div className="min-h-screen flex flex-col items-center py-10 bg-gradient-to-br from-[#2d0b5a] via-[#4b0082] to-[#220042] text-white">
+      <h1 className="text-4xl font-bold mb-8 text-pink-400 drop-shadow-lg tracking-wide">
+        ✏️ Edit Medicine
+      </h1>
 
       <form
         onSubmit={handleSubmit}
-        className="bg-gray-800 p-6 rounded-2xl shadow-lg w-full max-w-lg"
+        className="backdrop-blur-lg bg-white/10 border border-white/20 p-6 rounded-2xl shadow-2xl w-full max-w-lg"
       >
         <input
           type="text"
@@ -79,7 +81,7 @@ const EditMedicine = () => {
           value={formData.medicineName}
           onChange={handleChange}
           required
-          className="w-full mb-3 p-3 rounded-lg bg-gray-700 border border-gray-600 text-white"
+          className="w-full mb-4 p-3 rounded-lg bg-white/10 border border-white/20 placeholder-gray-300 text-white focus:outline-none focus:ring-2 focus:ring-pink-500"
         />
 
         <input
@@ -89,14 +91,14 @@ const EditMedicine = () => {
           value={formData.dosage}
           onChange={handleChange}
           required
-          className="w-full mb-3 p-3 rounded-lg bg-gray-700 border border-gray-600 text-white"
+          className="w-full mb-4 p-3 rounded-lg bg-white/10 border border-white/20 placeholder-gray-300 text-white focus:outline-none focus:ring-2 focus:ring-pink-500"
         />
 
         <select
           name="frequency"
           value={formData.frequency}
           onChange={handleChange}
-          className="w-full mb-3 p-3 rounded-lg bg-gray-700 border border-gray-600 text-white"
+          className="w-full mb-4 p-3 rounded-lg bg-white/10 border border-white/20 text-white focus:outline-none focus:ring-2 focus:ring-pink-500"
         >
           <option value="daily">Daily</option>
           <option value="weekly">Weekly</option>
@@ -110,14 +112,14 @@ const EditMedicine = () => {
             value={time}
             onChange={(e) => handleTimeChange(i, e.target.value)}
             required
-            className="w-full mb-3 p-3 rounded-lg bg-gray-700 border border-gray-600 text-white"
+            className="w-full mb-4 p-3 rounded-lg bg-white/10 border border-white/20 text-white focus:outline-none focus:ring-2 focus:ring-pink-500"
           />
         ))}
 
         <button
           type="button"
           onClick={addTimeField}
-          className="mb-4 w-full bg-teal-600 hover:bg-teal-500 p-2 rounded-lg font-semibold"
+          className="mb-4 w-full bg-pink-600 hover:bg-pink-500 transition-all p-2 rounded-lg font-semibold shadow-md"
         >
           + Add Time
         </button>
@@ -129,7 +131,7 @@ const EditMedicine = () => {
           value={formData.startDate}
           onChange={handleChange}
           required
-          className="w-full mb-3 p-3 rounded-lg bg-gray-700 border border-gray-600 text-white"
+          className="w-full mb-4 p-3 rounded-lg bg-white/10 border border-white/20 text-white focus:outline-none focus:ring-2 focus:ring-pink-500"
         />
 
         <label className="block mb-2 text-gray-300">End Date (optional):</label>
@@ -138,7 +140,7 @@ const EditMedicine = () => {
           name="endDate"
           value={formData.endDate}
           onChange={handleChange}
-          className="w-full mb-3 p-3 rounded-lg bg-gray-700 border border-gray-600 text-white"
+          className="w-full mb-4 p-3 rounded-lg bg-white/10 border border-white/20 text-white focus:outline-none focus:ring-2 focus:ring-pink-500"
         />
 
         <textarea
@@ -146,12 +148,12 @@ const EditMedicine = () => {
           placeholder="Notes"
           value={formData.notes}
           onChange={handleChange}
-          className="w-full mb-3 p-3 rounded-lg bg-gray-700 border border-gray-600 text-white"
+          className="w-full mb-4 p-3 rounded-lg bg-white/10 border border-white/20 text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-pink-500"
         />
 
         <button
           type="submit"
-          className="w-full bg-teal-600 hover:bg-teal-500 p-3 rounded-lg font-bold text-lg"
+          className="w-full bg-pink-600 hover:bg-pink-500 transition-all p-3 rounded-lg font-bold text-lg shadow-md"
         >
           💾 Save Changes
         </button>
@@ -160,7 +162,7 @@ const EditMedicine = () => {
       <button
         type="button"
         onClick={() => navigate("/myMedicines")}
-        className="mt-4 w-full max-w-lg bg-gray-700 hover:bg-gray-600 p-3 rounded-lg font-bold text-lg"
+        className="mt-6 w-full max-w-lg bg-pink-600 hover:bg-pink-500 transition-all p-3 rounded-lg font-bold text-lg shadow-md"
       >
         📋 Back to My Medicines
       </button>

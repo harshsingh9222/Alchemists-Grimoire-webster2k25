@@ -65,4 +65,105 @@ export async function createCalendarEventForUser(userIdOrDoc, eventPayload) {
     console.error('createCalendarEventForUser error:', err?.response?.data || err?.message || err)
     return { success: false, error: err?.response?.data || err?.message || String(err) }
   }
-}
+};
+
+export async function deleteCalendarEventForUser(userIdOrDoc, eventId) {
+  try {
+    // Determine if userIdOrDoc is an ID or a document
+    const isId = typeof userIdOrDoc === 'string' || mongoose.isValidObjectId(userIdOrDoc);
+    const user = isId ? await User.findById(userIdOrDoc).exec() : userIdOrDoc;
+
+    if (!user) {
+      console.warn('deleteCalendarEventForUser: user not found for', userIdOrDoc);
+      return { success: false, error: 'User not found' };
+    }
+
+    const refreshToken = user?.google?.refreshToken;
+    if (!refreshToken) {
+      console.warn('deleteCalendarEventForUser: no refresh token for user', user._id);
+      return { success: false, error: 'No Google refresh token for user' };
+    }
+
+    // Create fresh OAuth2 client
+    const client = new google.auth.OAuth2(
+      process.env.GOOGLE_CLIENT_ID,
+      process.env.GOOGLE_CLIENT_SECRET,
+      process.env.GOOGLE_REDIRECT_URI
+    );
+    client.setCredentials({ refresh_token: refreshToken });
+
+    // Ensure access token is valid
+    try {
+      await client.getAccessToken();
+    } catch (tokenErr) {
+      console.warn('deleteCalendarEventForUser: getAccessToken warning', tokenErr?.message || tokenErr);
+    }
+
+    const calendar = google.calendar({ version: 'v3', auth: client });
+
+    try {
+      const res = await calendar.events.delete({
+        calendarId: 'primary',
+        eventId: eventId,
+      });
+      console.log(`deleteCalendarEventForUser: deleted event ${eventId} for user ${user._id}`);
+      return { success: true };
+    } catch (deleteErr) {
+      console.error(`deleteCalendarEventForUser: failed to delete event ${eventId}`, deleteErr?.message || deleteErr);
+      return { success: false, error: deleteErr?.message || String(deleteErr) };
+    }
+  } catch (err) {
+    console.error('deleteCalendarEventForUser error:', err?.message || err);
+    return { success: false, error: err?.message || String(err) };
+  }
+};
+
+export async function getCalendarEventDetailsForUser(userIdOrDoc, eventId) {
+  try {
+    // Determine if userIdOrDoc is an ID or a user document
+    const isId = typeof userIdOrDoc === 'string' || mongoose.isValidObjectId(userIdOrDoc);
+    const user = isId ? await User.findById(userIdOrDoc).exec() : userIdOrDoc;
+
+    if (!user) {
+      console.warn('getCalendarEventDetailsForUser: user not found for', userIdOrDoc);
+      return { success: false, error: 'User not found' };
+    }
+
+    const refreshToken = user?.google?.refreshToken;
+    if (!refreshToken) {
+      console.warn('getCalendarEventDetailsForUser: no refresh token for user', user._id);
+      return { success: false, error: 'No Google refresh token for user' };
+    }
+
+    // Create fresh OAuth2 client (to avoid shared client issues)
+    const client = new google.auth.OAuth2(
+      process.env.GOOGLE_CLIENT_ID,
+      process.env.GOOGLE_CLIENT_SECRET,
+      process.env.GOOGLE_REDIRECT_URI
+    );
+    client.setCredentials({ refresh_token: refreshToken });
+
+    // Ensure access token is valid
+    try {
+      await client.getAccessToken();
+    } catch (tokenErr) {
+      console.warn('getCalendarEventDetailsForUser: getAccessToken warning', tokenErr?.message || tokenErr);
+    }
+
+    const calendar = google.calendar({ version: 'v3', auth: client });
+
+    // Fetch event details
+    const res = await calendar.events.get({
+      calendarId: 'primary',
+      eventId,
+    });
+
+    console.log(`getCalendarEventDetailsForUser: fetched details for event ${eventId} (user ${user._id})`);
+    return { success: true, data: res.data };
+
+  } catch (err) {
+    console.error(`getCalendarEventDetailsForUser error for event ${eventId}:`, err?.message || err);
+    return { success: false, error: err?.message || String(err) };
+  }
+};
+

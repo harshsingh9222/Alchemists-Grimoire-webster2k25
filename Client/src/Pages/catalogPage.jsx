@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { fetchCatalog, getAISuggestion } from "../api";
+import { useNavigate } from "react-router-dom";
 
 const CatalogPage = () => {
   const [catalog, setCatalog] = useState([]);
@@ -7,6 +8,7 @@ const CatalogPage = () => {
   const [feeling, setFeeling] = useState("");
   const [suggestion, setSuggestion] = useState(null);
   const [error, setError] = useState("");
+  const navigate = useNavigate();
 
   useEffect(() => {
     const loadCatalog = async () => {
@@ -31,17 +33,20 @@ const CatalogPage = () => {
     try {
       const res = await getAISuggestion(feeling);
       setSuggestion(res.suggestion);
-      console.log("AI Suggestion:", res.suggestion);
     } catch (err) {
       console.error("AI Suggestion error:", err);
       setError("Failed to get AI suggestion");
     }
   };
 
+  const handleAddToMedicine = () => {
+    if (!suggestion) return;
+    navigate("/medicine-form", { state: { suggestion } });
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#4b0082] to-[#2a004d] text-white py-10 px-6">
       <div className="max-w-5xl mx-auto">
-        {/* Header */}
         <h1 className="text-4xl md:text-5xl font-bold mb-2 text-center flex items-center justify-center gap-2">
           ✨ Medicine Catalog ✨
         </h1>
@@ -141,6 +146,13 @@ const CatalogPage = () => {
                   💬 {suggestion.reason}
                 </p>
               )}
+
+              <button
+                onClick={handleAddToMedicine}
+                className="mt-4 w-full bg-pink-600 hover:bg-pink-500 transition-all p-2 rounded-lg font-semibold"
+              >
+                ➕ Add to My Medicines
+              </button>
             </div>
           )}
         </div>
