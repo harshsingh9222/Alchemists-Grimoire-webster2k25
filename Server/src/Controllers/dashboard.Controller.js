@@ -24,10 +24,12 @@ const getDateRange = (timeRange) => {
   const startDate = new Date(endDate);
   switch (range) {
     case "day":
-      startDate.setUTCDate(startDate.getUTCDate() - 1);
+      // Show only today
+      // No day subtraction so start=end (we'll set start-of-day below)
       break;
     case "week":
-      startDate.setUTCDate(startDate.getUTCDate() - 7);
+      // Last 7 days including today (today and previous 6 days)
+      startDate.setUTCDate(startDate.getUTCDate() - 6);
       break;
     case "month":
       startDate.setUTCMonth(startDate.getUTCMonth() - 1);
