@@ -17,7 +17,19 @@ export const isNowWithinWindow = (scheduled, minutesBefore = 15) => {
   return Date.now() >= windowStart;
 };
 
+// Returns a Date window around N minutes from now, expanded by a tolerance in minutes
+export const windowAroundNow = (minutesAhead = 30, toleranceMinutes = 2) => {
+  const nowMs = Date.now();
+  const targetMs = nowMs + minutesAhead * 60 * 1000;
+  const tolMs = toleranceMinutes * 60 * 1000;
+  return {
+    start: new Date(targetMs - tolMs),
+    end: new Date(targetMs + tolMs),
+  };
+};
+
 export default {
   msFromISO,
-  isNowWithinWindow
+  isNowWithinWindow,
+  windowAroundNow
 };

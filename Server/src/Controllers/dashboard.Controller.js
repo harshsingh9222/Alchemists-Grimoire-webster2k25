@@ -11,35 +11,36 @@ import { msFromISO } from "../Utils/time.helper.js";
 import { localTimeToUTCDate } from "../Utils/timezone.helper.js";
 import { ApiResponse } from "../Utils/ApiResponse.js";
 
-// Helper function to get date range
+// Helper function to get UTC-bounded date range
 const getDateRange = (timeRange) => {
-  const endDate = new Date();
-  endDate.setHours(23, 59, 59, 999);
-  const startDate = new Date();
-  console.log("Start Date before switch:", startDate);
+  // Sanitize timeRange
+  const allowed = new Set(["day", "week", "month", "year"]);
+  const range = allowed.has(timeRange) ? timeRange : "week";
 
-  
-  
-  switch (timeRange) {
-    case 'day':
-      startDate.setDate(startDate.getDate() - 1);
+  const endDate = new Date();
+  // Use UTC end-of-day
+  endDate.setUTCHours(23, 59, 59, 999);
+
+  const startDate = new Date(endDate);
+  switch (range) {
+    case "day":
+      // Show only today
+      // No day subtraction so start=end (we'll set start-of-day below)
       break;
-    case 'week':
-      startDate.setDate(startDate.getDate() - 7);
+    case "week":
+      // Last 7 days including today (today and previous 6 days)
+      startDate.setUTCDate(startDate.getUTCDate() - 6);
       break;
-    case 'month':
-      startDate.setMonth(startDate.getMonth() - 1);
+    case "month":
+      startDate.setUTCMonth(startDate.getUTCMonth() - 1);
       break;
-    case 'year':
-      startDate.setFullYear(startDate.getFullYear() - 1);
+    case "year":
+      startDate.setUTCFullYear(startDate.getUTCFullYear() - 1);
       break;
-    default:
-      startDate.setDate(startDate.getDate() - 7); // Default to week
   }
-  
-  startDate.setHours(0, 0, 0, 0);
-  console.log('Date Range:', { startDate, endDate });
-  
+  // Use UTC start-of-day
+  startDate.setUTCHours(0, 0, 0, 0);
+
   return { startDate, endDate };
 };
 
@@ -62,14 +63,14 @@ export const getAdherenceData = asyncHandler(async (req, res) => {
   const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
   
   // Initialize all days in range
-  for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
-    const dateKey = d.toISOString().split('T')[0];
+  for (let d = new Date(startDate); d <= endDate; d.setUTCDate(d.getUTCDate() + 1)) {
+    const dateKey = d.toISOString().split('T')[0]; // UTC date
     dailyData[dateKey] = {
       date: dateKey,
-      day: dayNames[d.getDay()],
+      day: dayNames[d.getUTCDay()],
       taken: 0,
       missed: 0,
-      total: 0
+      total: 0,
     };
   }
   
@@ -83,14 +84,31 @@ export const getAdherenceData = asyncHandler(async (req, res) => {
   });
   
   // Calculate percentages and format for chart
-  const chartData = Object.values(dailyData).map(day => ({
-    day: day.day,
-    date: day.date,
-    taken: day.total > 0 ? Math.round((day.taken / day.total) * 100) : 0,
-    missed: day.total > 0 ? Math.round((day.missed / day.total) * 100) : 0,
-    takenCount: day.taken,
-    missedCount: day.missed
-  }));
+  const chartData = Object.values(dailyData).map((day) => {
+    if (day.total > 0) {
+      const takenPct = Math.round((day.taken / day.total) * 100);
+      const missedPct = 100 - takenPct; // guarantee sums to 100%
+      return {
+        day: day.day,
+        date: day.date,
+        taken: takenPct,
+        missed: missedPct,
+        takenCount: day.taken,
+        missedCount: day.missed,
+        total: day.total,
+      };
+    }
+    // No doses scheduled/logged that day: show 0/100 for visual clarity
+    return {
+      day: day.day,
+      date: day.date,
+      taken: 0,
+      missed: 100,
+      takenCount: 0,
+      missedCount: 0,
+      total: 0,
+    };
+  });
   
   // Calculate overall adherence rate
   const totalTaken = doseLogs.filter(log => log.status === "taken").length;

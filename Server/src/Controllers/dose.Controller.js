@@ -8,7 +8,7 @@ import nodemailer from 'nodemailer'
 import { asyncHandler } from "../Utils/asyncHandler.js";
 import { ApiResponse } from "../Utils/ApiResponse.js";
 import { ApiError } from "../Utils/ApiError.js";
-import { msFromISO, isNowWithinWindow } from "../Utils/time.helper.js";
+import { msFromISO, isNowWithinWindow, windowAroundNow } from "../Utils/time.helper.js";
 import { localTimeToUTCDate } from "../Utils/timezone.helper.js";
 
 // Get doses for a specific date
@@ -220,7 +220,9 @@ export const updateDoseStatus = asyncHandler(async (req, res) => {
         status,
         actualTime: status === 'taken' ? new Date() : null,
         notes: notes || undefined,
-        confirmedBy: 'user'
+        confirmedBy: 'user',
+        // ensure hour/dayOfWeek are present for analytics if inserting
+        ...(status && scheduledMs ? { dayOfWeek: new Date(scheduledMs).getDay(), hour: new Date(scheduledMs).getHours() } : {})
       },
       {
         new: true,
@@ -341,11 +343,7 @@ export const checkPendingDoses = asyncHandler(async (req, res) => {
 export const getUpcomingDoseRisks = asyncHandler(async (req, res) => {
   try {
     const userId = req.user._id;
-    const now = new Date();
-    const thirtyMinMs = 30 * 60 * 1000;
-    const toleranceMs = 2 * 60 * 1000;
-    const windowStart = new Date(now.getTime() + thirtyMinMs - toleranceMs);
-    const windowEnd = new Date(now.getTime() + thirtyMinMs + toleranceMs);
+  const { start: windowStart, end: windowEnd } = windowAroundNow(30, 2);
 
     // Find upcoming dose logs for this user in the 30min window
     const upcoming = await DoseLog.find({
@@ -383,26 +381,28 @@ export const getUpcomingDoseRisks = asyncHandler(async (req, res) => {
       const missedProb = total === 0 ? 0 : missed / total;
 
       if (missedProb > 0.4) {
+        const riskDetails = {
+          medicineName: dose.medicineId?.medicineName || 'Medicine',
+          scheduledTime: dose.scheduledTime,
+          missedProb,
+          slot: slot.label,
+        };
+
         const existingRisk = await Risk.findOne({ doseLogId: dose._id });
         if (!existingRisk) {
-          const riskDetails = {
-            medicineName: dose.medicineId?.medicineName || 'Medicine',
-            scheduledTime: dose.scheduledTime,
-            missedProb,
-          };
-
           await Risk.create({
             userId,
             doseId: dose.medicineId?._id,
             doseLogId: dose._id,
             riskDetails,
           });
-
-          risks.push({
-            doseId: dose._id,
-            ...riskDetails,
-          });
         }
+
+        // Always return the computed risk for the current window
+        risks.push({
+          doseId: dose._id,
+          ...riskDetails,
+        });
       }
     }
 
