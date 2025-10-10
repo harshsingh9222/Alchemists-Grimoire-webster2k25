@@ -8,7 +8,7 @@ import {
   updateUpcomingDoses,
   updateInsights,
   updateEffectiveness
-} from '../Store/dashboardSlice';
+} from '../store/dashboardSlice';
 import { dashboardService } from '../Services/dashboardServices';
 
 const useGetDashboardData = (options = {}) => {
