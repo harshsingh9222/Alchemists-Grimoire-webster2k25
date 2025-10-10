@@ -70,6 +70,7 @@ export const fetchDoseSummary = async (date) => {
 };
 
 export const fetchUpcomingRisks = async () => request('/doses/upcoming-risks', 'GET');
+export const remindRiskAgain = async (doseLogId) => request('/doses/risks/remind-again', 'POST', { doseLogId });
 
 
 // 💬 AI Health Chatbot APIs
@@ -95,4 +96,9 @@ export const fetchCatalog = async () => {
 // 🤖 Get AI suggestion based on user mood/feeling
 export const getAISuggestion = async (feeling) => {
   return request('/catalog/suggest', 'POST', { feeling });
+};
+
+// ✅ Get total user count (performers saved)
+export const fetchUserCount = async () => {
+  return request("/auth/count", "GET");
 };

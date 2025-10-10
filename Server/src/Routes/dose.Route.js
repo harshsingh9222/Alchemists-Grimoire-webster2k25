@@ -7,6 +7,7 @@ import {
   checkPendingDoses,
   getUpcomingDoseRisks
 } from "../Controllers/dose.Controller.js";
+import { remindRiskAgain } from "../Controllers/dose.Controller.js";
 
 import {
   getDailyDoseSummary, 
@@ -30,5 +31,6 @@ router.post('/check-pending', checkPendingDoses);
 
 // Get upcoming dose miss-risk for logged-in user
 router.get('/upcoming-risks', getUpcomingDoseRisks);
+router.post('/risks/remind-again', remindRiskAgain);
 
 export default router;

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { fetchCatalog, getAISuggestion } from "../api";
+import { useNavigate } from "react-router-dom";
 
 const CatalogPage = () => {
   const [catalog, setCatalog] = useState([]);
@@ -7,6 +8,7 @@ const CatalogPage = () => {
   const [feeling, setFeeling] = useState("");
   const [suggestion, setSuggestion] = useState(null);
   const [error, setError] = useState("");
+  const navigate = useNavigate();
 
   useEffect(() => {
     const loadCatalog = async () => {
@@ -31,17 +33,20 @@ const CatalogPage = () => {
     try {
       const res = await getAISuggestion(feeling);
       setSuggestion(res.suggestion);
-      console.log("AI Suggestion:", res.suggestion);
     } catch (err) {
       console.error("AI Suggestion error:", err);
       setError("Failed to get AI suggestion");
     }
   };
 
+  // ✅ Function to handle "Add to My Medicines"
+  const handleAddToMedicine = (medicine) => {
+    navigate("/medicine-form", { state: { suggestion: medicine } });
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#4b0082] to-[#2a004d] text-white py-10 px-6">
-      <div className="max-w-5xl mx-auto">
-        {/* Header */}
+      <div className="max-w-6xl mx-auto">
         <h1 className="text-4xl md:text-5xl font-bold mb-2 text-center flex items-center justify-center gap-2">
           ✨ Medicine Catalog ✨
         </h1>
@@ -60,14 +65,14 @@ const CatalogPage = () => {
             {catalog.map((item) => (
               <div
                 key={item.id}
-                className="p-5 rounded-2xl bg-gradient-to-br from-purple-600 to-indigo-800 shadow-lg border border-purple-400/30 hover:scale-105 transition-transform relative overflow-hidden"
+                className="p-5 rounded-2xl bg-gradient-to-br from-purple-600 to-indigo-800 shadow-lg border border-purple-400/30 hover:scale-105 transition-transform relative overflow-hidden flex flex-col justify-between"
               >
                 <div className="absolute inset-0 bg-purple-400/10 blur-3xl"></div>
                 <div className="relative z-10">
-                  <h2 className="text-2xl font-semibold mb-2">
+                  <h2 className="text-2xl font-semibold mb-2 text-pink-300">
                     {item.medicineName}
                   </h2>
-                  <p className="text-sm text-purple-200 mb-3">
+                  <p className="text-sm text-purple-200 mb-3 line-clamp-3">
                     {item.description}
                   </p>
                   <p>
@@ -89,6 +94,14 @@ const CatalogPage = () => {
                     {item.defaultTime}
                   </p>
                 </div>
+
+                {/* ✅ Add to Medicine Button */}
+                <button
+                  onClick={() => handleAddToMedicine(item)}
+                  className="mt-4 w-full bg-pink-600 hover:bg-pink-500 transition-all p-2 rounded-lg font-semibold relative z-10"
+                >
+                  ➕ Add to My Medicines
+                </button>
               </div>
             ))}
           </div>
@@ -109,8 +122,12 @@ const CatalogPage = () => {
               placeholder="e.g. I'm feeling tired and low on energy"
               value={feeling}
               onChange={(e) => setFeeling(e.target.value)}
-              className="flex-1 rounded-lg px-4 py-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-500"
+              className="flex-1 rounded-lg px-4 py-2 
+             bg-purple-900/40 text-purple-100 placeholder-purple-300 
+             border border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-500 
+             shadow-inner"
             />
+
             <button
               onClick={handleAISuggest}
               className="px-6 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:scale-105 transition"
@@ -141,6 +158,13 @@ const CatalogPage = () => {
                   💬 {suggestion.reason}
                 </p>
               )}
+
+              <button
+                onClick={() => handleAddToMedicine(suggestion)}
+                className="mt-4 w-full bg-pink-600 hover:bg-pink-500 transition-all p-2 rounded-lg font-semibold"
+              >
+                ➕ Add to My Medicines
+              </button>
             </div>
           )}
         </div>

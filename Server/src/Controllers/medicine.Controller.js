@@ -2,7 +2,7 @@ import Medicine from "../Models/medicineModel.js";
 import User from "../Models/user.models.js";
 import DoseLog from "../Models/doseLogModel.js";
 import { createDoseLogsForMedicine } from "../Utils/doseLogCreater.js";
-import { createCalendarEventForUser } from "../Utils/googleCalendar.js"
+import { createCalendarEventForUser, deleteCalendarEventForUser, getCalendarEventDetailsForUser } from "../Utils/googleCalendar.js"
 
 
 const addMedicine = async (req, res) => {
@@ -156,64 +156,195 @@ const fetchMedicines = async (req, res) => {
 export const deleteMedicine = async (req, res) => {
   try {
     const { id } = req.params;
-    const userId = req.user._id;
+    const userId = req.userId || req.user?._id;
 
-    const medicine = await Medicine.findOneAndDelete({ _id: id, userId });
-
+    // 🔍 Step 1: Find medicine first
+    const medicine = await Medicine.findOne({ _id: id, userId });
     if (!medicine) {
       return res.status(404).json({ message: "Medicine not found or not authorized" });
     }
 
-    // 🎯 IMPORTANT: Delete all future dose logs for this medicine
+    // 🗑️ Step 2: Delete only *future pending* dose logs
+    // Use the medicine._id (ObjectId) to avoid string/object mismatches
     await DoseLog.deleteMany({
-      medicineId: id,
-      status: 'pending', 
-      scheduledTime: { $gte: new Date() }
+      medicineId: medicine._id,
+      status: "pending",
+      scheduledTime: { $gte: new Date() },
     });
 
-    res.json({ message: "Medicine and future doses deleted successfully", medicine });
+    // 📅 Step 3: Delete only *future* Google Calendar events (not past ones)
+    if (medicine.googleEventId) {
+      let eventIds = [];
+      try {
+        eventIds = JSON.parse(medicine.googleEventId);
+      } catch (err) {
+        console.warn("Failed to parse Google Event IDs:", err);
+      }
+
+      for (const eventId of eventIds) {
+        try {
+          const eventDetails = await getCalendarEventDetailsForUser(userId, eventId);
+
+          if (
+            eventDetails.success &&
+            eventDetails.data?.start &&
+            new Date(eventDetails.data.start.dateTime || eventDetails.data.start.date) >= new Date()
+          ) {
+            await deleteCalendarEventForUser(userId, eventId);
+            console.log(`🗑️ Deleted future Google Calendar event: ${eventId}`);
+          } else {
+            console.log(`⏳ Skipped past event: ${eventId}`);
+          }
+        } catch (err) {
+          console.error(`⚠️ Failed to delete event ${eventId}:`, err.message);
+        }
+      }
+    }
+
+    // 💊 Step 4: Delete the medicine record
+    await Medicine.deleteOne({ _id: id, userId });
+
+    res.json({
+      message: "Medicine, future doses, and future calendar events deleted successfully",
+    });
   } catch (error) {
-    console.error(error);
+    console.error("❌ Server Error:", error);
     res.status(500).json({ message: "Server error" });
   }
 };
+
+
+
 
 // Update medicine
 export const updateMedicine = async (req, res) => {
   try {
     const { id } = req.params;
-    const userId = req.user._id;
-  const updates = req.body;
+    const userId = req.userId || req.user?._id;
+    const updates = req.body;
 
-    const medicine = await Medicine.findOneAndUpdate(
-      { _id: id, userId },
-      updates,
-      { new: true, runValidators: true }
-    );
-
+    // 🔹 Find medicine
+    const medicine = await Medicine.findOne({ _id: id, userId });
     if (!medicine) {
       return res.status(404).json({ message: "Medicine not found or not authorized" });
     }
 
-    // 🎯 If times or frequency changed, update future dose logs
-  // If timezone, times or frequency changed, refresh future dose logs
-  if (updates.timezone || updates.times || updates.frequency) {
-      // Delete future pending doses
+    // 🔹 Update fields
+    Object.keys(updates).forEach((key) => {
+      medicine[key] = updates[key];
+    });
+
+    // Persist the updates first so helper functions that read from DB see the latest values
+    await medicine.save();
+
+    // 🔹 Check if schedule-related fields changed
+    const scheduleFields = ["timezone", "times", "frequency", "startDate", "endDate"];
+    const scheduleChanged = scheduleFields.some((field) => updates[field] !== undefined);
+
+    // 🔹 Delete future pending doses if schedule changed
+    if (scheduleChanged) {
+      // Use the medicine._id (ObjectId) to avoid string/object mismatches
       await DoseLog.deleteMany({
-        medicineId: id,
-        status: 'pending',
-        scheduledTime: { $gte: new Date() }
+        medicineId: medicine._id,
+        status: "pending",
+        scheduledTime: { $gte: new Date() },
       });
-      
-      // Recreate dose logs with new schedule (medicine already has updated fields)
+
+      // Recreate dose logs using the saved medicine document
       await createDoseLogsForMedicine(medicine, userId);
     }
 
-    res.json({ message: "Medicine updated successfully", medicine });
+    // 🔹 Handle Google Calendar events if schedule changed
+    if (scheduleChanged && medicine.googleEventId) {
+      let eventIds = [];
+      try {
+        eventIds = JSON.parse(medicine.googleEventId);
+      } catch (err) {
+        console.warn("Failed to parse Google Event IDs:", err);
+      }
+
+      for (const eventId of eventIds) {
+        try {
+          const eventDetails = await getCalendarEventDetailsForUser(userId, eventId);
+
+          if (
+            eventDetails.success &&
+            eventDetails.data?.start &&
+            new Date(eventDetails.data.start.dateTime || eventDetails.data.start.date) >= new Date()
+          ) {
+            await deleteCalendarEventForUser(userId, eventId);
+            console.log(`🗑️ Deleted future Google Calendar event: ${eventId}`);
+          } else {
+            console.log(`⏳ Skipped past event: ${eventId}`);
+          }
+        } catch (err) {
+          console.error(`⚠️ Failed to delete event ${eventId}:`, err.message);
+        }
+      }
+    }
+
+    // 🔹 Recreate new Google Calendar events
+    const createdEventIds = [];
+    const { times, startDate, endDate, medicineName, dosage, frequency, notes, timezone } = medicine;
+
+    const formatDateToRRuleUntil = (d) => {
+      const dt = new Date(d);
+      const Y = dt.getUTCFullYear();
+      const M = String(dt.getUTCMonth() + 1).padStart(2, "0");
+      const D = String(dt.getUTCDate()).padStart(2, "0");
+      const h = String(dt.getUTCHours()).padStart(2, "0");
+      const m = String(dt.getUTCMinutes()).padStart(2, "0");
+      const s = String(dt.getUTCSeconds()).padStart(2, "0");
+      return `${Y}${M}${D}T${h}${m}${s}Z`;
+    };
+
+    for (const timeStr of times) {
+      const [hours, minutes] = timeStr.split(":").map(Number);
+      const startDt = new Date(startDate);
+      startDt.setHours(hours, minutes, 0, 0);
+      const endDt = new Date(startDt.getTime() + 15 * 60 * 1000);
+
+      const eventPayload = {
+        summary: `Medicine: ${medicineName}`,
+        description: notes || `Dosage: ${dosage} | Frequency: ${frequency}`,
+        start: { dateTime: startDt.toISOString(), timeZone: timezone || "UTC" },
+        end: { dateTime: endDt.toISOString(), timeZone: timezone || "UTC" },
+        reminders: { useDefault: false, overrides: [{ method: "popup", minutes: 10 }] },
+      };
+
+      if (frequency === "daily") {
+        eventPayload.recurrence = endDate
+          ? [`RRULE:FREQ=DAILY;UNTIL=${formatDateToRRuleUntil(endDate)}`]
+          : ["RRULE:FREQ=DAILY"];
+      } else if (frequency === "weekly") {
+        const weekdayMap = ["SU", "MO", "TU", "WE", "TH", "FR", "SA"];
+        const byday = weekdayMap[new Date(startDate).getDay()];
+        eventPayload.recurrence = endDate
+          ? [`RRULE:FREQ=WEEKLY;BYDAY=${byday};UNTIL=${formatDateToRRuleUntil(endDate)}`]
+          : [`RRULE:FREQ=WEEKLY;BYDAY=${byday}`];
+      }
+
+      try {
+        const result = await createCalendarEventForUser(userId, eventPayload);
+        if (result.success && result.eventId) createdEventIds.push(result.eventId);
+      } catch (err) {
+        console.error("❌ Failed to create calendar event:", err);
+      }
+    }
+
+    // 🔹 Save new event IDs as JSON string
+    medicine.googleEventId = JSON.stringify(createdEventIds);
+    await medicine.save();
+
+    res.json({
+      message: "✅ Medicine updated and calendar synced successfully",
+      medicine,
+    });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Server error" });
+    console.error("❌ updateMedicine error:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+
 
 export { addMedicine, fetchMedicines };

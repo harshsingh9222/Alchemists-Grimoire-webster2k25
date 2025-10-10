@@ -16,8 +16,16 @@ const notificationsSlice = createSlice({
   extraReducers: (builder) => {
     builder
       .addCase(loadUpcomingRisks.pending, (s) => { s.loading = true })
-      .addCase(loadUpcomingRisks.fulfilled, (s, a) => { s.loading = false; s.risks = a.payload })
-      .addCase(loadUpcomingRisks.rejected, (s) => { s.loading = false })
+      .addCase(loadUpcomingRisks.fulfilled, (s, a) => {
+        s.loading = false;
+        const incoming = Array.isArray(a.payload) ? a.payload : [];
+        // Keep existing risks until user acts; only append truly new ones (dedupe by doseId)
+        const existing = Array.isArray(s.risks) ? s.risks : [];
+        const existingIds = new Set(existing.map(r => String(r.doseId)));
+        const newOnes = incoming.filter(r => !existingIds.has(String(r.doseId)));
+        s.risks = existing.concat(newOnes);
+      })
+      .addCase(loadUpcomingRisks.rejected, (s) => { s.loading = false; /* keep existing risks on error */ })
   }
 })
 

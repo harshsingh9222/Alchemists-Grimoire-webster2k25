@@ -4,6 +4,7 @@ import Footer from "../Components/Footer"
 import PropTypes from 'prop-types'
 import { useSelector, useDispatch } from 'react-redux'
 import { dismissRisk } from '../store/notificationsSlice'
+import { remindRiskAgain as remindRiskAgainAPI } from '../api'
 import { useEffect, useState } from 'react'
 
 // Global popup component
@@ -11,6 +12,7 @@ function GlobalRiskPopup() {
   const risks = useSelector(s => s.notifications?.risks || [])
   const dispatch = useDispatch()
   const [visible, setVisible] = useState(false)
+  const [busyId, setBusyId] = useState(null)
 
   useEffect(() => {
     if (risks && risks.length > 0) {
@@ -32,8 +34,26 @@ function GlobalRiskPopup() {
                 <div className="text-xs text-gray-600">{r.slot} — Miss chance: {Math.round((r.missedProb||0)*100)}%</div>
                 <div className="text-xs text-gray-500">Scheduled: {new Date(r.scheduledTime).toLocaleTimeString()}</div>
               </div>
-              <div className="ml-3 flex flex-col items-end">
+              <div className="ml-3 flex flex-col items-end gap-2">
                 <button onClick={() => dispatch(dismissRisk(r.doseId))} className="px-2 py-1 text-xs bg-indigo-600 text-white rounded">Dismiss</button>
+                <button
+                  disabled={busyId === String(r.doseId)}
+                  onClick={async () => {
+                    try {
+                      setBusyId(String(r.doseId))
+                      await remindRiskAgainAPI(r.doseId)
+                      // Optional: dismiss current item since user asked to be reminded later
+                      dispatch(dismissRisk(r.doseId))
+                    } catch (e) {
+                      console.error('Failed to schedule remind-again', e)
+                    } finally {
+                      setBusyId(null)
+                    }
+                  }}
+                  className={`px-2 py-1 text-xs rounded ${busyId === String(r.doseId) ? 'bg-gray-400 text-white' : 'bg-purple-600 text-white'}`}
+                >
+                  {busyId === String(r.doseId) ? 'Scheduling…' : 'Remind me again'}
+                </button>
               </div>
             </div>
           ))}

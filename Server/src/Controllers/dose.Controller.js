@@ -343,7 +343,7 @@ export const checkPendingDoses = asyncHandler(async (req, res) => {
 export const getUpcomingDoseRisks = asyncHandler(async (req, res) => {
   try {
     const userId = req.user._id;
-  const { start: windowStart, end: windowEnd } = windowAroundNow(30, 2);
+    const { start: windowStart, end: windowEnd } = windowAroundNow(30, 2);
 
     // Find upcoming dose logs for this user in the 30min window
     const upcoming = await DoseLog.find({
@@ -359,54 +359,181 @@ export const getUpcomingDoseRisks = asyncHandler(async (req, res) => {
       { id: 3, start: 18, end: 24, label: '18:00-24:00' },
     ];
 
+    // Build compact recent logs JSON once (last 30 days, limited fields and capped to 300 entries)
     const lookbackDays = 30;
     const since = new Date();
     since.setDate(since.getDate() - lookbackDays);
     since.setHours(0, 0, 0, 0);
 
-    const risks = [];
+    const recentLogsFull = await DoseLog.find({ userId, scheduledTime: { $gte: since } })
+      .select('scheduledTime status hour dayOfWeek medicineId')
+      .sort({ scheduledTime: -1 })
+      .limit(300)
+      .lean();
+
+    const recentLogs = recentLogsFull.map(l => ({
+      scheduledTime: l.scheduledTime,
+      status: l.status,
+      hour: l.hour,
+      dayOfWeek: l.dayOfWeek,
+      medicineId: l.medicineId?.toString?.() || String(l.medicineId)
+    })).reverse(); // oldest first
+
+    const openaiKey = process.env.OPENAI_API_KEY;
+    const useAI = Boolean(openaiKey) && typeof fetch === 'function';
 
     for (const dose of upcoming) {
       const hr = dose.hour != null ? dose.hour : (dose.scheduledTime ? dose.scheduledTime.getHours() : null);
       const slot = slots.find(s => hr >= s.start && hr < s.end) || slots[0];
 
-      const logs = await DoseLog.find({
-        userId,
-        scheduledTime: { $gte: since },
-        hour: { $gte: slot.start, $lt: slot.end },
-      });
+      let willMiss = false;
+      let confidence = 0;
 
-      const total = logs.length;
-      const missed = logs.filter(l => l.status === 'missed').length;
-      const missedProb = total === 0 ? 0 : missed / total;
+      if (useAI) {
+        try {
+          const payload = {
+            upcomingDose: {
+              medicineId: dose.medicineId?._id?.toString?.() || String(dose.medicineId?._id || ''),
+              medicineName: dose.medicineId?.medicineName || 'Medicine',
+              scheduledTime: dose.scheduledTime,
+              hour: hr,
+              dayOfWeek: dose.dayOfWeek ?? (dose.scheduledTime ? dose.scheduledTime.getDay() : null),
+              slot: slot.label
+            },
+            recentLogs
+          };
 
-      if (missedProb > 0.4) {
-        const riskDetails = {
-          medicineName: dose.medicineId?.medicineName || 'Medicine',
-          scheduledTime: dose.scheduledTime,
-          missedProb,
-          slot: slot.label,
-        };
-
-        const existingRisk = await Risk.findOne({ doseLogId: dose._id });
-        if (!existingRisk) {
-          await Risk.create({
-            userId,
-            doseId: dose.medicineId?._id,
-            doseLogId: dose._id,
-            riskDetails,
+          console.log('[AI] Sending OpenAI risk request', {
+            doseId: String(dose._id),
+            medicine: payload.upcomingDose.medicineName,
+            scheduledTime: payload.upcomingDose.scheduledTime
           });
-        }
 
-        // Always return the computed risk for the current window
-        risks.push({
-          doseId: dose._id,
-          ...riskDetails,
+          const resp = await fetch('https://api.openai.com/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${openaiKey}`
+            },
+            body: JSON.stringify({
+              model: 'gpt-4o-mini',
+              temperature: 0,
+              max_tokens: 100,
+              response_format: { type: 'json_object' },
+              messages: [
+                { role: 'system', content: 'You are a concise classifier. Given dose logs and an upcoming dose, predict if the user will miss it. Respond ONLY as JSON: {"will_miss": boolean, "confidence": number} where confidence is 0..1.' },
+                { role: 'user', content: `Classify risk for upcoming dose using this data:\n${JSON.stringify(payload)}` }
+              ]
+            })
+          });
+          if (resp.ok) {
+            console.log('[AI] OpenAI risk classification success', {
+              doseId: String(dose._id),
+              status: resp.status
+            });
+            const data = await resp.json();
+            const text = data?.choices?.[0]?.message?.content || '{}';
+            try {
+              const parsed = JSON.parse(text);
+              willMiss = Boolean(parsed.will_miss);
+              const c = Number(parsed.confidence);
+              confidence = Number.isFinite(c) ? Math.max(0, Math.min(1, c)) : 0;
+            } catch (_) {
+              // fallback: leave defaults
+            }
+          } else {
+            console.warn('[AI] OpenAI risk classification non-OK response', {
+              doseId: String(dose._id),
+              status: resp.status
+            });
+          }
+        } catch (aiErr) {
+          console.warn('OpenAI risk classification failed:', aiErr?.message || aiErr);
+        }
+      }
+
+      const riskDetails = {
+        medicineName: dose.medicineId?.medicineName || 'Medicine',
+        scheduledTime: dose.scheduledTime,
+        willMiss,
+        confidence,
+        slot: slot.label,
+        source: useAI ? 'ai' : 'fallback'
+      };
+
+      const existingRisk = await Risk.findOne({ doseLogId: dose._id });
+      if (!existingRisk) {
+        const sendAt = new Date(Date.now() + 2 * 60 * 1000);
+        await Risk.create({
+          userId,
+          doseId: dose.medicineId?._id,
+          doseLogId: dose._id,
+          riskDetails,
+          sent: false,
+          timeAtWhichSent: sendAt,
+        });
+
+        console.log('[Risk] New risk scheduled', {
+          userId: String(userId),
+          doseLogId: String(dose._id),
+          doseId: String(dose.medicineId?._id || ''),
+          medicine: riskDetails.medicineName,
+          willMiss,
+          confidence,
+          sendAt: sendAt.toISOString(),
         });
       }
     }
 
-    return res.status(200).json({ risks });
+    // After adding risks, fetch this user's unsent risks that are due now:
+    // sent=false and timeAtWhichSent in the last 5 minutes up to now (wider window to avoid missed polls)
+    const now = new Date();
+    const fiveMinAgo = new Date(now.getTime() - 5 * 60 * 1000);
+    const dueRiskDocs = await Risk.find({
+      userId,
+      sent: false,
+      timeAtWhichSent: { $gte: fiveMinAgo, $lte: now }
+    })
+      .sort({ timeAtWhichSent: 1 })
+      .lean();
+
+    // Mark these risks as sent before returning to frontend to avoid duplicates on next poll
+    const dueIds = dueRiskDocs.map(r => r._id).filter(Boolean);
+    if (dueIds.length > 0) {
+      const updateResult = await Risk.updateMany({ _id: { $in: dueIds }, sent: false }, { $set: { sent: true } });
+      console.log('[Risk] Marked risks as sent', {
+        userId: String(userId),
+        requested: dueIds.length,
+        matched: updateResult?.matchedCount ?? updateResult?.nMatched,
+        modified: updateResult?.modifiedCount ?? updateResult?.nModified,
+      });
+    }
+
+    const dueRisks = dueRiskDocs.map((doc) => {
+      const details = doc.riskDetails || {};
+      const willMissDoc = Boolean(details.willMiss);
+      const confDoc = Number(details.confidence) || 0;
+      return {
+        doseId: doc.doseLogId,
+        medicineName: details.medicineName || 'Medicine',
+        scheduledTime: details.scheduledTime,
+        willMiss: willMissDoc,
+        confidence: confDoc,
+        missedProb: willMissDoc ? (confDoc || 1) : 0,
+        slot: details.slot,
+        sent: true,
+      };
+    });
+
+    console.log('[Risk] Returning due risks (marked sent)', {
+      dueRiskDocs,
+      userId: String(userId),
+      count: dueRiskDocs.length,
+      windowStart: fiveMinAgo.toISOString(),
+      windowEnd: now.toISOString(),
+    });
+
+    return res.status(200).json({ risks: dueRisks });
   } catch (err) {
     console.error('getUpcomingDoseRisks error', err);
     return res.status(500).json({ message: 'Failed to compute upcoming risks', error: String(err) });
@@ -502,4 +629,65 @@ export const getUserDoseData = async (userId) => {
     throw new Error("Failed to retrieve user dose data");
   }
 };
+
+// Schedule a new reminder risk 10 minutes from now for a given doseLogId
+export const remindRiskAgain = asyncHandler(async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const { doseLogId } = req.body || {};
+    if (!doseLogId) {
+      throw new ApiError(400, 'doseLogId is required');
+    }
+
+    // Try to reuse last risk details if available
+    const lastRisk = await Risk.findOne({ userId, doseLogId }).sort({ createdAt: -1 });
+
+    let riskDetails = lastRisk?.riskDetails;
+    let doseId = lastRisk?.doseId || null;
+    if (!riskDetails || !doseId) {
+      // Fallback: fetch dose log and medicine to build minimal details
+      const dose = await DoseLog.findOne({ _id: doseLogId, userId }).populate('medicineId');
+      if (!dose) throw new ApiError(404, 'Dose log not found');
+      const hr = dose.hour != null ? dose.hour : (dose.scheduledTime ? dose.scheduledTime.getHours() : null);
+      const slots = [
+        { id: 0, start: 0, end: 6, label: '00:00-06:00' },
+        { id: 1, start: 6, end: 12, label: '06:00-12:00' },
+        { id: 2, start: 12, end: 18, label: '12:00-18:00' },
+        { id: 3, start: 18, end: 24, label: '18:00-24:00' },
+      ];
+      const slot = slots.find(s => hr >= s.start && hr < s.end) || slots[0];
+      riskDetails = {
+        medicineName: dose.medicineId?.medicineName || 'Medicine',
+        scheduledTime: dose.scheduledTime,
+        willMiss: lastRisk?.riskDetails?.willMiss ?? false,
+        confidence: lastRisk?.riskDetails?.confidence ?? 0,
+        slot: slot.label,
+        source: 'manual-remind'
+      };
+      doseId = dose.medicineId?._id || null;
+    }
+
+    const sendAt = new Date(Date.now() + 10 * 60 * 1000);
+    const created = await Risk.create({
+      userId,
+      doseId,
+      doseLogId,
+      riskDetails,
+      sent: false,
+      timeAtWhichSent: sendAt,
+    });
+
+    console.log('[Risk] Remind-again scheduled', {
+      userId: String(userId),
+      doseLogId: String(doseLogId),
+      riskId: String(created._id),
+      sendAt: sendAt.toISOString(),
+    });
+
+    return res.status(200).json(new ApiResponse(200, { riskId: created._id, sendAt }, 'Reminder scheduled'));
+  } catch (err) {
+    console.error('remindRiskAgain error', err);
+    return res.status(500).json({ message: 'Failed to schedule reminder', error: String(err) });
+  }
+});
 

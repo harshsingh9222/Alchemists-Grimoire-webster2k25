@@ -14,7 +14,7 @@ const Navbar = ({ sidebarOpen, setSidebarOpen }) => {
   const location = useLocation()
 
   const navItems = [
-    { name: "Home", path: "/", icon: Home },
+    { name: "Home", path: "/home", icon: Home },
     { name: "About", path: "/about", icon: User },
     
   ]

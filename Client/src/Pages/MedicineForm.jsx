@@ -1,11 +1,18 @@
 import React, { useState, useEffect } from "react";
 import { addMedicines } from "../api";
 import { useSelector, useDispatch } from "react-redux";
-import { fetchMedicinesThunk } from "../store/medicineSlice"; 
-import { useNavigate } from "react-router-dom";
+import { fetchMedicinesThunk } from "../store/medicineSlice";
+import { useNavigate, useLocation } from "react-router-dom";
 
 const MedicineForm = () => {
   const { userData } = useSelector((state) => state.auth);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const suggestion = location.state?.suggestion || null;
+
+  const today = new Date().toISOString().split("T")[0]; // ✅ Today’s date in YYYY-MM-DD
+
   const [formData, setFormData] = useState({
     medicineName: "",
     dosage: "",
@@ -20,24 +27,44 @@ const MedicineForm = () => {
   const [timezones, setTimezones] = useState([]);
   const [customTz, setCustomTz] = useState("");
 
-  const dispatch = useDispatch();
-  const navigate = useNavigate();
+  useEffect(() => {
+    if (suggestion) {
+      setFormData((prev) => ({
+        ...prev,
+        medicineName: suggestion.medicineName || prev.medicineName,
+        dosage: suggestion.dosage || prev.dosage,
+        frequency: suggestion.frequency || prev.frequency,
+        times: suggestion.defaultTime ? [suggestion.defaultTime] : prev.times,
+        notes: suggestion.reason || prev.notes,
+      }));
+    }
+  }, [suggestion]);
 
   useEffect(() => {
     if (!userData?._id) {
-      navigate("/login"); // redirect if not logged in
+      navigate("/login");
     }
-    // Populate timezone options where supported
     try {
-      if (Intl && typeof Intl.supportedValuesOf === 'function') {
-        const tzs = Intl.supportedValuesOf('timeZone');
+      if (Intl && typeof Intl.supportedValuesOf === "function") {
+        const tzs = Intl.supportedValuesOf("timeZone");
         setTimezones(tzs);
       } else {
-        // fallback curated list
-        setTimezones(["UTC","America/New_York","America/Los_Angeles","Europe/London","Asia/Kolkata","Asia/Tokyo"]);
+        setTimezones([
+          "UTC",
+          "America/New_York",
+          "America/Los_Angeles",
+          "Europe/London",
+          "Asia/Kolkata",
+          "Asia/Tokyo",
+        ]);
       }
     } catch (err) {
-      setTimezones(["UTC","America/New_York","Europe/London","Asia/Kolkata"]);
+      setTimezones([
+        "UTC",
+        "America/New_York",
+        "Europe/London",
+        "Asia/Kolkata",
+      ]);
     }
   }, [userData, navigate]);
 
@@ -46,9 +73,24 @@ const MedicineForm = () => {
     setFormData({ ...formData, [name]: value });
   };
 
+  // Round entered time to nearest 15 minutes
+  const roundToNearest15 = (timeString) => {
+    const [hours, minutes] = timeString.split(":").map(Number);
+    const totalMinutes = hours * 60 + minutes;
+    const rounded = Math.round(totalMinutes / 15) * 15;
+    const roundedHours = Math.floor(rounded / 60) % 24;
+    const roundedMinutes = rounded % 60;
+    return (
+      String(roundedHours).padStart(2, "0") +
+      ":" +
+      String(roundedMinutes).padStart(2, "0")
+    );
+  };
+
   const handleTimeChange = (index, value) => {
+    const roundedValue = roundToNearest15(value);
     const updatedTimes = [...formData.times];
-    updatedTimes[index] = value;
+    updatedTimes[index] = roundedValue;
     setFormData({ ...formData, times: updatedTimes });
   };
 
@@ -56,16 +98,45 @@ const MedicineForm = () => {
     setFormData({ ...formData, times: [...formData.times, ""] });
   };
 
-  // ✅ Add medicine then refresh store
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // ✅ Validation for start and end date
+    const now = new Date();
+    const todayDateStr = now.toISOString().split("T")[0]; // YYYY-MM-DD
+
+    // ✅ Validation for start and end date
+    if (new Date(formData.startDate) < new Date(todayDateStr)) {
+      alert("Start date cannot be in the past");
+      return;
+    }
+    if (
+      formData.endDate &&
+      new Date(formData.endDate) < new Date(formData.startDate)
+    ) {
+      alert("End date cannot be before start date");
+      return;
+    }
+
+    // ✅ Extra validation: if start date is today, times cannot be before current time
+    if (formData.startDate === todayDateStr) {
+      for (let timeStr of formData.times) {
+        const [hours, minutes] = timeStr.split(":").map(Number);
+        const timeDate = new Date();
+        timeDate.setHours(hours, minutes, 0, 0);
+        if (timeDate < now) {
+          alert(`Selected time ${timeStr} cannot be in the past for today`);
+          return;
+        }
+      }
+    }
+
     try {
-      // Attach user's timezone so server can compute scheduled instants correctly
       const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
       const payload = { ...formData, timezone: tz };
-      await addMedicines(payload); // save to backend
-      await dispatch(fetchMedicinesThunk()); // refresh Redux store
-      navigate("/myMedicines"); // redirect
+      await addMedicines(payload);
+      await dispatch(fetchMedicinesThunk());
+      navigate("/myMedicines");
     } catch (error) {
       console.error(error);
       alert(error.message || "Error saving medicine");
@@ -73,12 +144,14 @@ const MedicineForm = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center py-10">
-      <h1 className="text-3xl font-bold mb-6 text-teal-400">💊 Medicine Tracker</h1>
+    <div className="min-h-screen flex flex-col items-center justify-start py-10 bg-gradient-to-br from-[#2d0b5a] via-[#4b0082] to-[#220042] text-white">
+      <h1 className="text-4xl font-bold mb-8 text-pink-400 drop-shadow-lg tracking-wide">
+        💊 Medicine Tracker
+      </h1>
 
       <form
         onSubmit={handleSubmit}
-        className="bg-gray-800 p-6 rounded-2xl shadow-lg w-full max-w-lg"
+        className="backdrop-blur-lg bg-white/10 border border-white/20 p-6 rounded-2xl shadow-2xl w-full max-w-lg"
       >
         <input
           type="text"
@@ -87,7 +160,7 @@ const MedicineForm = () => {
           value={formData.medicineName}
           onChange={handleChange}
           required
-          className="w-full mb-3 p-3 rounded-lg bg-gray-700 border border-gray-600 text-white"
+          className="w-full mb-4 p-3 rounded-lg bg-white/10 border border-white/20 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-pink-500"
         />
 
         <input
@@ -97,35 +170,42 @@ const MedicineForm = () => {
           value={formData.dosage}
           onChange={handleChange}
           required
-          className="w-full mb-3 p-3 rounded-lg bg-gray-700 border border-gray-600 text-white"
+          className="w-full mb-4 p-3 rounded-lg bg-white/10 border border-white/20 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-pink-500"
         />
 
         <select
           name="frequency"
           value={formData.frequency}
           onChange={handleChange}
-          className="w-full mb-3 p-3 rounded-lg bg-gray-700 border border-gray-600 text-white"
+          className="w-full mb-4 p-3 rounded-lg bg-white/10 border border-white/20 text-white focus:outline-none focus:ring-2 focus:ring-pink-500"
         >
-          <option value="daily">Daily</option>
-          <option value="weekly">Weekly</option>
-          <option value="as-needed">As Needed</option>
+          <option value="daily" className="bg-gray-800">
+            Daily
+          </option>
+          <option value="weekly" className="bg-gray-800">
+            Weekly
+          </option>
+          <option value="as-needed" className="bg-gray-800">
+            As Needed
+          </option>
         </select>
 
         {formData.times.map((time, i) => (
           <input
             key={i}
             type="time"
+            step="900"
             value={time}
             onChange={(e) => handleTimeChange(i, e.target.value)}
             required
-            className="w-full mb-3 p-3 rounded-lg bg-gray-700 border border-gray-600 text-white"
+            className="w-full mb-4 p-3 rounded-lg bg-white/10 border border-white/20 text-white focus:outline-none focus:ring-2 focus:ring-pink-500"
           />
         ))}
 
         <button
           type="button"
           onClick={addTimeField}
-          className="mb-4 w-full bg-teal-600 hover:bg-teal-500 p-2 rounded-lg font-semibold"
+          className="mb-4 w-full bg-pink-600 hover:bg-pink-500 transition-all p-2 rounded-lg font-semibold shadow-md"
         >
           + Add Time
         </button>
@@ -137,34 +217,42 @@ const MedicineForm = () => {
           value={formData.startDate}
           onChange={handleChange}
           required
-          className="w-full mb-3 p-3 rounded-lg bg-gray-700 border border-gray-600 text-white"
+          min={today} // ✅ Prevent past dates
+          className="w-full mb-4 p-3 rounded-lg bg-white/10 border border-white/20 text-white focus:outline-none focus:ring-2 focus:ring-pink-500"
         />
 
         <label className="block mb-2 text-gray-300">Timezone (optional):</label>
         <select
           name="timezone"
-          value={formData.timezone || ''}
+          value={formData.timezone || ""}
           onChange={(e) => {
             handleChange(e);
-            setCustomTz('');
+            setCustomTz("");
           }}
-          className="w-full mb-3 p-3 rounded-lg bg-gray-700 border border-gray-600 text-white"
+          className="w-full mb-4 p-3 rounded-lg bg-white/10 border border-white/20 text-white focus:outline-none focus:ring-2 focus:ring-pink-500"
         >
           {timezones.map((tz) => (
-            <option key={tz} value={tz}>{tz}</option>
+            <option key={tz} value={tz} className="bg-gray-800">
+              {tz}
+            </option>
           ))}
           <option value="">Other...</option>
         </select>
 
-  <p className="text-xs text-gray-400 mb-2">By default we detect your timezone. Change only if you want this schedule to follow a different timezone.</p>
+        <p className="text-xs text-gray-400 mb-2">
+          By default we detect your timezone. Change only if needed.
+        </p>
 
-  {formData.timezone === '' && (
+        {formData.timezone === "" && (
           <input
             type="text"
             placeholder="Enter IANA timezone (e.g., America/New_York)"
             value={customTz}
-            onChange={(e) => { setCustomTz(e.target.value); setFormData({ ...formData, timezone: e.target.value }); }}
-            className="w-full mb-3 p-3 rounded-lg bg-gray-700 border border-gray-600 text-white"
+            onChange={(e) => {
+              setCustomTz(e.target.value);
+              setFormData({ ...formData, timezone: e.target.value });
+            }}
+            className="w-full mb-4 p-3 rounded-lg bg-white/10 border border-white/20 text-white focus:outline-none focus:ring-2 focus:ring-pink-500"
           />
         )}
 
@@ -174,7 +262,8 @@ const MedicineForm = () => {
           name="endDate"
           value={formData.endDate}
           onChange={handleChange}
-          className="w-full mb-3 p-3 rounded-lg bg-gray-700 border border-gray-600 text-white"
+          min={formData.startDate || today} // ✅ Cannot select before startDate
+          className="w-full mb-4 p-3 rounded-lg bg-white/10 border border-white/20 text-white focus:outline-none focus:ring-2 focus:ring-pink-500"
         />
 
         <textarea
@@ -182,23 +271,24 @@ const MedicineForm = () => {
           placeholder="Notes"
           value={formData.notes}
           onChange={handleChange}
-          className="w-full mb-3 p-3 rounded-lg bg-gray-700 border border-gray-600 text-white"
+          className="w-full mb-4 p-3 rounded-lg bg-white/10 border border-white/20 text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-pink-500"
         />
 
         <button
           type="submit"
-          className="w-full bg-teal-600 hover:bg-teal-500 p-3 rounded-lg font-bold text-lg"
+          className="w-full bg-pink-600 hover:bg-pink-500 transition-all p-3 rounded-lg font-bold text-lg shadow-md"
         >
           Save Medicine
         </button>
       </form>
+
       <button
-          type="button"
-          onClick={() => navigate("/myMedicines")}
-          className="w-full bg-teal-600 hover:bg-teal-500 p-3 rounded-lg font-bold text-lg"
-        >
-          📋 Go to My Medicines
-        </button>
+        type="button"
+        onClick={() => navigate("/myMedicines")}
+        className="mt-6 w-full max-w-lg bg-pink-600 hover:bg-pink-500 transition-all p-3 rounded-lg font-bold text-lg shadow-md"
+      >
+        📋 Go to My Medicines
+      </button>
     </div>
   );
 };

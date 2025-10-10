@@ -178,7 +178,7 @@ const Signup = () => {
         <input
           type="text"
           name="username"
-          placeholder="Full Name"
+          placeholder="User Name"
           value={formData.username}
           onChange={handleChange}
           className="w-full mb-4 bg-purple-700 border border-fuchsia-400 rounded-lg px-4 py-3 text-white placeholder-fuchsia-200 focus:outline-none focus:ring-2 focus:ring-fuchsia-400"
