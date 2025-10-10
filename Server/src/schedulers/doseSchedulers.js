@@ -24,11 +24,11 @@ class DoseScheduler {
       this.createUpcomingDoseLogs();
     });
     
-    // Run a lightweight missed-dose scan every 30 seconds to
+    // Run a lightweight missed-dose scan every 2 minutes to
     // detect doses that passed their 30-minute grace period promptly.
     // Using a short, idempotent job is safe because the handler only acts on
     // DoseLogs still marked 'pending' and older than 30 minutes.
-    cron.schedule('*/30 * * * * *', () => {
+    cron.schedule('*/2 * * * *', () => {
       this.checkMissedDoses();
     });
     
@@ -40,7 +40,7 @@ class DoseScheduler {
     // Send reminder notifications (every 15 minutes)
     // Running every 15 minutes is fine as long as the reminder window
     // (windowMs + 2 * toleranceMs) is larger than the scheduling interval.
-    cron.schedule('*/15 * * * *', () => {
+    cron.schedule('*/2 * * * *', () => {
       this.sendDoseReminders();
     });
     // Run a one-time backfill for missed doses before today (non-blocking)
@@ -148,14 +148,14 @@ class DoseScheduler {
       }
       
       for (const dose of missedDoses) {
-        // avoid double-processing
-        if (dose.notificationSent) continue;
+        // Process even if a reminder was previously sent; rely on Notification
+        // existence check to avoid duplicate missed notifications.
 
         dose.status = 'missed';
         dose.notificationSent = true;
         await dose.save();
 
-        // Only create a missed notification if none exists
+  // Only create a missed notification if none exists
         const exists = await Notification.findOne({ relatedDoseLogId: dose._id, type: 'missed_dose' });
         if (!exists) {
           const note = await Notification.create({
@@ -193,6 +193,9 @@ class DoseScheduler {
             } catch (mailErr) {
               console.warn('Failed to send missed-dose email:', mailErr?.message || mailErr);
             }
+        } else {
+          // missed notification already exists; optionally prevent re-sending email
+          // no-op
         }
 
         console.log(`⚠️ Marked dose as missed and notified: ${dose.medicineId.medicineName}`);
