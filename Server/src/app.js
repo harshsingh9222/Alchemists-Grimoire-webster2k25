@@ -8,7 +8,7 @@ import doseScheduler from "./schedulers/doseSchedulers.js";
 import wellnessRoutes from './Routes/wellness.Routes.js';
 import doseRoutes from './Routes/dose.Route.js';
 import charRoutes from './Routes/chatRoute.js';
-
+import catalogRoute from './Routes/catalogRoute.js';
 const app = express();
 
 // Middleware
@@ -59,6 +59,9 @@ app.use('/wellness', wellnessRoutes);
 // Dose routes
 app.use('/doses', doseRoutes);
 app.use("/chat", charRoutes);
+
+// catalog Route
+app.use('/catalog', catalogRoute);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

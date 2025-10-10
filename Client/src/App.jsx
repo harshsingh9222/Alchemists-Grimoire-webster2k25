@@ -18,6 +18,8 @@ import { useDispatch,useSelector } from 'react-redux';
 import { getCurrentUser } from './Hooks/getCurrentUser.js';
 import About from './Pages/About.jsx';
 import HealthChat from './Pages/ChatBotPage.jsx';
+import ProfilePage from './Pages/Profile.jsx';
+import CatalogPage from './Pages/catalogPage.jsx';
 
 function App() {
   const dispatch = useDispatch();
@@ -54,23 +56,28 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/about" element={<About />} />
-        <Route path="/chat-bot" element={< HealthChat/>} />
+        <Route path="/chat-bot" element={<HealthChat />} />
 
         {/* App routes wrapped with MainLayout so Navbar/Sidebar/Footer appear */}
         <Route
           path="/home"
           element={
-            <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen}>
+            <MainLayout
+              sidebarOpen={sidebarOpen}
+              setSidebarOpen={setSidebarOpen}
+            >
               <Home />
             </MainLayout>
           }
         />
 
-
         <Route
           path="/dose-tracker"
           element={
-            <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen}>
+            <MainLayout
+              sidebarOpen={sidebarOpen}
+              setSidebarOpen={setSidebarOpen}
+            >
               <DoseTrackerPage />
             </MainLayout>
           }
@@ -79,7 +86,10 @@ function App() {
         <Route
           path="/medicine-form"
           element={
-            <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen}>
+            <MainLayout
+              sidebarOpen={sidebarOpen}
+              setSidebarOpen={setSidebarOpen}
+            >
               <MedicineForm />
             </MainLayout>
           }
@@ -88,7 +98,10 @@ function App() {
         <Route
           path="/myMedicines"
           element={
-            <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen}>
+            <MainLayout
+              sidebarOpen={sidebarOpen}
+              setSidebarOpen={setSidebarOpen}
+            >
               <MyMedicines />
             </MainLayout>
           }
@@ -97,7 +110,10 @@ function App() {
         <Route
           path="/dashboard"
           element={
-            <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen}>
+            <MainLayout
+              sidebarOpen={sidebarOpen}
+              setSidebarOpen={setSidebarOpen}
+            >
               <Dashboard />
             </MainLayout>
           }
@@ -105,17 +121,59 @@ function App() {
         <Route
           path="/calendar"
           element={
-            <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen}>
+            <MainLayout
+              sidebarOpen={sidebarOpen}
+              setSidebarOpen={setSidebarOpen}
+            >
               <Calendar />
             </MainLayout>
           }
         />
-         <Route path="/edit-medicine/:id" element={<EditMedicine />} />
+        <Route
+          path="/calendar"
+          element={
+            <MainLayout
+              sidebarOpen={sidebarOpen}
+              setSidebarOpen={setSidebarOpen}
+            >
+              <Calendar />
+            </MainLayout>
+          }
+        />
+
+        <Route
+          path="/profile"
+          element={
+            <MainLayout
+              sidebarOpen={sidebarOpen}
+              setSidebarOpen={setSidebarOpen}
+            >
+              <ProfilePage />
+            </MainLayout>
+          }
+        />
+
+        <Route
+          path="/catalog"
+          element={
+            <MainLayout
+              sidebarOpen={sidebarOpen}
+              setSidebarOpen={setSidebarOpen}
+            >
+              <CatalogPage />
+            </MainLayout>
+          }
+        />
+
+        <Route path="/edit-medicine/:id" element={<EditMedicine />} />
         {/* Fallback: render home inside MainLayout for any unmatched /app paths */}
         <Route
           path="/app/*"
           element={
-            <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen}>
+            <MainLayout
+              sidebarOpen={sidebarOpen}
+              setSidebarOpen={setSidebarOpen}
+            >
               <Home />
             </MainLayout>
           }

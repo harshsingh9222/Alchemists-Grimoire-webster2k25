@@ -617,22 +617,42 @@ const getCalendarEventsForMonth = async (req, res) => {
 
 export { getCalendarEventsForMonth };
 
-// PUT /api/users/character
+// PUT /api/auth/character
+
+
 export const updateCharacter = async (req, res) => {
   try {
     const { characterId } = req.body;
     const userId = req.user.id; // assuming you use JWT middleware
-    // console.log("Character ID to update:", characterId);
-    const updatedUser = await User.findByIdAndUpdate(
-      userId,
-      { character: characterId },
-      { new: true }
-    );
-    // console.log("Updated user after selecting the character:", updatedUser);
-    res.json(updatedUser);
+
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    if (user.onboarded) {
+      return res
+        .status(400)
+        .json({ error: "Character cannot be changed after onboarding" });
+    }
+
+    // First-time character selection
+    user.character = characterId;
+    user.onboarded = true;
+
+    await user.save();
+
+    res.json({
+      message: "Character selected successfully",
+      character: user.character,
+      onboarded: user.onboarded,
+    });
   } catch (error) {
+    console.error("Error updating character:", error);
     res.status(500).json({ error: "Failed to update character" });
   }
 };
+
 
 

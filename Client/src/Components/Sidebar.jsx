@@ -19,6 +19,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
     { name: "MEDS", path: "/medicine-form", icon: Calendar },
     { name: "Dose Tracker", path: "/dose-tracker", icon: Calendar },
     { name: "Chatty Chat", path: "/chat-bot", icon: MessageSquare },
+    { name: "Catalog", path: "/catalog", icon: Mail }
   ];
 
   return (

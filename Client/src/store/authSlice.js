@@ -18,7 +18,7 @@ const authSlice = createSlice({
         },
         updateCharacter: (state, action) => {
             if (state.userData) {
-                state.userData.circusCharacter = action.payload;
+                state.userData.character = action.payload;
             }
         },
 

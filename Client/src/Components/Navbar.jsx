@@ -14,6 +14,7 @@ const Navbar = ({ sidebarOpen, setSidebarOpen }) => {
   const navItems = [
     { name: "Home", path: "/", icon: Home },
     { name: "About", path: "/about", icon: User },
+    
   ]
 
   const auth = useSelector((state) => state.auth)

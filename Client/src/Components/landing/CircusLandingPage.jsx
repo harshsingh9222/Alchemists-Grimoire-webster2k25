@@ -10,8 +10,9 @@ import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import drumrollUrl from "../../assets/Sounds/drumroll.wav";
 import TimeLineSteps from "./TimeLineSteps";
-import { updateUserCharacter } from "../../api";
+import { getUser, updateUserCharacter } from "../../api";
 import { updateCharacter } from "../../store/authSlice";
+import { login as authLogin } from "../../store/authSlice";
 
 const CircusLandingPage = () => {
   const navigate = useNavigate();
@@ -30,17 +31,7 @@ const CircusLandingPage = () => {
   if(authStatus){
     console.log("User on landing page:",userData);
   }
-  // this is for the character 
-  useEffect(() => {
-    if (userData?.circusCharacter) {
-      const foundChar = characters.find(
-        (c) => c.id === userData.circusCharacter
-      );
-      if (foundChar) {
-        setSelectedCharacter(foundChar);
-      }
-    }
-  }, [userData]);
+
 
   // Use a ref to hold Howl instances so they aren't recreated every render
   const soundsRef = useRef(null);
@@ -150,10 +141,15 @@ const CircusLandingPage = () => {
   // const userData = useSelector((state) => state.auth.userData);
 
   useEffect(() => {
-    if (authStatus && userData?.onboarded) {
-      navigate("/home");
+    if (userData?.onboarded && userData?.character) {
+      // Find the matching character object
+      const savedChar = characters.find((c) => c.id === userData.character);
+      if (savedChar) {
+        setSelectedCharacter(savedChar);
+      }
     }
-  }, [navigate, authStatus, userData]);
+  }, [userData]);
+
 
   const CurtainLoader = () => {
     // Stripe width in pixels (adjust for denser/wider pleats)
@@ -412,13 +408,22 @@ const CircusLandingPage = () => {
                     transition={{ delay: 0.1 * index }}
                     whileHover={{ y: -10, transition: { duration: 0.2 } }}
                     onClick={async () => {
-                      setSelectedCharacter(char);
                       try {
                         await updateUserCharacter(char.id); // ✅ API call
-                        // dispatch(updateCharacter(char.id)); 
+                         setSelectedCharacter(char);
+                        // dispatch(updateCharacter(char.id));
                         dispatch(updateCharacter(char.id));
+                        const res = await getUser();
+                        dispatch(authLogin(res.user));
                       } catch (e) {
-                        console.error("Failed to update character:", e);
+                        if (e.response?.status === 400) {
+                          alert(
+                            e.response.data.error ||
+                              "You cannot change character after onboarding."
+                          );
+                        } else {
+                          console.error("Failed to update character:", e);
+                        }
                       }
                     }}
                     className={`
@@ -511,7 +516,7 @@ const CircusLandingPage = () => {
                       }
 
                       // ✅ Character selection check
-                      if (!selectedCharacter) {
+                      if (!userData?.onboarded) {
                         alert(
                           "Please select a character before entering the show!"
                         );

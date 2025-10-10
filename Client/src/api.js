@@ -83,3 +83,12 @@ export const updateUserCharacter = async (characterId) => {
   return request('/auth/character', 'PUT', { characterId });
 };
 
+// 📜 Fetch catalog for logged-in user's character
+export const fetchCatalog = async () => {
+  return request('/catalog/get-catalog', 'GET');
+};
+
+// 🤖 Get AI suggestion based on user mood/feeling
+export const getAISuggestion = async (feeling) => {
+  return request('/catalog/suggest', 'POST', { feeling });
+};
