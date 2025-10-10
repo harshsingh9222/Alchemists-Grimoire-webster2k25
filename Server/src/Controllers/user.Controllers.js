@@ -120,7 +120,11 @@ const googleLogin = async (req, res) => {
     // Generate access and refresh tokens consistent with other flows
     const { accessToken, refreshToken } = await generateAccessAndRefreshToken(user._id)
 
-    await initializeUserData(user._id);
+    // Optionally initialize user data (dose logs / wellness scores). Controlled by SEED_ON_REGISTER.
+    // We intentionally do not await this so registration/login stays fast.
+    if (process.env.SEED_ON_REGISTER === 'true') {
+      initializeUserData(user._id).catch(err => console.error('initializeUserData failed (googleLogin):', err));
+    }
 
     // Set cookies same as register/login flows
     const calendarScopeGranted = !!(tokens?.scope && tokens.scope.includes('https://www.googleapis.com/auth/calendar.events'))
@@ -403,7 +407,10 @@ const registerUser = asyncHandler(async (req, res) => {
         //remove password and refreshToken from user object before sending response
         const createdUser = await User.findById(user._id).select("-password -refreshToken");
 
-        await initializeUserData(user._id);
+        // Optionally initialize user data for new users. Gate with SEED_ON_REGISTER and don't await.
+        if (process.env.SEED_ON_REGISTER === 'true') {
+          initializeUserData(user._id).catch(err => console.error('initializeUserData failed (register):', err));
+        }
 
         return res.status(201)
             .cookie("accessToken", accessToken, options)
