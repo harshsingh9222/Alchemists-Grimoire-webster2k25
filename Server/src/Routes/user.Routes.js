@@ -60,4 +60,6 @@ router.get('/google-client-info', getGoogleClientInfo);
 // Fetch calendar events for a given month (requires authentication)
 router.get('/calendar', verifyJWT, getCalendarEventsForMonth);
 
+
+
 export default router;
