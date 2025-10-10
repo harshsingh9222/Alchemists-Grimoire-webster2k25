@@ -7,6 +7,8 @@ import WellnessScore from "../Models/wellnessScoreModel.js";
 import Notification from "../Models/notificationModel.js";
 import { asyncHandler } from "../Utils/asyncHandler.js";
 import { ApiError } from "../Utils/ApiError.js";
+import { msFromISO } from "../Utils/time.helper.js";
+import { localTimeToUTCDate } from "../Utils/timezone.helper.js";
 import { ApiResponse } from "../Utils/ApiResponse.js";
 
 // Helper function to get date range
@@ -14,6 +16,9 @@ const getDateRange = (timeRange) => {
   const endDate = new Date();
   endDate.setHours(23, 59, 59, 999);
   const startDate = new Date();
+  console.log("Start Date before switch:", startDate);
+
+  
   
   switch (timeRange) {
     case 'day':
@@ -33,6 +38,8 @@ const getDateRange = (timeRange) => {
   }
   
   startDate.setHours(0, 0, 0, 0);
+  console.log('Date Range:', { startDate, endDate });
+  
   return { startDate, endDate };
 };
 
@@ -202,16 +209,22 @@ export const getUpcomingDoses = asyncHandler(async (req, res) => {
   
   medicines.forEach(medicine => {
     medicine.times.forEach(time => {
+      let doseTime;
       const [hours, minutes] = time.split(':');
-      const doseTime = new Date();
-      doseTime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
-      
-      // Check if this dose is already logged
-      const isLogged = todayLogs.some(log => 
-        log.medicineId.toString() === medicine._id.toString() &&
-        log.scheduledTime.getHours() === doseTime.getHours()
-      );
-      
+      if (medicine.timezone) {
+        doseTime = localTimeToUTCDate(new Date(), time, medicine.timezone);
+      } else {
+        doseTime = new Date();
+        doseTime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+      }
+
+      // Check if this dose is already logged (compare within the same minute)
+      const isLogged = todayLogs.some(log => {
+        if (log.medicineId.toString() !== medicine._id.toString()) return false;
+        const diffMs = Math.abs(log.scheduledTime.getTime() - doseTime.getTime());
+        return diffMs <= 60 * 1000; // same minute
+      });
+
       // Only include if it's upcoming and not logged
       if (doseTime > now && !isLogged) {
         let timeOfDay = "morning";
@@ -457,12 +470,18 @@ export const recordDose = asyncHandler(async (req, res) => {
   const userId = req.user._id;
   
   // Check if dose log already exists
+  const schedDate = new Date(scheduledTime);
+  const schedStart = new Date(schedDate);
+  schedStart.setMinutes(0, 0, 0);
+  const schedEnd = new Date(schedDate);
+  schedEnd.setMinutes(59, 59, 999);
+
   let doseLog = await DoseLog.findOne({
     userId,
     medicineId,
     scheduledTime: {
-      $gte: new Date(scheduledTime).setMinutes(0, 0, 0),
-      $lt: new Date(scheduledTime).setMinutes(59, 59, 999)
+      $gte: schedStart,
+      $lt: schedEnd
     }
   });
   
@@ -474,7 +493,8 @@ export const recordDose = asyncHandler(async (req, res) => {
     doseLog.confirmedBy = "user";
   } else {
     // Create new log
-    const scheduleDate = new Date(scheduledTime);
+      const ms = msFromISO(scheduledTime);
+      const scheduleDate = ms === null ? new Date(scheduledTime) : new Date(ms);
     doseLog = new DoseLog({
       userId,
       medicineId,

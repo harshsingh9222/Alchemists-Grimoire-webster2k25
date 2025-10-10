@@ -8,6 +8,7 @@ import WellnessScore from '../Models/wellnessScoreModel.js';
 import Notification from '../Models/notificationModel.js';
 import User from '../Models/user.models.js';
 import nodemailer from 'nodemailer';
+import { localTimeToUTCDate } from '../Utils/timezone.helper.js';
 
 class DoseScheduler {
   constructor() {
@@ -36,8 +37,10 @@ class DoseScheduler {
       this.updateDailyWellnessScores();
     });
     
-    // Send reminder notifications (every 1 minute)
-    cron.schedule('* * * * *', () => {
+    // Send reminder notifications (every 15 minutes)
+    // Running every 15 minutes is fine as long as the reminder window
+    // (windowMs + 2 * toleranceMs) is larger than the scheduling interval.
+    cron.schedule('*/15 * * * *', () => {
       this.sendDoseReminders();
     });
     // Run a one-time backfill for missed doses before today (non-blocking)
@@ -76,19 +79,30 @@ class DoseScheduler {
             (medicine.frequency === 'weekly' && this.isScheduledToday(medicine))) {
           
           for (const timeStr of medicine.times) {
-            const [hours, minutes] = timeStr.split(':').map(Number);
-            const scheduledTime = new Date();
-            scheduledTime.setHours(hours, minutes, 0, 0);
+            let scheduledTime;
+            if (medicine.timezone) {
+              // compute scheduled instant for today's date in medicine.timezone
+              scheduledTime = localTimeToUTCDate(new Date(), timeStr, medicine.timezone);
+            } else {
+              const [hours, minutes] = timeStr.split(':').map(Number);
+              scheduledTime = new Date();
+              scheduledTime.setHours(hours, minutes, 0, 0);
+            }
             
             // Only create logs for upcoming doses in the next hour
             if (scheduledTime > now && scheduledTime <= nextHour) {
               // Check if log already exists
+              const sStart = new Date(scheduledTime);
+              sStart.setSeconds(0, 0);
+              const sEnd = new Date(scheduledTime);
+              sEnd.setSeconds(59, 999);
+
               const existingLog = await DoseLog.findOne({
                 userId: medicine.userId,
                 medicineId: medicine._id,
                 scheduledTime: {
-                  $gte: new Date(scheduledTime).setSeconds(0, 0),
-                  $lt: new Date(scheduledTime).setSeconds(59, 999)
+                  $gte: sStart,
+                  $lt: sEnd
                 }
               });
               
@@ -158,20 +172,27 @@ class DoseScheduler {
             sentAt: new Date()
           });
 
-          // send email if possible
-          try {
-            const toEmail = dose.userId?.email || (await User.findById(dose.userId))?.email;
-            if (transporter && toEmail) {
-              await transporter.sendMail({
-                from: process.env.EMAIL_USER,
-                to: toEmail,
-                subject: note.title,
-                html: `<p>${note.message}</p>`
-              });
+            // send email only for Google-authenticated users
+            try {
+              const user = dose.userId || (await User.findById(dose.userId));
+              const toEmail = user?.email;
+              const isGoogleUser = (user?.provider === 'google') || Boolean(user?.google?.refreshToken);
+
+              if (!isGoogleUser) {
+                console.log(`Skipping missed-dose email for non-Google user ${user?.email || user?._id}`);
+              } else if (!transporter) {
+                console.log('Email transporter not configured; skipping missed-dose email send');
+              } else if (toEmail) {
+                await transporter.sendMail({
+                  from: process.env.EMAIL_USER,
+                  to: toEmail,
+                  subject: note.title,
+                  html: `<p>${note.message}</p>`
+                });
+              }
+            } catch (mailErr) {
+              console.warn('Failed to send missed-dose email:', mailErr?.message || mailErr);
             }
-          } catch (mailErr) {
-            console.warn('Failed to send missed-dose email:', mailErr?.message || mailErr);
-          }
         }
 
         console.log(`⚠️ Marked dose as missed and notified: ${dose.medicineId.medicineName}`);
@@ -223,10 +244,17 @@ class DoseScheduler {
                 sentAt: new Date()
               });
 
-              // send email
+              // send email only for Google-authenticated users
               try {
-                const toEmail = dose.userId?.email || (await User.findById(dose.userId))?.email;
-                if (transporter && toEmail) {
+                const user = dose.userId || (await User.findById(dose.userId));
+                const toEmail = user?.email;
+                const isGoogleUser = (user?.provider === 'google') || Boolean(user?.google?.refreshToken);
+
+                if (!isGoogleUser) {
+                  console.log(`Skipping backfill email for non-Google user ${user?.email || user?._id}`);
+                } else if (!transporter) {
+                  console.log('Email transporter not configured; skipping backfill email send');
+                } else if (toEmail) {
                   await transporter.sendMail({ from: process.env.EMAIL_USER, to: toEmail, subject: note.title, html: `<p>${note.message}</p>` });
                 }
               } catch (mailErr) {
@@ -258,7 +286,10 @@ class DoseScheduler {
       const now = new Date();
       // We'll consider upcoming doses within ~30 minutes (with tolerance)
       const windowMs = 30 * 60 * 1000;
-      const toleranceMs = 2 * 60 * 1000; // 2 min tolerance
+  // Increase tolerance so the reminder window safely overlaps
+  // between 15-minute runs. A 15 minute tolerance expands the
+  // query window on both sides by 15 minutes.
+  const toleranceMs = 15 * 60 * 1000; // 15 min tolerance
       const windowStart = new Date(now.getTime() - toleranceMs);
       const windowEnd = new Date(now.getTime() + windowMs + toleranceMs);
 
@@ -268,6 +299,12 @@ class DoseScheduler {
         notificationSent: false,
         scheduledTime: { $gte: windowStart, $lte: windowEnd }
       }).populate('medicineId userId');
+
+      // prepare transporter if email creds provided
+      let transporter = null;
+      if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+        transporter = nodemailer.createTransport({ service: 'gmail', auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS } });
+      }
 
       for (const dose of upcomingDoses) {
         // Avoid duplicates (also check Notification collection)
@@ -292,10 +329,17 @@ class DoseScheduler {
           sentAt: new Date()
         });
 
-        // send email if transporter available
+        // send email only for Google-authenticated users (avoid stuck or fake emails)
         try {
-          const toEmail = dose.userId?.email || (await User.findById(dose.userId))?.email;
-          if (transporter && toEmail) {
+          const user = dose.userId || (await User.findById(dose.userId));
+          const toEmail = user?.email;
+          const isGoogleUser = (user?.provider === 'google') || Boolean(user?.google?.refreshToken);
+
+          if (!isGoogleUser) {
+            console.log(`Skipping email for non-Google user ${user?.email || user?._id}`);
+          } else if (!transporter) {
+            console.log('Email transporter not configured; skipping email send');
+          } else if (toEmail) {
             await transporter.sendMail({
               from: process.env.EMAIL_USER,
               to: toEmail,

@@ -4,7 +4,7 @@ import { app } from "./app.js";
 import { connectDB } from "./DB/connectDB.js";
 // Routers are registered in app.js to keep app configuration centralized
 
-console.log("Loaded MONGODB_URI =", process.env.MONGODB_URI);
+// console.log("Loaded MONGODB_URI =", process.env.MONGODB_URI);
 
 const PORT = process.env.PORT || 8000;
 

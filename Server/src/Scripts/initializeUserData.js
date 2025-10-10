@@ -5,6 +5,7 @@ import Medicine from "../Models/medicineModel.js";
 import DoseLog from "../Models/doseLogModel.js";
 import WellnessScore from "../Models/wellnessScoreModel.js";
 import { createDoseLogsForMedicine } from "../Utils/doseLogCreater.js";
+import { localTimeToUTCDate } from "../Utils/timezone.helper.js";
 
 dotenv.config();
 
@@ -55,21 +56,31 @@ const initializeDoseLogs = async (userId) => {
         date.setDate(date.getDate() - i);
         
         for (const timeStr of medicine.times) {
-          const [hours, minutes] = timeStr.split(':');
-          const scheduledTime = new Date(date);
-          scheduledTime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+          let scheduledTime;
+          if (medicine.timezone) {
+            scheduledTime = localTimeToUTCDate(date, timeStr, medicine.timezone);
+          } else {
+            const [hours, minutes] = timeStr.split(':');
+            scheduledTime = new Date(date);
+            scheduledTime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+          }
           
           // Random status for historical data
           const statuses = ['taken', 'taken', 'taken', 'missed']; // 75% adherence
           const randomStatus = statuses[Math.floor(Math.random() * statuses.length)];
           
+          const sStart = new Date(scheduledTime);
+          sStart.setSeconds(0, 0);
+          const sEnd = new Date(scheduledTime);
+          sEnd.setSeconds(59, 999);
+
           await DoseLog.findOneAndUpdate(
             {
               userId,
               medicineId: medicine._id,
               scheduledTime: {
-                $gte: new Date(scheduledTime).setSeconds(0, 0),
-                $lt: new Date(scheduledTime).setSeconds(59, 999)
+                $gte: sStart,
+                $lt: sEnd
               }
             },
             {

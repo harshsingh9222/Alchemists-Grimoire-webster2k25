@@ -6,9 +6,11 @@ import {
   CheckCircle,
   XCircle,
   AlertCircle,
+  Sparkles,
 } from "lucide-react";
 import PropTypes from "prop-types";
 import DoseSummaryCard from "./DoseSummaryCard.jsx";
+import { isNowWithinWindow } from "../../Utils/time.helper";
 
 const ProgressSection = ({
   progressDate,
@@ -81,116 +83,136 @@ const ProgressSection = ({
       )}
 
       <div className="mt-6">
+        {/* Show only taken or missed doses in Progress */}
+        {/**
+         * We compute a filtered list so Progress shows only completed or missed doses
+         * for the selected date as requested.
+         */}
         <h3 className="text-lg text-purple-200 font-semibold mb-3">
-          Dose Log ({progressDoses.length})
+          Dose Log ({progressDoses.filter(d => d.status === 'taken' || d.status === 'missed').length})
         </h3>
         {progressLoading ? (
           <div className="flex justify-center items-center h-40">
             <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-400"></div>
           </div>
-        ) : progressDoses.length === 0 ? (
+        ) : progressDoses.filter(d => d.status === 'taken' || d.status === 'missed').length === 0 ? (
           <div className="text-center py-8">
-            <p className="text-purple-300">No doses recorded for this date.</p>
+            <p className="text-purple-300">No taken or missed doses recorded for this date.</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {progressDoses.map((dose) => {
-              const isComplete = dose.status === "taken";
-              const isMissed = dose.status === "missed";
-              const isPending = dose.status === "pending";
-              return (
-                <div
-                  key={dose._id || `${dose.medicineId}-${dose.time}`}
-                  className={`relative group overflow-hidden bg-gradient-to-br from-purple-950/90 via-purple-900/80 to-indigo-950/90 backdrop-blur-sm rounded-2xl border p-6 transition-all hover:scale-[1.02] ${
-                    isComplete
-                      ? "ring-2 ring-green-500/50"
-                      : isMissed
-                      ? "ring-2 ring-red-500/40 bg-red-900/60 border-red-600/30"
-                      : "border-purple-500/30"
-                  }`}
-                >
-                  <div className="flex items-start justify-between mb-4">
-                    <div>
-                      <h3 className="text-xl font-bold text-purple-200 mb-1">
-                        {dose.medicineName || dose.medicine?.medicineName}
-                      </h3>
-                      <p className="text-purple-400 text-sm">
-                        {dose.dosage || dose.medicine?.dosage}
-                      </p>
+            {progressDoses
+              .filter((dose) => dose.status === "taken" || dose.status === "missed")
+              .map((dose) => {
+                const isComplete = dose.status === "taken";
+                const isMissed = dose.status === "missed";
+                const isPending = dose.status === "pending";
+                // Allow taking only from 15 minutes before scheduled time
+                  const canTake = (() => {
+                    if (isMissed) return false;
+                    const scheduled = dose.scheduledTime ? dose.scheduledTime : null;
+                    if (!scheduled) return true; // allow when no scheduled time
+                    return isNowWithinWindow(scheduled, 15);
+                })();
+                return (
+                  <div
+                    key={dose._id || `${dose.medicineId}-${dose.time}`}
+                    className={`relative group overflow-hidden bg-gradient-to-br from-purple-950/90 via-purple-900/80 to-indigo-950/90 backdrop-blur-sm rounded-2xl border p-6 transition-all hover:scale-[1.02] ${
+                      isComplete
+                        ? "ring-2 ring-green-500/50"
+                        : isMissed
+                        ? "ring-2 ring-red-500/40 bg-red-900/60 border-red-600/30"
+                        : "border-purple-500/30"
+                    }`}
+                  >
+                    <div className="flex items-start justify-between mb-4">
+                      <div>
+                        <h3 className="text-xl font-bold text-purple-200 mb-1">
+                          {dose.medicineName || dose.medicine?.medicineName}
+                        </h3>
+                        <p className="text-purple-400 text-sm">
+                          {dose.dosage || dose.medicine?.dosage}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-purple-300 font-medium">
+                          {dose.time ||
+                            new Date(dose.scheduledTime).toLocaleTimeString(
+                              "en-US",
+                              { hour: "2-digit", minute: "2-digit" }
+                            )}
+                        </span>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-purple-300 font-medium">
-                        {dose.time ||
-                          new Date(dose.scheduledTime).toLocaleTimeString(
-                            "en-US",
-                            { hour: "2-digit", minute: "2-digit" }
-                          )}
+
+                    <div className="mb-4">
+                      <span
+                        className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium ${
+                          isComplete
+                            ? "bg-green-500/20 text-green-300"
+                            : isMissed
+                            ? "bg-red-500/20 text-red-300"
+                            : "bg-gray-500/20 text-gray-300"
+                        }`}
+                      >
+                        {isComplete && <CheckCircle className="w-3 h-3" />}
+                        {isMissed && <XCircle className="w-3 h-3" />}
+                        {isPending && <AlertCircle className="w-3 h-3" />}
+                        {dose.status || "Pending"}
                       </span>
                     </div>
-                  </div>
 
-                  <div className="mb-4">
-                    <span
-                      className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium ${
-                        isComplete
-                          ? "bg-green-500/20 text-green-300"
-                          : isMissed
-                          ? "bg-red-500/20 text-red-300"
-                          : "bg-gray-500/20 text-gray-300"
-                      }`}
-                    >
-                      {isComplete && <CheckCircle className="w-3 h-3" />}
-                      {isMissed && <XCircle className="w-3 h-3" />}
-                      {isPending && <AlertCircle className="w-3 h-3" />}
-                      {dose.status || "Pending"}
-                    </span>
+                    {!isComplete && (
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() =>
+                              handleDoseAction(
+                                dose._id,
+                                "take",
+                                dose.medicineId || dose.medicine?._id,
+                                dose.scheduledTime
+                              )
+                            }
+                            disabled={!canTake}
+                            title={
+                              isMissed
+                                ? 'This dose was missed and cannot be taken'
+                                : !canTake
+                                ? 'You can take this dose starting 15 minutes before its scheduled time'
+                                : 'Mark dose as taken'
+                            }
+                            className={`flex-1 py-2 px-4 text-white rounded-lg transition-all transform ${
+                              !canTake
+                                ? 'bg-gray-700/40 opacity-60 cursor-not-allowed pointer-events-none'
+                                : 'bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 hover:scale-105'
+                            }`}
+                        >
+                          Take
+                        </button>
+                        <button
+                          onClick={() =>
+                            handleDoseAction(
+                              dose._id,
+                              "skip",
+                              dose.medicineId || dose.medicine?._id,
+                              dose.scheduledTime
+                            )
+                          }
+                          disabled={isMissed}
+                          title={isMissed ? 'This dose was missed and cannot be skipped' : 'Skip this dose'}
+                          className={`flex-1 py-2 px-4 text-white rounded-lg transition-all transform ${
+                            isMissed
+                              ? 'bg-gray-700/40 opacity-60 cursor-not-allowed pointer-events-none'
+                              : 'bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-600 hover:to-amber-600 hover:scale-105'
+                          }`}
+                        >
+                          Skip
+                        </button>
+                      </div>
+                    )}
                   </div>
-
-                  {!isComplete && (
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() =>
-                          handleDoseAction(
-                            dose._id,
-                            "take",
-                            dose.medicineId || dose.medicine?._id,
-                            dose.scheduledTime
-                          )
-                        }
-                        disabled={isMissed}
-                        title={isMissed ? 'This dose was missed and cannot be taken' : 'Mark dose as taken'}
-                        className={`flex-1 py-2 px-4 text-white rounded-lg transition-all transform ${
-                          isMissed
-                            ? 'bg-gray-700/40 opacity-60 cursor-not-allowed pointer-events-none'
-                            : 'bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 hover:scale-105'
-                        }`}
-                      >
-                        Take
-                      </button>
-                      <button
-                        onClick={() =>
-                          handleDoseAction(
-                            dose._id,
-                            "skip",
-                            dose.medicineId || dose.medicine?._id,
-                            dose.scheduledTime
-                          )
-                        }
-                        disabled={isMissed}
-                        title={isMissed ? 'This dose was missed and cannot be skipped' : 'Skip this dose'}
-                        className={`flex-1 py-2 px-4 text-white rounded-lg transition-all transform ${
-                          isMissed
-                            ? 'bg-gray-700/40 opacity-60 cursor-not-allowed pointer-events-none'
-                            : 'bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-600 hover:to-amber-600 hover:scale-105'
-                        }`}
-                      >
-                        Skip
-                      </button>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
+                );
+              })}
           </div>
         )}
       </div>

@@ -1,13 +1,14 @@
 import Medicine from "../Models/medicineModel.js";
 import User from "../Models/user.models.js";
 import DoseLog from "../Models/doseLogModel.js";
-import { createDoseLogsForMedicine } from "../Utils/doseLogCreater.js";import { createCalendarEventForUser } from "../Utils/googleCalendar.js"
+import { createDoseLogsForMedicine } from "../Utils/doseLogCreater.js";
+import { createCalendarEventForUser } from "../Utils/googleCalendar.js"
 
 
 const addMedicine = async (req, res) => {
   try {
     console.log("in AddMe->", req.body);
-    const { medicineName, dosage, frequency, times, startDate, endDate, notes } = req.body;
+  const { medicineName, dosage, frequency, times, startDate, endDate, notes, timezone } = req.body;
     // Ensure auth middleware attached user
     if (!req.user) {
       return res.status(401).json({ message: 'Unauthorized - user missing from request' })
@@ -37,6 +38,7 @@ const addMedicine = async (req, res) => {
       startDate,
       endDate,
       notes,
+      timezone,
     });
 
     await newMedicine.save();
@@ -71,8 +73,8 @@ const addMedicine = async (req, res) => {
         const eventPayload = {
           summary: `Medicine: ${medicineName}`,
           description: notes || `Dosage: ${dosage} | Frequency: ${frequency}`,
-          start: { dateTime: startDt.toISOString(), timeZone: 'UTC' },
-          end: { dateTime: endDt.toISOString(), timeZone: 'UTC' },
+          start: { dateTime: startDt.toISOString(), timeZone: newMedicine.timezone || 'UTC' },
+          end: { dateTime: endDt.toISOString(), timeZone: newMedicine.timezone || 'UTC' },
           reminders: { useDefault: false, overrides: [{ method: 'popup', minutes: 10 }] }
         };
 
@@ -94,8 +96,10 @@ const addMedicine = async (req, res) => {
           }
         } else {
           // as-needed -> no recurrence (single event at startDate/time)
+          // no recurrence field needed
         }
 
+        // Attempt to create calendar event for this time
         const calendarResult = await createCalendarEventForUser(userId, eventPayload);
         if (calendarResult?.success && calendarResult?.eventId) {
           createdEventIds.push(calendarResult.eventId);
@@ -103,6 +107,7 @@ const addMedicine = async (req, res) => {
         } else {
           console.log('Google Calendar event not created for time', timeStr, ':', calendarResult?.error);
         }
+
       }
 
       if (createdEventIds.length > 0) {
@@ -178,7 +183,7 @@ export const updateMedicine = async (req, res) => {
   try {
     const { id } = req.params;
     const userId = req.user._id;
-    const updates = req.body;
+  const updates = req.body;
 
     const medicine = await Medicine.findOneAndUpdate(
       { _id: id, userId },
@@ -191,7 +196,8 @@ export const updateMedicine = async (req, res) => {
     }
 
     // 🎯 If times or frequency changed, update future dose logs
-    if (updates.times || updates.frequency) {
+  // If timezone, times or frequency changed, refresh future dose logs
+  if (updates.timezone || updates.times || updates.frequency) {
       // Delete future pending doses
       await DoseLog.deleteMany({
         medicineId: id,
@@ -199,7 +205,7 @@ export const updateMedicine = async (req, res) => {
         scheduledTime: { $gte: new Date() }
       });
       
-      // Recreate dose logs with new schedule
+      // Recreate dose logs with new schedule (medicine already has updated fields)
       await createDoseLogsForMedicine(medicine, userId);
     }
 

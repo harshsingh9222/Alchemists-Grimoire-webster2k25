@@ -7,6 +7,8 @@ import {
   AlertCircle,
   Sparkles,
 } from "lucide-react";
+import { isNowWithinWindow } from "../../Utils/time.helper";
+import { useNavigate } from "react-router-dom";
 
 const TodayDoses = ({
   todayLoading,
@@ -16,6 +18,12 @@ const TodayDoses = ({
   handleDoseAction,
   setShowWellnessModal,
 }) => {
+  const navigate = useNavigate();
+
+  const handleAddMedicineClick = () => {
+    // Use react-router navigation for faster client-side routing
+    navigate("/medicine-form");
+  };
   return (
     <div className="mb-8">
       <div className="flex items-center gap-3 mb-4">
@@ -54,7 +62,7 @@ const TodayDoses = ({
           <Pill className="w-12 h-12 text-purple-400 mx-auto mb-4 opacity-50" />
           <p className="text-purple-300">No potions scheduled for today</p>
           {medicines.length === 0 && (
-            <button className="mt-4 px-6 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:scale-105 transition-all">
+            <button className="mt-4 px-6 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:scale-105 transition-all" onClick={()=>{handleAddMedicineClick()}}>
               Add Your First Potion
             </button>
           )}
@@ -65,6 +73,16 @@ const TodayDoses = ({
             const isComplete = dose.status === "taken";
             const isMissed = dose.status === "missed";
             const isPending = dose.status === "pending";
+
+            // Determine if the user is allowed to take the dose.
+            // Business rule: dose can be taken starting 15 minutes before the scheduled time.
+            // If scheduledTime is missing, allow taking (backend will validate if needed).
+            const canTake = (() => {
+              if (isMissed) return false;
+              const scheduled = dose.scheduledTime ? dose.scheduledTime : null;
+              if (!scheduled) return true; // allow when no scheduled time
+              return isNowWithinWindow(scheduled, 15);
+            })();
 
             return (
               <div
@@ -131,10 +149,16 @@ const TodayDoses = ({
                           dose.scheduledTime
                         )
                       }
-                      disabled={isMissed}
-                      title={isMissed ? 'This dose was missed and cannot be taken' : 'Mark dose as taken'}
-                      className={`flex-1 py-2 px-4 text-white rounded-lg transition-all transform ${
+                      disabled={!canTake}
+                      title={
                         isMissed
+                          ? 'This dose was missed and cannot be taken'
+                          : !canTake
+                          ? 'You can take this dose starting 15 minutes before its scheduled time'
+                          : 'Mark dose as taken'
+                      }
+                      className={`flex-1 py-2 px-4 text-white rounded-lg transition-all transform ${
+                        !canTake
                           ? 'bg-gray-700/40 opacity-60 cursor-not-allowed pointer-events-none'
                           : 'bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 hover:scale-105'
                       }`}

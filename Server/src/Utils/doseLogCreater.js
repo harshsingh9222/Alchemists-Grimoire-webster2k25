@@ -1,4 +1,5 @@
 import DoseLog from "../Models/doseLogModel.js";
+import { localTimeToUTCDate } from "./timezone.helper.js";
 
 export const createDoseLogsForMedicine = async (medicine, userId) => {
   const today = new Date();
@@ -21,9 +22,15 @@ export const createDoseLogsForMedicine = async (medicine, userId) => {
     // Check if medicine should be taken on this day
     if (shouldCreateLog(medicine, date)) {
       for (const timeStr of medicine.times) {
-        const [hours, minutes] = timeStr.split(':').map(Number);
-        const scheduledTime = new Date(date);
-        scheduledTime.setHours(hours, minutes, 0, 0);
+        let scheduledTime;
+        if (medicine.timezone) {
+          // Convert local wall-clock time (medicine.times entries) for the given date and timezone
+          scheduledTime = localTimeToUTCDate(date, timeStr, medicine.timezone);
+        } else {
+          const [hours, minutes] = timeStr.split(':').map(Number);
+          scheduledTime = new Date(date);
+          scheduledTime.setHours(hours, minutes, 0, 0);
+        }
         
         // Only create future logs
         if (scheduledTime > new Date()) {

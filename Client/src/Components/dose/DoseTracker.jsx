@@ -3,11 +3,13 @@ import { Clock, Pill, Sparkles } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { doseService } from "../../Services/doseServices";
 import { fetchDoseSummary } from "../../api";
+import { useToast } from "../../Components/Toast/ToastProvider.jsx";
 import TodayDoses from "./TodayDoses";
 import ProgressSection from "./ProgressSection";
 import UpdateWellness from "./UpdateWellness";
 
 const DoseTracker = () => {
+  const { showToast } = useToast();
   const [todayDoses, setTodayDoses] = useState([]);
   const [todayLoading, setTodayLoading] = useState(false);
   const [view, setView] = useState("today"); // "today" | "progress" | "wellness"
@@ -96,18 +98,35 @@ const DoseTracker = () => {
   // shared action (take/skip). After update, refresh both today's doses AND progress doses
   const handleDoseAction = async (doseId, action, medicineId, scheduledTime) => {
     try {
+      // Normalize scheduledTime to ISO string when sending from client
+      let scheduledIso = null;
+      if (scheduledTime) {
+        if (scheduledTime instanceof Date) scheduledIso = scheduledTime.toISOString();
+        else if (typeof scheduledTime === 'number') scheduledIso = new Date(scheduledTime).toISOString();
+        else if (typeof scheduledTime === 'string') {
+          // crude ISO check (has T and Z or timezone offset)
+          if (scheduledTime.includes('T') && (scheduledTime.endsWith('Z') || scheduledTime.includes('+') || scheduledTime.includes('-'))) {
+            scheduledIso = scheduledTime;
+          } else {
+            // attempt to parse and re-serialize
+            const d = new Date(scheduledTime);
+            scheduledIso = Number.isFinite(d.getTime()) ? d.toISOString() : scheduledTime;
+          }
+        }
+      }
+
       const payload = doseId
         ? { doseId, status: action === "take" ? "taken" : "skipped" }
         : {
             medicineId,
-            scheduledTime,
+            scheduledTime: scheduledIso,
             status: action === "take" ? "taken" : "skipped",
           };
 
       await doseService.updateDoseStatus(payload);
 
       // get fresh lists (use returned arrays to avoid stale React state)
-      const [freshToday, freshProgress] = await Promise.all([
+      const [freshToday] = await Promise.all([
         fetchTodayDoses(), // now returns array
         fetchProgressDoses(progressDate),
       ]);
@@ -122,6 +141,12 @@ const DoseTracker = () => {
       if (allTaken) setShowWellnessModal(true);
     } catch (error) {
       console.error("Error recording dose:", error);
+      // If server rejected due to early 'taken', show friendly toast
+      if (error?.response?.status === 403 || (error?.message && error.message.includes('Too early to mark'))) {
+        showToast('Too early to mark this dose as taken. You can take it starting 15 minutes before scheduled time.', 'error');
+      } else {
+        showToast('Failed to record dose. Please try again.', 'error');
+      }
     }
   };
 

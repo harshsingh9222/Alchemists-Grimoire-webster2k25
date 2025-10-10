@@ -14,7 +14,7 @@ import Dashboard from './Pages/Dashboard.jsx';
 import EditMedicine from './Pages/EditMedicines.jsx';
 import DoseTrackerPage from './Pages/DoseTrackerPage.jsx';
 import { useEffect } from 'react';
-import { useDispatch,useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { getCurrentUser } from './Hooks/getCurrentUser.js';
 import About from './Pages/About.jsx';
 import HealthChat from './Pages/ChatBotPage.jsx';
@@ -31,8 +31,8 @@ function App() {
   console.log("Auth Status:", authStatus);
   useEffect(() => {
     getCurrentUser(dispatch)
-    .finally(() => setLoading(false));
-  },[authStatus,dispatch]);
+      .finally(() => setLoading(false));
+  }, [authStatus, dispatch]);
 
   if (loading) {
     return (
@@ -58,7 +58,7 @@ function App() {
         <Route path="/about" element={<About />} />
         <Route path="/chat-bot" element={<HealthChat />} />
 
-        {/* App routes wrapped with MainLayout so Navbar/Sidebar/Footer appear */}
+        /* App routes wrapped with MainLayout so Navbar/Sidebar/Footer appear */
         <Route
           path="/home"
           element={
@@ -70,52 +70,69 @@ function App() {
             </MainLayout>
           }
         />
+        {/* <Route path="/chat-bot" element={< HealthChat />} /> */}
 
+        <Route
+          path="/chat-bot"
+          element={
+            authStatus === false ? (
+              <Navigate to="/login" replace />
+            ) : (
+              <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen}>
+                <HealthChat />
+              </MainLayout>
+            )
+          }
+        />
         <Route
           path="/dose-tracker"
           element={
-            <MainLayout
-              sidebarOpen={sidebarOpen}
-              setSidebarOpen={setSidebarOpen}
-            >
-              <DoseTrackerPage />
-            </MainLayout>
+            authStatus === false ? (
+              <Navigate to="/login" replace />
+            ) : (
+              <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen}>
+                <DoseTrackerPage />
+              </MainLayout>
+            )
           }
         />
 
         <Route
           path="/medicine-form"
           element={
-            <MainLayout
-              sidebarOpen={sidebarOpen}
-              setSidebarOpen={setSidebarOpen}
-            >
-              <MedicineForm />
-            </MainLayout>
+            authStatus === false ? (
+              <Navigate to="/login" replace />
+            ) : (
+              <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen}>
+                <MedicineForm />
+              </MainLayout>
+            )
           }
         />
 
         <Route
           path="/myMedicines"
           element={
-            <MainLayout
-              sidebarOpen={sidebarOpen}
-              setSidebarOpen={setSidebarOpen}
-            >
-              <MyMedicines />
-            </MainLayout>
+            authStatus === false ? (
+              <Navigate to="/login" replace />
+            ) : (
+              <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen}>
+                <MyMedicines />
+              </MainLayout>
+            )
           }
         />
 
         <Route
           path="/dashboard"
           element={
-            <MainLayout
-              sidebarOpen={sidebarOpen}
-              setSidebarOpen={setSidebarOpen}
-            >
-              <Dashboard />
-            </MainLayout>
+            authStatus === false ? (
+              <Navigate to="/login" replace />
+            ) : (
+              <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen}>
+                <Dashboard />
+              </MainLayout>
+            )
           }
         />
         <Route
@@ -166,6 +183,16 @@ function App() {
         />
 
         <Route path="/edit-medicine/:id" element={<EditMedicine />} />
+        <Route
+          path="/edit-medicine/:id"
+          element={
+            authStatus === false ? (
+              <Navigate to="/login" replace />
+            ) : (
+              <EditMedicine />
+            )
+          }
+        />
         {/* Fallback: render home inside MainLayout for any unmatched /app paths */}
         <Route
           path="/app/*"

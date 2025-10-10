@@ -25,6 +25,10 @@ const medicineSchema = new mongoose.Schema(
       type: [String], // Example: ["08:00", "14:00", "20:00"]
       required: true,
     },
+    timezone: {
+      type: String,
+      default: null,
+    },
     startDate: {
       type: Date,
       required: true,

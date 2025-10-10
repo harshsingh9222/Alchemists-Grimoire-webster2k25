@@ -33,12 +33,14 @@ export const userSignup = async (formData) => request('/auth/register', 'POST', 
 export const userLogin = async (formData) => request('/auth/login', 'POST', formData, false);
 export const addMedicines = async (formData) => request('/medicines/addMedicines', 'POST', formData, false);
 export const fetchMedicines = async () => request('/medicines/fetchMedicines', 'GET');
-export const googleAuth = async (code, requireOtp = false) => request(`/auth/google?code=${encodeURIComponent(code)}${requireOtp ? '&requireOtp=true' : ''}`, 'GET');
+export const googleAuth = async (code) => request(`/auth/google?code=${encodeURIComponent(code)}`, 'GET');
 export const adminLogin = async (credentials) => request('/auth/admin/login', 'POST', credentials);
 export const userLogout = async () => request('/auth/logout', 'POST');
 export const adminSignup = async (formData) => request('/auth/admin/signup', 'POST', formData, true);
 export const sendOTP = async (email) => request('/auth/send-otp', 'POST', { email });
-export const verifyOTP = async (email, otp) => request('/auth/verify-otp', 'POST', { email, otp });
+// verifyOTP now accepts optional extra fields (e.g. createWithPassword, username, password)
+export const verifyOTP = async (email, otp, extra = {}) => request('/auth/verify-otp', 'POST', { email, otp, ...extra });
+export const resendOTP = async (email) => request('/auth/resend-otp', 'POST', { email });
 export const uploadFile = async (formData) => request('/upload', 'POST', formData, true);
 export const getUserProfile = async () => request('/user/profile', 'GET');
 export const deleteMedicine = async (id) => {
@@ -66,6 +68,8 @@ export const fetchDoseSummary = async (date) => {
   const dateStr = date.toISOString().split('T')[0];
   return request(`/doses/summary?date=${dateStr}`, 'GET');
 };
+
+export const fetchUpcomingRisks = async () => request('/doses/upcoming-risks', 'GET');
 
 
 // 💬 AI Health Chatbot APIs

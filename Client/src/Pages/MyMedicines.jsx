@@ -55,8 +55,13 @@ const MyMedicines = () => {
                     {med.dosage} • {med.frequency}
                   </div>
                   <div className="text-sm text-gray-400">
-                    {med.startDate} → {med.endDate || "Ongoing"}
+                    {med.startDate ? new Date(med.startDate).toLocaleDateString() : ''} → {med.endDate ? new Date(med.endDate).toLocaleDateString() : 'Ongoing'}
                   </div>
+                  {med.timezone && (
+                    <div className="mt-1 inline-block rounded-full bg-indigo-700/60 px-3 py-1 text-xs text-indigo-100">
+                      TZ: {med.timezone}
+                    </div>
+                  )}
                   {med.notes && (
                     <p className="text-gray-400 mt-2 italic">💬 {med.notes}</p>
                   )}

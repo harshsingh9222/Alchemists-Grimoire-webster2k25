@@ -39,6 +39,8 @@ import {
 } from 'recharts';
 import useGetDashboardData from '../../Hooks/useGetDashboardData.js';
 import { dashboardService } from '../../Services/dashboardServices.js';
+import { useToast } from '../../Components/Toast/ToastProvider.jsx';
+import { isNowWithinWindow } from '../../Utils/time.helper';
 
 // Loading Skeleton for cards
 const LoadingSkeleton = ({ className = "" }) => (
@@ -374,13 +376,15 @@ const DashboardSkeleton = () => (
 // Main Dashboard Component
 const AlchemistDashboard = () => {
   const [selectedTimeRange, setSelectedTimeRange] = useState('week');
+  const { showToast } = useToast();
 
   // Safe Redux selection to avoid undefined errors
   const dispatch = useDispatch();
   const dashboardState = useSelector((s) => s.dashboard) || {};
+  console.log("DashboardState:",dashboardState)
 
   // Enhanced data fetching with error handling
-  const { isInitialLoad, refetch, refreshAdherence, refreshWellness, refreshUpcoming, refreshInsights } = useGetDashboardData({ 
+  const { isInitialLoad, refetch, refreshAdherence, refreshWellness, refreshUpcoming, refreshInsights, refreshEffectiveness } = useGetDashboardData({ 
     timeRange: selectedTimeRange,
     refreshInterval: 5 * 60 * 1000 // 5 minutes auto-refresh
   });
@@ -457,7 +461,8 @@ const AlchemistDashboard = () => {
   const wellnessData = dashboardState?.wellness?.data || fallbackData.wellness;
   const upcomingData = dashboardState?.upcoming?.data || fallbackData.upcoming;
   const insightsData = dashboardState?.insights?.data || fallbackData.insights;
-  const potionEffectivenessData = fallbackData.effectiveness;
+  // Use backend effectiveness when available
+  const potionEffectivenessData = dashboardState?.effectiveness?.data?.potions || fallbackData.effectiveness;
 
   // Loading states
   const adherenceLoading = dashboardState?.adherence?.loading || false;
@@ -479,6 +484,31 @@ const AlchemistDashboard = () => {
   const radarData = wellnessData?.radarData ?? fallbackData.wellness.radarData;
   const chartData = adherenceData?.chartData ?? fallbackData.adherence.chartData;
 
+  // console.log('Overall Adherence:', overallAdherence);
+  // console.log('wellnessScore:', wellnessScore);
+  
+  // Log only UI-relevant fields (no internal IDs/timestamps or raw objects)
+  const uiAdherence = {
+    overallAdherence,
+    chartData: (chartData || []).map(({ day, taken, missed }) => ({ day, taken, missed }))
+  };
+  const uiWellness = {
+    wellnessScore,
+    radarData: (radarData || []).map(({ aspect, score }) => ({ aspect, score }))
+  };
+  const uiUpcoming = (upcomingDosesData || []).map(({ id, name, time, color }) => ({ id, name, time, color }));
+  const uiInsights = (insightsData?.insights || []).map(({ type, title, message }) => ({ type, title, message }));
+  const uiEffectiveness = (potionEffectivenessData || []).map(({ potion, effectiveness }) => ({ potion, effectiveness }));
+
+  console.log('UI Data:', {
+    adherence: uiAdherence,
+    wellness: uiWellness,
+    upcoming: uiUpcoming,
+    insights: uiInsights,
+    effectiveness: uiEffectiveness
+  });
+
+
   // Pie data from adherence
   const pieData = [
     { name: 'Taken', value: Math.round(overallAdherence), color: '#a78bfa' },
@@ -490,7 +520,7 @@ const AlchemistDashboard = () => {
     try {
       await dashboardService.recordDose({
         medicineId: dose.medicineId || null,
-        scheduledTime: new Date().toISOString(),
+        scheduledTime: dose.scheduledTime || new Date().toISOString(),
         actualTime: new Date().toISOString(),
         status: 'taken',
         notes: 'Marked from dashboard'
@@ -499,6 +529,11 @@ const AlchemistDashboard = () => {
       refetch();
     } catch (error) {
       console.error('Failed to record dose:', error);
+      if (error?.response?.status === 403 || (error?.message && error.message.includes('Too early to mark'))) {
+        showToast('Too early to mark this dose as taken. You can take it starting 15 minutes before scheduled time.', 'error');
+      } else {
+        showToast('Failed to record dose. Please try again.', 'error');
+      }
       // Could show toast notification here
     }
   };
@@ -731,6 +766,9 @@ const AlchemistDashboard = () => {
               {upcomingDosesData.map((dose) => {
                 const DoseIcon = dose.icon || Sun;
                 const color = dose.color || 'yellow';
+                // determine scheduled Date if available
+                const scheduled = dose.scheduledTime ? dose.scheduledTime : null;
+                const canTake = scheduled ? isNowWithinWindow(scheduled, 15) : false;
                 return (
                   <div
                     key={dose.id}
@@ -746,8 +784,14 @@ const AlchemistDashboard = () => {
                       </div>
                     </div>
                     <button
-                      onClick={() => handleTake(dose)}
-                      className="px-3 py-1 bg-purple-500/20 hover:bg-purple-500/30 rounded-lg text-purple-300 text-xs font-medium transition-colors"
+                      onClick={() => handleTake({ ...dose, scheduledTime: scheduled ? scheduled.toISOString() : new Date().toISOString() })}
+                      disabled={!canTake}
+                      title={!canTake ? 'You can take this dose starting 15 minutes before its scheduled time' : 'Take'}
+                      className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors ${
+                        !canTake
+                          ? 'bg-gray-700/40 text-gray-300 cursor-not-allowed'
+                          : 'bg-purple-500/20 hover:bg-purple-500/30 text-purple-300'
+                      }`}
                     >
                       Take
                     </button>

@@ -53,6 +53,12 @@ const userSchema = new mongoose.Schema({
     default: false,
     index: true
   },
+  // Has the user's email been confirmed (useful to distinguish email verification from onboarding)
+  emailConfirmed: {
+    type: Boolean,
+    default: false,
+    index: true
+  },
   // i had added the character feild
   character: { 
     type: String, 
