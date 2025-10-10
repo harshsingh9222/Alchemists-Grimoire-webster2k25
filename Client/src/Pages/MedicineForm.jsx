@@ -8,9 +8,11 @@ const MedicineForm = () => {
   const { userData } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const location = useLocation(); // 👈 read AI suggestion data
+  const location = useLocation();
   const suggestion = location.state?.suggestion || null;
- 
+
+  const today = new Date().toISOString().split("T")[0]; // ✅ Today’s date in YYYY-MM-DD
+
   const [formData, setFormData] = useState({
     medicineName: "",
     dosage: "",
@@ -24,7 +26,6 @@ const MedicineForm = () => {
 
   const [timezones, setTimezones] = useState([]);
   const [customTz, setCustomTz] = useState("");
-
 
   useEffect(() => {
     if (suggestion) {
@@ -72,7 +73,7 @@ const MedicineForm = () => {
     setFormData({ ...formData, [name]: value });
   };
 
-  // ✅ Round entered time to nearest 15 minutes
+  // Round entered time to nearest 15 minutes
   const roundToNearest15 = (timeString) => {
     const [hours, minutes] = timeString.split(":").map(Number);
     const totalMinutes = hours * 60 + minutes;
@@ -99,6 +100,37 @@ const MedicineForm = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // ✅ Validation for start and end date
+    const now = new Date();
+    const todayDateStr = now.toISOString().split("T")[0]; // YYYY-MM-DD
+
+    // ✅ Validation for start and end date
+    if (new Date(formData.startDate) < new Date(todayDateStr)) {
+      alert("Start date cannot be in the past");
+      return;
+    }
+    if (
+      formData.endDate &&
+      new Date(formData.endDate) < new Date(formData.startDate)
+    ) {
+      alert("End date cannot be before start date");
+      return;
+    }
+
+    // ✅ Extra validation: if start date is today, times cannot be before current time
+    if (formData.startDate === todayDateStr) {
+      for (let timeStr of formData.times) {
+        const [hours, minutes] = timeStr.split(":").map(Number);
+        const timeDate = new Date();
+        timeDate.setHours(hours, minutes, 0, 0);
+        if (timeDate < now) {
+          alert(`Selected time ${timeStr} cannot be in the past for today`);
+          return;
+        }
+      }
+    }
+
     try {
       const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
       const payload = { ...formData, timezone: tz };
@@ -162,7 +194,7 @@ const MedicineForm = () => {
           <input
             key={i}
             type="time"
-            step="900" // 15-minute intervals
+            step="900"
             value={time}
             onChange={(e) => handleTimeChange(i, e.target.value)}
             required
@@ -185,6 +217,7 @@ const MedicineForm = () => {
           value={formData.startDate}
           onChange={handleChange}
           required
+          min={today} // ✅ Prevent past dates
           className="w-full mb-4 p-3 rounded-lg bg-white/10 border border-white/20 text-white focus:outline-none focus:ring-2 focus:ring-pink-500"
         />
 
@@ -229,6 +262,7 @@ const MedicineForm = () => {
           name="endDate"
           value={formData.endDate}
           onChange={handleChange}
+          min={formData.startDate || today} // ✅ Cannot select before startDate
           className="w-full mb-4 p-3 rounded-lg bg-white/10 border border-white/20 text-white focus:outline-none focus:ring-2 focus:ring-pink-500"
         />
 

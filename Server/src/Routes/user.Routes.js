@@ -13,6 +13,7 @@ import {
   getGoogleClientInfo,
   getCalendarEventsForMonth,
   updateCharacter,
+  getCount,
 } from '../Controllers/user.Controllers.js';
 import { upload } from '../Middlewares/multer.Middleware.js';
 import {upload_cloud} from "../Middlewares/cloudinary_multer.middleware.js"
@@ -59,5 +60,7 @@ router.get('/google-client-info', getGoogleClientInfo);
 
 // Fetch calendar events for a given month (requires authentication)
 router.get('/calendar', verifyJWT, getCalendarEventsForMonth);
+
+router.route('/count').get(verifyJWT,getCount);
 
 export default router;

@@ -97,3 +97,8 @@ export const fetchCatalog = async () => {
 export const getAISuggestion = async (feeling) => {
   return request('/catalog/suggest', 'POST', { feeling });
 };
+
+// ✅ Get total user count (performers saved)
+export const fetchUserCount = async () => {
+  return request("/auth/count", "GET");
+};

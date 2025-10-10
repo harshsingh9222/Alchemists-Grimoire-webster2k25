@@ -10,7 +10,7 @@ import crypto from 'crypto'
 import oauth2Client from "../Utils/googleConfig.js"
 import axios from "axios"
 import { createCalendarEventForUser } from '../Utils/googleCalendar.js'
-
+import DoseLog from "../Models/doseLogModel.js";
 const options = {
     httpOnly: true,
     secure: true
@@ -667,5 +667,27 @@ export const updateCharacter = async (req, res) => {
   }
 };
 
+// to get the count of all the users
 
+export const getCount = async (req, res) => {
+  try {
+    // ✅ Count all users
+    const totalUsers = await User.countDocuments();
+
+    // ✅ Count all dose logs
+    const totalDoses = await DoseLog.countDocuments();
+
+    res.status(200).json({
+      success: true,
+      totalUsers,
+      totalDoses,
+    });
+  } catch (error) {
+    console.error("Error fetching counts:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch counts",
+    });
+  }
+};
 
