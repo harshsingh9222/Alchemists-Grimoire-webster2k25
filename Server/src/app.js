@@ -9,11 +9,13 @@ import wellnessRoutes from './Routes/wellness.Routes.js';
 import doseRoutes from './Routes/dose.Route.js';
 import charRoutes from './Routes/chatRoute.js';
 import catalogRoute from './Routes/catalogRoute.js';
+import dotenv from 'dotenv';
+dotenv.config();
 const app = express();
 
 // Middleware
 app.use(cors({
-  origin: "http://localhost:5173",
+  origin: process.env.CORS_ORIGIN,
   credentials: true,
 }));
 
