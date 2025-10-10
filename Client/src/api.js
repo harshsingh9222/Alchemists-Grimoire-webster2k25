@@ -70,6 +70,7 @@ export const fetchDoseSummary = async (date) => {
 };
 
 export const fetchUpcomingRisks = async () => request('/doses/upcoming-risks', 'GET');
+export const remindRiskAgain = async (doseLogId) => request('/doses/risks/remind-again', 'POST', { doseLogId });
 
 
 // 💬 AI Health Chatbot APIs

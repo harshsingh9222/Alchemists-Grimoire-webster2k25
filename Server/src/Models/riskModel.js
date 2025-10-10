@@ -20,6 +20,16 @@ const riskSchema = new mongoose.Schema({
     type: Object,
     required: true,
   },
+  // Indicates whether a notification/action based on this risk was sent
+  sent: {
+    type: Boolean,
+    default: false,
+  },
+  // Timestamp of when the notification/action was sent
+  timeAtWhichSent: {
+    type: Date,
+    default: null,
+  },
   createdAt: {
     type: Date,
     default: Date.now,
