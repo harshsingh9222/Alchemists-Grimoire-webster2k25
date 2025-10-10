@@ -1,10 +1,20 @@
 "use client"
 import { Link, useLocation } from "react-router-dom"
 import { useSelector } from 'react-redux'
-import { Home, User, Calendar, Mail, X } from 'lucide-react'
+import {
+  Home,
+  User,
+  Calendar,
+  Info,
+  X,
+  Pill,
+  ClipboardCheck,
+  MessageSquare,
+  BookOpen,
+} from "lucide-react";
 // ...existing code...
 import PropTypes from "prop-types";
-import { MessageSquare } from "lucide-react";
+
 
 
 const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
@@ -13,13 +23,13 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
 
   const sidebarItems = [
     { name: "Dashboard", path: "/dashboard", icon: Home },
-    { name: "About", path: "/about", icon: User },
-    { name: "Profile", path: "/profile", icon: Mail },
+    { name: "About", path: "/about", icon: Info },
+    { name: "Profile", path: "/profile", icon: User },
     { name: "Calendar", path: "/calendar", icon: Calendar },
-    { name: "MEDS", path: "/medicine-form", icon: Calendar },
-    { name: "Dose Tracker", path: "/dose-tracker", icon: Calendar },
+    { name: "MEDS", path: "/medicine-form", icon: Pill },
+    { name: "Dose Tracker", path: "/dose-tracker", icon: ClipboardCheck },
     { name: "Chatty Chat", path: "/chat-bot", icon: MessageSquare },
-    { name: "Catalog", path: "/catalog", icon: Mail }
+    { name: "Catalog", path: "/catalog", icon: BookOpen },
   ];
 
   return (
