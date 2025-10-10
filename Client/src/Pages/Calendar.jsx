@@ -213,65 +213,115 @@ const CalendarPage = () => {
                 No events for this month.
               </p>
             ) : (
-              // Month grid with subtle glass effect
-              <div className="grid grid-cols-7 gap-4 bg-gray-800 bg-opacity-30 p-4 rounded-lg shadow-inner">
-                {generateMonthGrid(year, month).map((cell) => (
-                  <div
-                    key={cell.key}
-                    className={`relative p-3 border rounded min-h-[80px] transition-shadow duration-150
-                      ${
-                        cell.isCurrentMonth
-                          ? "bg-gray-800 bg-opacity-60 shadow-inner"
-                          : "bg-gray-700 text-gray-400 opacity-80"
-                      }
-                      hover:shadow-lg`}
-                  >
-                    <div className="flex items-start justify-between">
-                      <div className="text-xs font-semibold text-white">
-                        {cell.label}
+              <>
+                {/* Desktop / tablet grid */}
+                <div className="hidden md:grid grid-cols-7 gap-4 bg-gray-800 bg-opacity-30 p-4 rounded-lg shadow-inner">
+                  {generateMonthGrid(year, month).map((cell) => (
+                    <div
+                      key={cell.key}
+                      className={`relative p-3 border rounded min-h-[80px] transition-shadow duration-150
+                        ${
+                          cell.isCurrentMonth
+                            ? "bg-gray-800 bg-opacity-60 shadow-inner"
+                            : "bg-gray-700 text-gray-400 opacity-80"
+                        }
+                        hover:shadow-lg`}
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="text-xs font-semibold text-white">
+                          {cell.label}
+                        </div>
+                      </div>
+                      <div className="mt-2 text-xs space-y-1">
+                        {(() => {
+                          const dayEvents =
+                            eventsForDate(events, cell.date) || [];
+                          const MAX = 3;
+                          const visible = dayEvents.slice(0, MAX);
+                          return (
+                            <>
+                              {visible.map((ev) => (
+                                <button
+                                  key={ev.id}
+                                  onClick={() => setSelectedEvent(ev)}
+                                  className="w-full text-left block rounded px-1 py-0.5 hover:bg-indigo-700/20"
+                                  title={ev.summary || ""}
+                                >
+                                  <div className="text-xs text-purple-300 truncate">
+                                    {ev.summary || "(No title)"}
+                                  </div>
+                                  <div className="text-[11px] text-gray-300">
+                                    {formatEventTime(ev)}
+                                  </div>
+                                </button>
+                              ))}
+                              {dayEvents.length > MAX && (
+                                <button
+                                  onClick={() => {
+                                    setSelectedDateEvents(dayEvents);
+                                    setShowDateListModal(true);
+                                  }}
+                                  className="w-full text-left mt-1 text-[11px] text-indigo-200 hover:text-white font-medium"
+                                >
+                                  View {dayEvents.length - MAX} more
+                                </button>
+                              )}
+                            </>
+                          );
+                        })()}
                       </div>
                     </div>
-                    <div className="mt-2 text-xs space-y-1">
-                      {(() => {
-                        const dayEvents =
-                          eventsForDate(events, cell.date) || [];
-                        const MAX = 3;
-                        const visible = dayEvents.slice(0, MAX);
-                        return (
-                          <>
-                            {visible.map((ev) => (
-                              <button
-                                key={ev.id}
-                                onClick={() => setSelectedEvent(ev)}
-                                className="w-full text-left block rounded px-1 py-0.5 hover:bg-indigo-700/20"
-                                title={ev.summary || ""}
-                              >
-                                <div className="text-xs text-purple-300 truncate">
-                                  {ev.summary || "(No title)"}
-                                </div>
-                                <div className="text-[11px] text-gray-300">
-                                  {formatEventTime(ev)}
-                                </div>
-                              </button>
-                            ))}
-                            {dayEvents.length > MAX && (
-                              <button
-                                onClick={() => {
-                                  setSelectedDateEvents(dayEvents);
-                                  setShowDateListModal(true);
-                                }}
-                                className="w-full text-left mt-1 text-[11px] text-indigo-200 hover:text-white font-medium"
-                              >
-                                View {dayEvents.length - MAX} more
-                              </button>
-                            )}
-                          </>
-                        );
-                      })()}
+                  ))}
+                </div>
+
+                {/* Mobile: stacked vertical list of days */}
+                <div className="md:hidden space-y-3">
+                  {generateMonthGrid(year, month).map((cell) => (
+                    <div
+                      key={cell.key}
+                      className={`p-3 rounded-lg border ${
+                        cell.isCurrentMonth
+                          ? "bg-gray-800 bg-opacity-60"
+                          : "bg-gray-700 text-gray-400 opacity-80"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="text-sm font-semibold">
+                          {cell.label}
+                        </div>
+                        <div className="text-xs text-gray-300">
+                          {cell.date.toLocaleDateString()}
+                        </div>
+                      </div>
+                      <div className="mt-2 space-y-2">
+                        {(() => {
+                          const dayEvents =
+                            eventsForDate(events, cell.date) || [];
+                          if (!dayEvents.length)
+                            return (
+                              <div className="text-sm text-gray-400">
+                                No events
+                              </div>
+                            );
+                          return dayEvents.map((ev) => (
+                            <div
+                              key={ev.id}
+                              className="p-2 bg-gray-800 rounded hover:bg-indigo-700/20"
+                            >
+                              <div className="text-sm font-medium text-purple-300 truncate">
+                                {ev.summary || "(No title)"}
+                              </div>
+                              <div className="text-xs text-gray-300">
+                                {formatEventTime(ev)}
+                              </div>
+                            </div>
+                          ));
+                        })()}
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              </>
             )}
           </div>
         )}
