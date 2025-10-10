@@ -1,6 +1,6 @@
 import React from 'react';
 import AlchemistDashboard from '../Components/dashboard/AlchemistDashboard.jsx';
-import { MagicalBackground } from '../Components/magical/Theme component.jsx';
+import { MagicalBackground } from '../Components/magical/Themecomponent.jsx';
 
 const Dashboard = () => {
   return (
