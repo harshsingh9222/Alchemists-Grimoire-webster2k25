@@ -20,11 +20,11 @@ import About from './Pages/About.jsx';
 import HealthChat from './Pages/ChatBotPage.jsx';
 import ProfilePage from './Pages/Profile.jsx';
 import CatalogPage from './Pages/catalogPage.jsx';
+import Notifications from './Pages/Notifications.jsx';
 
 function App() {
   const dispatch = useDispatch();
   const authStatus = useSelector(state => state.auth.status);
-  const userData = useSelector(state => state.auth.userData);
   const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -58,7 +58,7 @@ function App() {
         <Route path="/about" element={<About />} />
         <Route path="/chat-bot" element={<HealthChat />} />
 
-        /* App routes wrapped with MainLayout so Navbar/Sidebar/Footer appear */
+  {/* App routes wrapped with MainLayout so Navbar/Sidebar/Footer appear */}
         <Route
           path="/home"
           element={
@@ -157,6 +157,19 @@ function App() {
             >
               <ProfilePage />
             </MainLayout>
+          }
+        />
+
+        <Route
+          path="/notifications"
+          element={
+            authStatus === false ? (
+              <Navigate to="/login" replace />
+            ) : (
+              <MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen}>
+                <Notifications />
+              </MainLayout>
+            )
           }
         />
 
