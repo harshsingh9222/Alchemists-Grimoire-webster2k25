@@ -231,16 +231,7 @@ const MagicalCard = ({
 };
 
 // Reusable Stats Orb Component with loading state
-const StatsOrb = ({
-  value,
-  label,
-  icon: Icon,
-  color = "purple",
-  trend,
-  loading = false,
-  error = null,
-  onRetry,
-}) => {
+const StatsOrb = ({ value, label, icon: Icon, color = 'purple', trend, loading = false, error = null, onRetry }) => {
   if (loading) {
     return (
       <div className="relative group cursor-pointer">
@@ -282,55 +273,55 @@ const StatsOrb = ({
 
   const colorMap = {
     purple: {
-      gradientFrom: "from-purple-500",
-      gradientTo: "to-purple-600",
-      bgFrom: "from-purple-900/80",
-      bgTo: "to-purple-950/90",
-      border: "border-purple-500/50",
-      icon: "text-purple-400",
-      textFrom: "from-purple-300",
-      textTo: "to-purple-100",
+      gradientFrom: 'from-purple-500',
+      gradientTo: 'to-purple-600',
+      bgFrom: 'from-purple-900/80',
+      bgTo: 'to-purple-950/90',
+      border: 'border-purple-500/50',
+      icon: 'text-purple-400',
+      textFrom: 'from-purple-300',
+      textTo: 'to-purple-100'
     },
     pink: {
-      gradientFrom: "from-pink-500",
-      gradientTo: "to-pink-600",
-      bgFrom: "from-pink-900/80",
-      bgTo: "to-pink-950/90",
-      border: "border-pink-500/50",
-      icon: "text-pink-400",
-      textFrom: "from-pink-300",
-      textTo: "to-pink-100",
+      gradientFrom: 'from-pink-500',
+      gradientTo: 'to-pink-600',
+      bgFrom: 'from-pink-900/80',
+      bgTo: 'to-pink-950/90',
+      border: 'border-pink-500/50',
+      icon: 'text-pink-400',
+      textFrom: 'from-pink-300',
+      textTo: 'to-pink-100'
     },
     green: {
-      gradientFrom: "from-green-500",
-      gradientTo: "to-green-600",
-      bgFrom: "from-green-900/80",
-      bgTo: "to-green-950/90",
-      border: "border-green-500/50",
-      icon: "text-green-400",
-      textFrom: "from-green-300",
-      textTo: "to-green-100",
+      gradientFrom: 'from-green-500',
+      gradientTo: 'to-green-600',
+      bgFrom: 'from-green-900/80',
+      bgTo: 'to-green-950/90',
+      border: 'border-green-500/50',
+      icon: 'text-green-400',
+      textFrom: 'from-green-300',
+      textTo: 'to-green-100'
     },
     yellow: {
-      gradientFrom: "from-yellow-500",
-      gradientTo: "to-yellow-600",
-      bgFrom: "from-yellow-900/80",
-      bgTo: "to-yellow-950/90",
-      border: "border-yellow-500/50",
-      icon: "text-yellow-400",
-      textFrom: "from-yellow-300",
-      textTo: "to-yellow-100",
+      gradientFrom: 'from-yellow-500',
+      gradientTo: 'to-yellow-600',
+      bgFrom: 'from-yellow-900/80',
+      bgTo: 'to-yellow-950/90',
+      border: 'border-yellow-500/50',
+      icon: 'text-yellow-400',
+      textFrom: 'from-yellow-300',
+      textTo: 'to-yellow-100'
     },
     blue: {
-      gradientFrom: "from-blue-500",
-      gradientTo: "to-blue-600",
-      bgFrom: "from-blue-900/80",
-      bgTo: "to-blue-950/90",
-      border: "border-blue-500/50",
-      icon: "text-blue-400",
-      textFrom: "from-blue-300",
-      textTo: "to-blue-100",
-    },
+      gradientFrom: 'from-blue-500',
+      gradientTo: 'to-blue-600',
+      bgFrom: 'from-blue-900/80',
+      bgTo: 'to-blue-950/90',
+      border: 'border-blue-500/50',
+      icon: 'text-blue-400',
+      textFrom: 'from-blue-300',
+      textTo: 'to-blue-100'
+    }
   };
 
   const c = colorMap[color] || colorMap.purple;
@@ -355,15 +346,11 @@ const StatsOrb = ({
             {value}
           </div>
 
-          <div className="text-xs text-center text-purple-300/70 mt-1">
-            {label}
-          </div>
+          <div className="text-xs text-center text-purple-300/70 mt-1">{label}</div>
 
-          {typeof trend === "number" && (
+          {typeof trend === 'number' && (
             <div
-              className={`absolute -top-2 -right-2 px-2 py-1 ${
-                trend > 0 ? "bg-green-500" : "bg-red-500"
-              } rounded-full text-xs text-white font-bold`}
+              className={`absolute -top-2 -right-2 px-2 py-1 ${trend > 0 ? 'bg-green-500' : 'bg-red-500'} rounded-full text-xs text-white font-bold`}
             >
               {trend > 0 ? "+" : ""}
               {trend}%
@@ -485,14 +472,7 @@ const AlchemistDashboard = () => {
   console.log("DashboardState:", dashboardState);
 
   // Enhanced data fetching with error handling
-  const {
-    isInitialLoad,
-    refetch,
-    refreshAdherence,
-    refreshWellness,
-    refreshUpcoming,
-    refreshInsights,
-  } = useGetDashboardData({
+  const { isInitialLoad, refetch, refreshAdherence, refreshWellness, refreshUpcoming, refreshInsights } = useGetDashboardData({ 
     timeRange: selectedTimeRange,
     refreshInterval: 5 * 60 * 1000, // 5 minutes auto-refresh
   });
@@ -611,31 +591,22 @@ const AlchemistDashboard = () => {
   const insightsError = dashboardState?.insights?.error || null;
 
   // Computed values for UI
-  const overallAdherence =
-    adherenceData?.overallAdherence ?? fallbackData.adherence.overallAdherence;
-  const wellnessScore =
-    wellnessData?.currentScore ?? fallbackData.wellness.currentScore;
-  const totalTaken =
-    adherenceData?.totalTaken ?? fallbackData.adherence.totalTaken;
+  const overallAdherence = adherenceData?.overallAdherence ?? fallbackData.adherence.overallAdherence;
+  const wellnessScore = wellnessData?.currentScore ?? fallbackData.wellness.currentScore;
+  const totalTaken = adherenceData?.totalTaken ?? fallbackData.adherence.totalTaken;
   const statisticsData = dashboardState?.statistics?.data || null;
   // Backend now returns grouped upcomingMedicines (one per medicine) and upcomingDoses/upcomingDosesAll.
   // Prefer upcomingMedicines for the dashboard list. Keep fallback to older upcomingDoses for compatibility.
-  const upcomingDosesData =
-    upcomingData?.upcomingMedicines ??
-    upcomingData?.upcomingDoses ??
-    fallbackData.upcoming.upcomingDoses;
+  const upcomingDosesData = upcomingData?.upcomingMedicines ?? upcomingData?.upcomingDoses ?? fallbackData.upcoming.upcomingDoses;
   // Also get the full list of upcoming dose instances for today (used to compute currently active potions)
-  const upcomingDosesAll =
-    upcomingData?.upcomingDosesAll ??
-    upcomingData?.upcomingDoses ??
-    fallbackData.upcoming.upcomingDoses;
+  const upcomingDosesAll = upcomingData?.upcomingDosesAll ?? upcomingData?.upcomingDoses ?? fallbackData.upcoming.upcomingDoses;
   // Count doses for which the "Take" button would be enabled (same rules as TodayDoses):
   // - exclude doses already taken or missed
   // - if scheduledTime is missing, allow taking
   // - otherwise allow when isNowWithinWindow(scheduled, 15)
   const activeFromUpcoming = (upcomingDosesAll || []).filter((d) => {
-    const isComplete = d.status === "taken";
-    const isMissed = d.status === "missed";
+    const isComplete = d.status === 'taken';
+    const isMissed = d.status === 'missed';
     if (isComplete || isMissed) return false;
     const scheduled = d.scheduledTime ? new Date(d.scheduledTime) : null;
     if (!scheduled) return true;
@@ -645,7 +616,7 @@ const AlchemistDashboard = () => {
   const activePotionsCount = activeFromUpcoming;
   // Debug: log the raw upcoming payload to verify backend shape
   useEffect(() => {
-    console.log("DEBUG upcoming payload from backend:", upcomingData);
+    console.log('DEBUG upcoming payload from backend:', upcomingData);
   }, [upcomingData]);
   const radarData = wellnessData?.radarData ?? fallbackData.wellness.radarData;
   const chartData =
@@ -979,17 +950,11 @@ const AlchemistDashboard = () => {
               {upcomingDosesData.map((dose) => {
                 // server now sends an iconName string; map it to an imported component
                 const iconMap = { Sun, Moon, Zap };
-                const DoseIcon = dose.iconName
-                  ? iconMap[dose.iconName] || Sun
-                  : dose.icon || Sun;
-                const color = dose.color || "yellow";
+                const DoseIcon = dose.iconName ? (iconMap[dose.iconName] || Sun) : (dose.icon || Sun);
+                const color = dose.color || 'yellow';
                 // determine scheduled Date if available and normalize to Date object
-                const scheduled = dose.scheduledTime
-                  ? new Date(dose.scheduledTime)
-                  : null;
-                const canTake = scheduled
-                  ? isNowWithinWindow(scheduled, 15)
-                  : false;
+                const scheduled = dose.scheduledTime ? new Date(dose.scheduledTime) : null;
+                const canTake = scheduled ? isNowWithinWindow(scheduled, 15) : false;
                 return (
                   <div
                     key={dose.id}
@@ -1010,9 +975,7 @@ const AlchemistDashboard = () => {
                     </div>
                     <button
                       onClick={() => {
-                        const scheduledIso = scheduled
-                          ? scheduled.toISOString()
-                          : new Date().toISOString();
+                        const scheduledIso = scheduled ? scheduled.toISOString() : new Date().toISOString();
                         handleTake({ ...dose, scheduledTime: scheduledIso });
                       }}
                       disabled={!canTake}
