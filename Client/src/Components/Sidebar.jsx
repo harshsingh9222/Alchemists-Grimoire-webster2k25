@@ -23,6 +23,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
 
   const sidebarItems = [
     { name: "Dashboard", path: "/dashboard", icon: Home },
+    { name: "Notifications", path: "/notifications", icon: MessageSquare },
     { name: "About", path: "/about", icon: Info },
     { name: "Profile", path: "/profile", icon: User },
     { name: "Calendar", path: "/calendar", icon: Calendar },

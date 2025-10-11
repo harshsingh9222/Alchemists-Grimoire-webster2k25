@@ -69,6 +69,15 @@ export const fetchDoseSummary = async (date) => {
   return request(`/doses/summary?date=${dateStr}`, 'GET');
 };
 
+export const fetchNotificationsForDate = async (date) => {
+  const dateStr = date.toISOString().split('T')[0];
+  return request(`/notifications?date=${dateStr}`, 'GET');
+};
+
+export const markNotificationsRead = async (ids = []) => request('/notifications/mark-read', 'POST', { ids });
+export const acknowledgeNotification = async (id) => request('/notifications/ack', 'POST', { id });
+export const convertDoseLogToNotification = async (doseLogId) => request('/notifications/convert', 'POST', { doseLogId });
+
 export const fetchUpcomingRisks = async () => request('/doses/upcoming-risks', 'GET');
 export const remindRiskAgain = async (doseLogId) => request('/doses/risks/remind-again', 'POST', { doseLogId });
 
