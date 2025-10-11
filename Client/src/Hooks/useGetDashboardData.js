@@ -6,6 +6,7 @@ import {
   updateAdherenceData,
   updateWellnessData,
   updateUpcomingDoses,
+  updateStatistics,
   updateInsights,
   updateEffectiveness
 } from '../Store/dashboardSlice';
@@ -32,13 +33,14 @@ const useGetDashboardData = (options = {}) => {
       // Fetch all dashboard data concurrently
       const results = await Promise.allSettled([
         dashboardService.getAdherenceData(timeRange),
-        dashboardService.getWellnessScore(),
+        dashboardService.getWellnessScore(timeRange),
         dashboardService.getUpcomingDoses(),
         dashboardService.getInsights(),
-        dashboardService.getPotionEffectiveness(timeRange)
+        dashboardService.getPotionEffectiveness(timeRange),
+        dashboardService.getStatistics(timeRange)
       ]);
 
-      const [adherence, wellness, upcoming, insights, effectiveness] = results;
+      const [adherence, wellness, upcoming, insights, effectiveness, statistics] = results;
 
       // Process adherence data
       if (adherence.status === 'fulfilled') {
@@ -78,6 +80,13 @@ const useGetDashboardData = (options = {}) => {
           section: 'insights', 
           error: insights.reason?.message || 'Failed to fetch insights' 
         }));
+      }
+
+      // Process statistics
+      if (statistics && statistics.status === 'fulfilled') {
+        dispatch(updateStatistics(statistics.value));
+      } else if (statistics && statistics.status === 'rejected') {
+        dispatch(setDashboardError({ section: 'statistics', error: statistics.reason?.message || 'Failed to fetch statistics' }));
       }
 
       // Process potion effectiveness
@@ -140,7 +149,7 @@ const useGetDashboardData = (options = {}) => {
     refreshWellness: async () => {
       try {
         dispatch(setDashboardLoading({ section: 'wellness', loading: true }));
-        const data = await dashboardService.getWellnessScore();
+        const data = await dashboardService.getWellnessScore(timeRange);
         dispatch(updateWellnessData(data));
       } catch (error) {
         dispatch(setDashboardError({ 

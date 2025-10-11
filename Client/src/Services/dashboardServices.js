@@ -14,9 +14,11 @@ export const dashboardService = {
     }
   },
 
-  getWellnessScore: async () => {
+  getWellnessScore: async (timeRange = 'week') => {
     try {
-      const response = await axiosInstance.get('/dashboard/wellness');
+      const response = await axiosInstance.get('/dashboard/wellness', {
+        params: { timeRange }
+      });
       return response.data?.data || response.data;
     } catch (error) {
       console.error('Error fetching wellness data:', error);
