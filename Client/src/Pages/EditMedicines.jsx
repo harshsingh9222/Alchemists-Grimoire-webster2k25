@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import BackButton from "../Components/BackButton";
 import { useParams, useNavigate } from "react-router-dom";
 import { updateMedicine, fetchMedicines } from "../api";
 import { useDispatch } from "react-redux";
@@ -69,6 +70,10 @@ const EditMedicine = () => {
       <h1 className="text-4xl font-bold mb-8 text-pink-400 drop-shadow-lg tracking-wide">
         ✏️ Edit Medicine
       </h1>
+
+      <div className="w-full max-w-lg -mt-4 mb-6">
+        <BackButton className="bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-400 hover:to-purple-700 text-white px-4 py-2 rounded-lg shadow-lg" />
+      </div>
 
       <form
         onSubmit={handleSubmit}

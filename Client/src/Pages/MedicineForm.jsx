@@ -73,21 +73,66 @@ const MedicineForm = () => {
     setFormData({ ...formData, [name]: value });
   };
 
-  // Round entered time to nearest 15 minutes
-  const roundToNearest15 = (timeString) => {
-    const [hours, minutes] = timeString.split(":").map(Number);
-    const totalMinutes = hours * 60 + minutes;
-    const rounded = Math.round(totalMinutes / 15) * 15;
-    const roundedHours = Math.floor(rounded / 60) % 24;
-    const roundedMinutes = rounded % 60;
-    return (
-      String(roundedHours).padStart(2, "0") +
-      ":" +
-      String(roundedMinutes).padStart(2, "0")
-    );
+  // Parse a tolerant time string into { h, m } in 24h. Accepts inputs like
+  // "9", "9:5", "9:05 AM", "21:5", "09:05". Returns null when parse fails.
+  const parseTimeString = (s) => {
+    if (!s || typeof s !== "string") return null;
+    const str = s.trim();
+    if (str.length === 0) return null;
+
+    // Match patterns like: 9, 9:5, 09:05, 9am, 9:05PM, 12:30 pm
+    const re = /^(\d{1,2})(?::?(\d{1,2}))?\s*(am|pm)?$/i;
+    const m = str.match(re);
+    if (!m) return null;
+    let hour = parseInt(m[1], 10);
+    let minute = m[2] ? parseInt(m[2], 10) : 0;
+    const ampm = m[3] ? m[3].toLowerCase() : null;
+
+    if (isNaN(hour) || isNaN(minute)) return null;
+    // Normalize minute and hour ranges
+    if (minute < 0) minute = 0;
+    if (minute > 59) minute = 59;
+
+    if (ampm) {
+      // 12 AM -> 0, 12 PM -> 12
+      if (ampm === "am") {
+        if (hour === 12) hour = 0;
+      } else if (ampm === "pm") {
+        if (hour !== 12) hour = (hour % 12) + 12;
+      }
+    }
+
+    // If no am/pm and hour looks like 24-hour (0-23) accept it
+    hour = hour % 24;
+    return { h: hour, m: minute };
   };
 
-  const handleTimeChange = (index, value) => {
+  // Round a time (string or parsed) to nearest 15 minutes and return HH:MM (24h)
+  const roundToNearest15 = (timeInput) => {
+    let parsed = null;
+    if (typeof timeInput === "string") parsed = parseTimeString(timeInput);
+    else if (timeInput && typeof timeInput === "object")
+      parsed = { h: Number(timeInput.h), m: Number(timeInput.m) };
+    if (!parsed) return "";
+
+    const totalMinutes = parsed.h * 60 + parsed.m;
+    const rounded = Math.round(totalMinutes / 15) * 15;
+    const roundedHours = Math.floor((rounded % (24 * 60)) / 60);
+    const roundedMinutes = rounded % 60;
+    return `${String(roundedHours).padStart(2, "0")}:${String(
+      roundedMinutes
+    ).padStart(2, "0")}`;
+  };
+
+  // Update raw time while typing (no rounding) to avoid fighting user's input
+  const setTimeRaw = (index, value) => {
+    const updatedTimes = [...formData.times];
+    updatedTimes[index] = value;
+    setFormData({ ...formData, times: updatedTimes });
+  };
+
+  // Normalize/round when user leaves the field (blur)
+  const handleTimeBlur = (index, value) => {
     const roundedValue = roundToNearest15(value);
     const updatedTimes = [...formData.times];
     updatedTimes[index] = roundedValue;
@@ -196,7 +241,8 @@ const MedicineForm = () => {
             type="time"
             step="900"
             value={time}
-            onChange={(e) => handleTimeChange(i, e.target.value)}
+            onChange={(e) => setTimeRaw(i, e.target.value)}
+            onBlur={(e) => handleTimeBlur(i, e.target.value)}
             required
             className="w-full mb-4 p-3 rounded-lg bg-white/10 border border-white/20 text-white focus:outline-none focus:ring-2 focus:ring-pink-500"
           />
