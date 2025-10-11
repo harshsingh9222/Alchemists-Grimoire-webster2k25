@@ -92,10 +92,36 @@ TASK:
 `;
 
     // --- Call OpenAI ---
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [{ role: "user", content: prompt }],
-    });
+    const primaryModel = process.env.OPENAI_CHAT_MODEL || "gpt-4o-mini";
+    const fallbackModel = process.env.OPENAI_CHAT_MODEL_FALLBACK || "gpt-4o-mini-translate";
+    let completion;
+    try {
+      completion = await openai.chat.completions.create({
+        model: primaryModel,
+        messages: [{ role: "user", content: prompt }],
+      });
+    } catch (err) {
+      // Handle rate limit: try fallback model once
+      const status = err?.status || err?.response?.status;
+      if (status === 429) {
+        const retryAfter = err?.headers?.get?.("retry-after") || err?.headers?.get?.("retry-after-ms");
+        console.warn(`OpenAI rate limited on ${primaryModel}. Retrying with fallback ${fallbackModel}. Retry-After:`, retryAfter);
+        try {
+          completion = await openai.chat.completions.create({
+            model: fallbackModel,
+            messages: [{ role: "user", content: prompt }],
+          });
+        } catch (fallbackErr) {
+          console.error("OpenAI fallback model also failed:", fallbackErr?.message || fallbackErr);
+          const humanMsg = retryAfter
+            ? `AI is busy. Please retry after ${retryAfter} seconds.`
+            : "AI is busy right now. Please try again in a bit.";
+          return res.status(429).json({ error: humanMsg });
+        }
+      } else {
+        throw err;
+      }
+    }
 
     const reply =
       completion.choices?.[0]?.message?.content ||

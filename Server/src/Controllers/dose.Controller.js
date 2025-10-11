@@ -416,7 +416,7 @@ export const getUpcomingDoseRisks = asyncHandler(async (req, res) => {
               'Authorization': `Bearer ${openaiKey}`
             },
             body: JSON.stringify({
-              model: 'gpt-4o-mini',
+              model: process.env.OPENAI_RISK_MODEL || 'gpt-4o-mini',
               temperature: 0,
               max_tokens: 100,
               response_format: { type: 'json_object' },
@@ -442,10 +442,45 @@ export const getUpcomingDoseRisks = asyncHandler(async (req, res) => {
               // fallback: leave defaults
             }
           } else {
-            console.warn('[AI] OpenAI risk classification non-OK response', {
-              doseId: String(dose._id),
-              status: resp.status
-            });
+            // On 429 rate limit, try a lighter fallback model once
+            if (resp.status === 429) {
+              const retryAfter = resp.headers.get('retry-after') || resp.headers.get('retry-after-ms');
+              console.warn('[AI] Risk model rate-limited. Retrying with fallback model.', { retryAfter });
+              const resp2 = await fetch('https://api.openai.com/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${openaiKey}`
+                },
+                body: JSON.stringify({
+                  model: process.env.OPENAI_RISK_MODEL_FALLBACK || 'gpt-4o-mini-translate',
+                  temperature: 0,
+                  max_tokens: 100,
+                  response_format: { type: 'json_object' },
+                  messages: [
+                    { role: 'system', content: 'You are a concise classifier. Given dose logs and an upcoming dose, predict if the user will miss it. Respond ONLY as JSON: {"will_miss": boolean, "confidence": number} where confidence is 0..1.' },
+                    { role: 'user', content: `Classify risk for upcoming dose using this data:\n${JSON.stringify(payload)}` }
+                  ]
+                })
+              });
+              if (resp2.ok) {
+                const data = await resp2.json();
+                const text = data?.choices?.[0]?.message?.content || '{}';
+                try {
+                  const parsed = JSON.parse(text);
+                  willMiss = Boolean(parsed.will_miss);
+                  const c = Number(parsed.confidence);
+                  confidence = Number.isFinite(c) ? Math.max(0, Math.min(1, c)) : 0;
+                } catch (_) {}
+              } else {
+                console.warn('[AI] Fallback risk model also non-OK', { status: resp2.status });
+              }
+            } else {
+              console.warn('[AI] OpenAI risk classification non-OK response', {
+                doseId: String(dose._id),
+                status: resp.status
+              });
+            }
           }
         } catch (aiErr) {
           console.warn('OpenAI risk classification failed:', aiErr?.message || aiErr);
