@@ -49,53 +49,109 @@ const InteractiveTimeline = () => {
   const steps = [
     {
       title: "🏰 Landing Page",
-      desc: "Where every alchemist begins their journey — greeted by a shimmering welcome and a promise of balance.",
-      icon: "🪶",
+      desc: "Welcome — an inviting intro to the app, value props, and quick CTAs to sign up or explore.",
+      icon: "✨",
       color: "bg-indigo-500",
-      imageUrl: "https://placehold.co/600x400/1e1b4b/fda4af?text=Landing+Page",
+      imageUrl: "https://placehold.co/600x400/2a0e61/fda4af?text=Landing+Page",
     },
     {
       title: "🔮 Sign In / Register",
-      desc: "The ritual of initiation — create your grimoire, set your seal, and enter the circle of wellness.",
+      desc: "Multiple auth paths: email/OTP, Google OAuth — fast entry while preserving existing OTP flow.",
       icon: "🔐",
       color: "bg-violet-500",
-      imageUrl: "https://placehold.co/600x400/1e1b4b/fda4af?text=Sign+Up",
+      imageUrl: "https://placehold.co/600x400/43127e/fbf1ff?text=Sign+In",
     },
     {
-      title: "📜 Dashboard (The Grand Grimoire)",
-      desc: "Your magical command center — track your potions, progress, and all your mystical routines.",
-      icon: "📜",
+      title: "🧭 Onboarding & Preferences",
+      desc: "Quick setup: timezone, notification preferences, and initial medicines import or template selection.",
+      icon: "🧾",
       color: "bg-pink-500",
-      imageUrl: "https://placehold.co/600x400/1e1b4b/fda4af?text=Dashboard",
+      imageUrl: "https://placehold.co/600x400/6b21a8/fde68a?text=Onboarding",
     },
     {
-      title: "🧪 Add Medicine (Brew a New Elixir)",
-      desc: "Add your medicine to the tome — specify dose, time, and frequency of your elixirs.",
+      title: "📜 Dashboard (Overview)",
+      desc: "Your command center: today's doses, upcoming reminders, quick actions and adherence summary.",
+      icon: "�",
+      color: "bg-rose-500",
+      imageUrl: "https://placehold.co/600x400/8b5cf6/fff1f2?text=Dashboard",
+    },
+    {
+      title: "🧪 Add / Edit Medicine",
+      desc: "Create or modify medicines: name, dose, schedule, instructions, and attach images or notes.",
       icon: "⚗️",
       color: "bg-teal-500",
-      imageUrl: "https://placehold.co/600x400/1e1b4b/fda4af?text=Add+Medicine",
+      imageUrl: "https://placehold.co/600x400/0ea5a4/ffffff?text=Add+Medicine",
     },
     {
-      title: "🔔 Notifications (The Circus Crier)",
-      desc: "Never miss a dose! The magical bell rings across time to remind you of your scheduled potions.",
-      icon: "🔔",
-      color: "bg-yellow-500",
-      imageUrl: "https://placehold.co/600x400/1e1b4b/fda4af?text=Notifications",
-    },
-    {
-      title: "📖 Logs (Potion History)",
-      desc: "Record your potion-taking rituals. Mark each as taken or missed and build your adherence legacy.",
-      icon: "📖",
-      color: "bg-emerald-500",
-      imageUrl: "https://placehold.co/600x400/1e1b4b/fda4af?text=Logs",
-    },
-    {
-      title: "📊 Wellness Dashboard",
-      desc: "Observe your wellness patterns through mystical charts and glowing adherence graphs.",
-      icon: "📊",
+      title: "🗂️ Medicine Catalog",
+      desc: "Browse the catalog to find common medicines, add recommended dosage templates, or learn details.",
+      icon: "📚",
       color: "bg-sky-500",
+      imageUrl: "https://placehold.co/600x400/0369a1/ffffff?text=Catalog",
+    },
+    {
+      title: "⏰ Schedule & Reminders",
+      desc: "Set single or recurring schedules, choose reminder channels (push, email), and snooze rules.",
+      icon: "⏱️",
+      color: "bg-yellow-500",
+      imageUrl: "https://placehold.co/600x400/f59e0b/ffffff?text=Scheduling",
+    },
+    {
+      title: "🩺 Dose Tracker (Today)",
+      desc: "The active tracker: view today's doses, mark taken/missed, skip or postpone, and see immediate feedback.",
+      icon: "✅",
+      color: "bg-emerald-500",
+      imageUrl: "https://placehold.co/600x400/10b981/ffffff?text=Dose+Tracker",
+    },
+    {
+      title: "📆 Calendar & Day View",
+      desc: "Monthly calendar with per-day dose breakdown, view more details and jump to any date (mobile-friendly).",
+      icon: "📅",
+      color: "bg-violet-400",
+      imageUrl: "https://placehold.co/600x400/7c3aed/ffffff?text=Calendar",
+    },
+    {
+      title: "🔔 Notifications & Delivery",
+      desc: "Reliable reminders delivered at the right timezone — includes retry logic, delivery history, and settings.",
+      icon: "�",
+      color: "bg-pink-400",
+      imageUrl: "https://placehold.co/600x400/ec4899/ffffff?text=Notifications",
+    },
+    {
+      title: "📖 Logs & Reports",
+      desc: "Historical logs of all dose events, exportable reports, adherence charts and trends over time.",
+      icon: "🧾",
+      color: "bg-sky-600",
+      imageUrl: "https://placehold.co/600x400/0ea5e9/ffffff?text=Logs",
+    },
+    {
+      title: "🧰 My Medicines",
+      desc: "A dedicated list of your medicines: quick edit, refill reminders, delete or archive entries.",
+      icon: "🩺",
+      color: "bg-indigo-400",
+      imageUrl: "https://placehold.co/600x400/6366f1/ffffff?text=My+Medicines",
+    },
+    {
+      title: "🤖 ChatBot & AI Help",
+      desc: "Ask the assistant for dosage tips, FAQs, or to set reminders; get smart suggestions for schedules.",
+      icon: "🤖",
+      color: "bg-emerald-400",
+      imageUrl: "https://placehold.co/600x400/34d399/ffffff?text=ChatBot",
+    },
+    {
+      title: "⚙️ Profile & Settings",
+      desc: "Manage account, link Google, control timezone/onboarded state, privacy and notification preferences.",
+      icon: "👤",
+      color: "bg-gray-500",
+      imageUrl: "https://placehold.co/600x400/6b7280/ffffff?text=Profile",
+    },
+    {
+      title: "📬 Help & About",
+      desc: "Learn about the app, contact support, read docs, and find onboarding tips to get the most out of it.",
+      icon: "�",
+      color: "bg-pink-300",
       imageUrl:
-        "https://placehold.co/600x400/1e1b4b/fda4af?text=Wellness+Dashboard",
+        "https://placehold.co/600x400/fda4af/1e1b4b?text=About+%26+Support",
     },
   ];
 
@@ -141,7 +197,7 @@ const InteractiveTimeline = () => {
           className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start h-[80vh] overflow-y-scroll scrollbar-thin scrollbar-thumb-pink-400/60 scrollbar-track-transparent pr-4"
         >
           {/* Left: Sticky image */}
-          <div className="sticky top-10 w-full h-[400px]">
+          <div className="sticky top-10 w-full h-56 md:h-80 lg:h-[400px]">
             <div className="relative w-full h-full rounded-2xl border-4 border-pink-500/30 shadow-[0_0_30px_rgba(255,100,200,0.4)] overflow-hidden">
               <div className="absolute inset-0 bg-purple-900/40 z-10"></div>
               {steps.map((step, idx) => (

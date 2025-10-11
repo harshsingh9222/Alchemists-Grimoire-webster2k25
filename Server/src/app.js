@@ -4,6 +4,7 @@ import cookieParser from 'cookie-parser';
 import userRouter from './Routes/user.Routes.js';
 import medicineRouter from './Routes/medicine.Router.js';
 import dashboardRoutes from "./Routes/dashboad.Routes.js";
+import notificationRoutes from './Routes/notification.Routes.js';
 import doseScheduler from "./schedulers/doseSchedulers.js";
 import wellnessRoutes from './Routes/wellness.Routes.js';
 import doseRoutes from './Routes/dose.Route.js';
@@ -81,6 +82,8 @@ app.use("/chat", charRoutes);
 
 // catalog Route
 app.use('/catalog', catalogRoute);
+// Notifications
+app.use('/notifications', notificationRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

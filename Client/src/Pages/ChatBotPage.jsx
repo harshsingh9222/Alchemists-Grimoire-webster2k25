@@ -16,6 +16,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import BackButton from "../Components/BackButton";
 
 /**
  * HealthChat.jsx
@@ -250,11 +251,14 @@ const HealthChat = () => {
       {/* Chat Window */}
       <div className="flex-1 flex flex-col">
         {/* Header */}
-        <div className="flex items-center gap-2 px-6 py-4 bg-gradient-to-r from-purple-700/80 to-indigo-700/60 border-b border-purple-400/30 backdrop-blur-md">
-          <Bot className="w-5 h-5 text-purple-100" />
-          <h1 className="text-lg font-semibold text-purple-50">
-            AI Health Assistant
-          </h1>
+        <div className="flex items-center gap-2 px-6 py-4 bg-gradient-to-r from-purple-700/80 to-indigo-700/60 border-b border-purple-400/30 backdrop-blur-md justify-between">
+          <div className="flex items-center gap-2">
+            <Bot className="w-5 h-5 text-purple-100" />
+            <h1 className="text-lg font-semibold text-purple-50">
+              AI Health Assistant
+            </h1>
+          </div>
+          <BackButton className="bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-400 hover:to-purple-700 text-white px-4 py-2 rounded-lg shadow-lg" />
         </div>
 
         {/* Messages */}

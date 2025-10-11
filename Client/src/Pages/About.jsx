@@ -1,4 +1,5 @@
 import React from "react";
+import BackButton from "../Components/BackButton";
 
 const About = () => {
   return (
@@ -8,6 +9,8 @@ const About = () => {
         <h1 className="text-4xl font-extrabold text-center text-fuchsia-300 tracking-widest mb-6">
           🎭 About the Alchemist's Grand Grimoire
         </h1>
+
+        {/* Back button moved to the lower side with purple-pink gradient */}
 
         {/* Description */}
         <p className="text-lg leading-relaxed text-fuchsia-100 mb-6">
@@ -52,13 +55,17 @@ const About = () => {
           {[{ name: "Animesh" }, { name: "Harsh" }, { name: "Dhruv" }].map(
             (contributor, index) => (
               <div key={index} className="flex flex-col items-center">
-
                 <p className="mt-2 text-lg font-semibold text-fuchsia-200">
                   {contributor.name}
                 </p>
               </div>
             )
           )}
+        </div>
+
+        {/* Lower back button: purple-pink gradient */}
+        <div className="flex justify-center mt-8">
+          <BackButton className="bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-400 hover:to-purple-700 text-white px-4 py-2 rounded-lg shadow-lg" />
         </div>
       </div>
     </div>
